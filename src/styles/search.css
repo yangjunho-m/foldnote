@@ -69,6 +69,109 @@
   margin-bottom: 32px;
 }
 
+.saved-notes {
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 22px rgba(32, 43, 68, 0.05);
+}
+
+.saved-notes-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.saved-notes-head h3,
+.saved-notes-head p {
+  margin: 0;
+}
+
+.saved-notes-head h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.saved-notes-head p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.saved-notes-head span {
+  min-width: 38px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: #0754d6;
+  background: var(--primary-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.saved-note-list {
+  display: grid;
+  gap: 10px;
+}
+
+.saved-note-card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.saved-note-card > button:first-child {
+  width: 100%;
+  min-height: 96px;
+  padding: 13px 48px 13px 13px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.saved-note-card strong,
+.saved-note-card span,
+.saved-note-card p {
+  display: block;
+}
+
+.saved-note-card strong {
+  font-size: 15px;
+}
+
+.saved-note-card span {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.saved-note-card p {
+  margin: 8px 0 0;
+  color: #4f5665;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.note-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
 .recommend-box {
   margin-bottom: 22px;
   padding: 18px;

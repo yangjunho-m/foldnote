@@ -11,6 +11,7 @@
 - 리본, 스틱, 구체, 표면, 신뢰도 색상 보기
 - 구조 부위 클릭 시 잔기/원자 설명 툴팁
 - Europe PMC 기반 논문 초록 요약, 연관 키워드, 참고문헌 보기
+- 브라우저 저장 기반 Protein Note 저장/다시 열기
 - 추천 단백질 랜덤 카드
 - mmCIF/PDB 파일 다운로드 링크
 
@@ -45,6 +46,7 @@ npm start
 - `index.html`: 앱 진입점
 - `src/catalog.js`: 예시 단백질, 추천, API URL, 아이콘, 잔기 설명 데이터
 - `src/literatureService.js`: Europe PMC 논문 초록 검색과 근거 요약 로직
+- `src/noteStore.js`: 브라우저 저장소 기반 Protein Note 저장 로직
 - `src/proteinService.js`: RCSB, UniProt, AlphaFold 데이터 검색 로직
 - `src/styles/`: 기본, 검색 화면, 뷰어, 반응형 스타일
 - `styles.css`: 스타일 모듈 진입점

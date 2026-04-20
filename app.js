@@ -4,6 +4,7 @@ import {
   residueDescriptions
 } from "./src/catalog.js";
 import { fetchLiteratureEvidence } from "./src/literatureService.js";
+import { deleteNote, getProteinKey as getStoredProteinKey, isSaved, loadNotes, saveNote } from "./src/noteStore.js";
 import { findProteinStructures } from "./src/proteinService.js";
 
 const state = {
@@ -24,7 +25,9 @@ const state = {
   literatureLoading: {},
   recommendations: [],
   theme: "light",
-  isHelpOpen: false
+  isHelpOpen: false,
+  notes: loadNotes(),
+  saveMessage: ""
 };
 
 
@@ -113,7 +116,7 @@ async function ensureLiterature(protein) {
 }
 
 function getProteinKey(protein) {
-  return protein.pdbId || protein.accession || protein.englishName || protein.name;
+  return getStoredProteinKey(protein);
 }
 
 function badge(protein) {
@@ -193,8 +196,43 @@ function renderSearch() {
         </form>
 
         ${renderSearchState()}
+        ${renderSavedNotes()}
         ${renderRecommendations()}
         ${renderTips()}
+      </div>
+    </section>
+  `;
+}
+
+function renderSavedNotes() {
+  if (!state.notes.length) return "";
+
+  return `
+    <section class="saved-notes">
+      <div class="saved-notes-head">
+        <div>
+          <h3>저장한 Protein Notes</h3>
+          <p>다시 볼 구조와 논문 근거 요약을 브라우저에 저장합니다.</p>
+        </div>
+        <span>${state.notes.length}개</span>
+      </div>
+      <div class="saved-note-list">
+        ${state.notes
+          .map(
+            (note) => `
+              <article class="saved-note-card">
+                <button type="button" data-open-note="${escapeHtml(note.id)}">
+                  <strong>${escapeHtml(note.name)}</strong>
+                  <span>${escapeHtml(note.structureId)} · ${escapeHtml(note.source)} · ${formatSavedDate(note.savedAt)}</span>
+                  <p>${escapeHtml(note.summary?.[0] || note.description || "저장된 구조 노트입니다.")}</p>
+                </button>
+                <button class="note-delete" type="button" data-delete-note="${escapeHtml(note.id)}" aria-label="노트 삭제">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
+                </button>
+              </article>
+            `
+          )
+          .join("")}
       </div>
     </section>
   `;
@@ -557,6 +595,7 @@ function renderProfessionalInfo(protein) {
 
 function renderResearchTools(protein) {
   const literatureUrl = buildLiteratureSearchUrl(protein);
+  const saved = isSaved(protein, state.notes);
 
   return `
     <section class="section compact-section">
@@ -571,8 +610,9 @@ function renderResearchTools(protein) {
 
     <div class="action-row">
       <a class="primary-button link-button" href="${escapeHtml(protein.externalUrl)}" target="_blank" rel="noreferrer">${protein.source === "PDB" ? "PDB에서 보기" : "AlphaFold 보기"}</a>
-      <button class="secondary-button" type="button">해설 저장</button>
+      <button class="secondary-button" type="button" data-save-note>${saved ? "저장됨" : "노트 저장"}</button>
     </div>
+    ${state.saveMessage ? `<div class="save-message">${escapeHtml(state.saveMessage)}</div>` : ""}
   `;
 }
 
@@ -716,6 +756,21 @@ function bindEvents() {
     });
   });
 
+  document.querySelectorAll("[data-open-note]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const note = state.notes.find((item) => item.id === button.dataset.openNote);
+      if (!note) return;
+      scheduleSearch(note.structureId || note.englishName || note.name);
+    });
+  });
+
+  document.querySelectorAll("[data-delete-note]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.notes = deleteNote(button.dataset.deleteNote);
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-recommend-query]").forEach((button) => {
     button.addEventListener("click", () => {
       const query = button.dataset.recommendQuery;
@@ -773,6 +828,32 @@ function bindEvents() {
       }
     });
   });
+
+  const saveNoteButton = document.querySelector("[data-save-note]");
+  if (saveNoteButton && state.selected) {
+    saveNoteButton.addEventListener("click", () => {
+      const key = getProteinKey(state.selected);
+      const evidence = state.literature[key];
+      state.notes = saveNote(state.selected, evidence);
+      state.saveMessage = "Protein Note에 저장했습니다. 홈 화면에서 다시 열 수 있습니다.";
+      render();
+      window.setTimeout(() => {
+        state.saveMessage = "";
+        render();
+      }, 1800);
+    });
+  }
+}
+
+function formatSavedDate(value) {
+  try {
+    return new Intl.DateTimeFormat("ko-KR", {
+      month: "short",
+      day: "numeric"
+    }).format(new Date(value));
+  } catch {
+    return "저장됨";
+  }
 }
 
 async function initProteinViewer(protein) {

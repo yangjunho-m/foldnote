@@ -528,6 +528,17 @@
   padding-top: 4px;
 }
 
+.save-message {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(22, 114, 69, 0.18);
+  border-radius: var(--radius);
+  color: #167245;
+  background: var(--green-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .tool-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
