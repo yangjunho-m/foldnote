@@ -44,6 +44,7 @@ const state = {
   isReportOpen: false,
   reportSnapshot: "",
   variantQuery: "",
+  isSidebarOpen: false,
   language: window.localStorage.getItem("foldnote-language") || "ko"
 };
 
@@ -174,6 +175,9 @@ function renderTopbar() {
         </div>
       </button>
       <div class="topbar-actions">
+        <button class="icon-button" type="button" data-sidebar-toggle title="워크스페이스" aria-label="워크스페이스 열기">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+        </button>
         <div class="language-toggle" aria-label="${t("language")}">
           <button class="${state.language === "ko" ? "active" : ""}" type="button" data-language="ko">한국어</button>
           <button class="${state.language === "en" ? "active" : ""}" type="button" data-language="en">EN</button>
@@ -192,6 +196,7 @@ function renderSearch() {
   return `
     <section class="search-screen">
       ${renderWorkspaceSidebar()}
+      ${state.isSidebarOpen ? `<button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="워크스페이스 닫기"></button>` : ""}
       <div class="search-main">
         <div class="search-wrap">
           <div class="hero">
@@ -227,14 +232,17 @@ function renderWorkspaceSidebar() {
   const notes = state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === currentProject.id);
 
   return `
-    <aside class="workspace-sidebar" aria-label="GitHub 워크스페이스">
+    <aside class="workspace-sidebar ${state.isSidebarOpen ? "open" : ""}" aria-label="GitHub 워크스페이스">
       <div class="workspace-head">
         <div>
           <h2>GitHub 워크스페이스</h2>
           <p>GitHub Pages에서 구조 노트를 정리합니다.</p>
         </div>
-        <a href="https://yangjunho-m.github.io/foldnote/" target="_blank" rel="noreferrer">Pages</a>
+        <button class="sidebar-close" type="button" data-sidebar-close aria-label="워크스페이스 닫기">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
+        </button>
       </div>
+      <a class="pages-link" href="https://yangjunho-m.github.io/foldnote/" target="_blank" rel="noreferrer">GitHub Pages에서 보기</a>
 
       <div class="workspace-section">
         <div class="workspace-section-head">
@@ -1008,6 +1016,21 @@ function bindEvents() {
     });
   }
 
+  const sidebarToggle = document.querySelector("[data-sidebar-toggle]");
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener("click", () => {
+      state.isSidebarOpen = true;
+      render();
+    });
+  }
+
+  document.querySelectorAll("[data-sidebar-close]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.isSidebarOpen = false;
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-language]").forEach((button) => {
     button.addEventListener("click", () => {
       state.language = button.dataset.language;
@@ -1033,6 +1056,11 @@ function bindEvents() {
   });
 
   document.onkeydown = (event) => {
+    if (event.key === "Escape" && state.isSidebarOpen) {
+      state.isSidebarOpen = false;
+      render();
+      return;
+    }
     if (event.key === "Escape" && state.isHelpOpen) {
       state.isHelpOpen = false;
       render();
@@ -1122,6 +1150,7 @@ function bindEvents() {
   document.querySelectorAll("[data-project-id]").forEach((button) => {
     button.addEventListener("click", () => {
       state.currentProjectId = button.dataset.projectId;
+      state.isSidebarOpen = false;
       render();
     });
   });
@@ -1132,6 +1161,7 @@ function bindEvents() {
       const name = window.prompt("새 프로젝트 폴더 이름을 입력하세요", "새 구조 프로젝트");
       state.projects = createProject(name);
       state.currentProjectId = state.projects[state.projects.length - 1]?.id || DEFAULT_PROJECT_ID;
+      state.isSidebarOpen = true;
       render();
     });
   }

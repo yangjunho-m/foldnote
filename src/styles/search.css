@@ -1,9 +1,5 @@
 .search-screen {
   min-height: calc(100vh - 80px);
-  display: grid;
-  grid-template-columns: 292px minmax(0, 1fr);
-  align-items: start;
-  gap: 28px;
   padding: 24px 24px 56px;
 }
 
@@ -18,20 +14,37 @@
 }
 
 .workspace-sidebar {
-  position: sticky;
-  top: 96px;
-  max-height: calc(100vh - 116px);
+  position: fixed;
+  z-index: 42;
+  left: 0;
+  top: 0;
+  width: min(330px, calc(100vw - 42px));
+  height: 100vh;
   overflow: auto;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 8px 22px rgba(32, 43, 68, 0.06);
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 20px 0 50px rgba(22, 31, 52, 0.18);
+  transform: translateX(-105%);
+  transition: transform 180ms ease;
+}
+
+.workspace-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  background: rgba(10, 14, 23, 0.38);
+  backdrop-filter: blur(4px);
 }
 
 .workspace-head {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
@@ -55,12 +68,25 @@
   line-height: 1.45;
 }
 
-.workspace-head a {
-  align-self: flex-start;
-  min-height: 30px;
+.sidebar-close {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
+.pages-link {
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
-  padding: 0 9px;
+  justify-content: center;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: #0754d6;
@@ -744,7 +770,7 @@
   border-color: var(--line);
 }
 
-.app-shell.dark .workspace-head a,
+.app-shell.dark .pages-link,
 .app-shell.dark .workspace-folder-list button.active,
 .app-shell.dark .state-card.representative {
   background: rgba(76, 132, 255, 0.14);

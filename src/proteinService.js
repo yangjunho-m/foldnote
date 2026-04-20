@@ -14,24 +14,35 @@ import {
 } from "./catalog.js";
 
 export async function findProteinStructures(query) {
-  const response = await fetch(RCSB_SEARCH_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(buildRcsbSearchPayload(query))
-  });
+  const curatedPdbIds = getCuratedPdbIds(query);
+  let apiPdbIds = [];
 
-  if (!response.ok) {
-    throw new Error(`RCSB 검색 요청 실패 (${response.status})`);
+  try {
+    const response = await fetch(RCSB_SEARCH_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(buildRcsbSearchPayload(query))
+    });
+
+    if (!response.ok) {
+      throw new Error(`RCSB 검색 요청 실패 (${response.status})`);
+    }
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+    apiPdbIds = (data.result_set || [])
+      .map((item) => item.identifier)
+      .filter(Boolean)
+      .slice(0, 6);
+  } catch (error) {
+    if (!curatedPdbIds.length) {
+      return fetchAlphaFoldResults(query);
+    }
   }
 
-  const data = await response.json();
-  const apiPdbIds = (data.result_set || [])
-    .map((item) => item.identifier)
-    .filter(Boolean)
-    .slice(0, 6);
-  const pdbIds = mergeUniqueIds([...getCuratedPdbIds(trimmedQuery), ...apiPdbIds]).slice(0, 8);
+  const pdbIds = mergeUniqueIds([...curatedPdbIds, ...apiPdbIds]).slice(0, 8);
 
   const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(query);
   return groupRelatedStructures(results.map(addLocalizedMetadata), query);
@@ -263,6 +274,30 @@ function classifyHemoglobinState(protein, text) {
   const value = `${text} ${protein.pdbId || ""}`.toLowerCase();
   const id = String(protein.pdbId || "").toUpperCase();
   const facts = `${protein.method || "실험"} · ${protein.resolution || "해상도 정보 없음"}`;
+
+  if (id === "4HHB") {
+    return {
+      koreanName: "헤모글로빈 A",
+      stateLabel: "대표 성인형",
+      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id})`
+    };
+  }
+
+  if (id === "1HHO") {
+    return {
+      koreanName: "산소 결합 헤모글로빈",
+      stateLabel: "산소 결합형",
+      stateReason: `산소가 헴에 붙은 R 상태에 가까운 구조입니다. 산소가 붙으며 친화도가 높아지는 협동성 설명에 좋습니다. (${id})`
+    };
+  }
+
+  if (id === "2HHB") {
+    return {
+      koreanName: "데옥시헤모글로빈",
+      stateLabel: "비결합형",
+      stateReason: `산소가 붙지 않은 T 상태 구조입니다. 산소 결합형과 비교하면 사슬 사이 배치와 헴 주변 위치가 달라집니다. (${id})`
+    };
+  }
 
   if (/2hhb|deoxy|unliganded|t-state|tense/.test(value)) {
     return {

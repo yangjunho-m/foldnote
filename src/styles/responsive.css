@@ -18,17 +18,11 @@
   }
 
   .search-screen {
-    grid-template-columns: 1fr;
     padding: 18px;
   }
 
   .search-main {
     padding-top: 7vh;
-  }
-
-  .workspace-sidebar {
-    position: static;
-    max-height: none;
   }
 
   .viewer-screen {
