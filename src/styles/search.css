@@ -113,11 +113,28 @@
   font-weight: 800;
 }
 
-.workspace-section-head button {
-  width: 30px;
-  height: 30px;
+.folder-create-form {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.folder-create-form input,
+.folder-create-form button {
+  min-height: 36px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
+}
+
+.folder-create-form input {
+  min-width: 0;
+  padding: 0 10px;
+  color: var(--foreground);
+  background: var(--surface);
+}
+
+.folder-create-form button {
   color: #ffffff;
   background: var(--primary);
   font-size: 18px;
@@ -763,6 +780,7 @@
 
 .app-shell.dark .workspace-sidebar,
 .app-shell.dark .workspace-folder-list button,
+.app-shell.dark .folder-create-form input,
 .app-shell.dark .saved-note-card,
 .app-shell.dark .state-card {
   background: rgba(23, 28, 38, 0.95);

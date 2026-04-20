@@ -45,7 +45,10 @@ export async function findProteinStructures(query) {
   const pdbIds = mergeUniqueIds([...curatedPdbIds, ...apiPdbIds]).slice(0, 8);
 
   const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(query);
-  return groupRelatedStructures(results.map(addLocalizedMetadata), query);
+  return groupRelatedStructures(
+    results.map((protein) => addSearchContextMetadata(addLocalizedMetadata(protein), query)),
+    query
+  );
 }
 
 function normalize(text) {
@@ -258,16 +261,59 @@ function createProteinFromAlphaFold(record, structureUrl) {
 function addLocalizedMetadata(protein) {
   const text = `${protein.name || ""} ${protein.englishName || ""}`;
   const match = proteinNameTranslations.find((item) => item.pattern.test(text));
-  if (!match) return protein;
+  if (!match) return addGenericMetadata(protein);
   const state = match.family === "헤모글로빈" ? classifyHemoglobinState(protein, text) : null;
 
-  return {
+  return addGenericMetadata({
     ...protein,
     koreanName: state?.koreanName || protein.koreanName || match.koreanName,
     family: protein.family || match.family,
     stateLabel: state?.stateLabel || protein.stateLabel || match.stateLabel,
     stateReason: state?.stateReason || protein.stateReason || match.stateReason
+  });
+}
+
+function addGenericMetadata(protein) {
+  const family = protein.family || inferProteinFamily(protein);
+  const state = inferGenericState(protein);
+  return {
+    ...protein,
+    family,
+    stateLabel: protein.stateLabel || state.stateLabel,
+    stateReason: protein.stateReason || state.stateReason
   };
+}
+
+function addSearchContextMetadata(protein, query) {
+  const searchTerm = resolveSearchTerm(query);
+  const searchFamily = normalizeFamilyName(searchTerm);
+  const structureId = String(getStructureId(protein) || "").toUpperCase();
+  const text = `${searchTerm} ${protein.name || ""} ${protein.englishName || ""} ${structureId}`;
+
+  if (/h[ae]moglobin/i.test(text)) {
+    const state = classifyHemoglobinState(protein, text);
+    return {
+      ...protein,
+      koreanName: protein.koreanName || state.koreanName,
+      family: "헤모글로빈",
+      stateLabel: state.stateLabel,
+      stateReason: state.stateReason
+    };
+  }
+
+  if (searchFamily && isWeakFamilyName(protein.family)) {
+    return {
+      ...protein,
+      family: searchFamily
+    };
+  }
+
+  return protein;
+}
+
+function isWeakFamilyName(family) {
+  const value = normalizeFamilyName(family);
+  return !value || /^pdb [0-9a-z]{4}$/.test(value) || value === "rcsb pdb entry";
 }
 
 function classifyHemoglobinState(protein, text) {
@@ -367,21 +413,17 @@ function groupRelatedStructures(results, query) {
   if (filtered.length <= 1) return filtered;
 
   const searchTerm = resolveSearchTerm(query).toLowerCase();
-  const shouldGroup =
-    proteinNameTranslations.some((item) => item.pattern.test(searchTerm)) ||
-    filtered.some((item) => item.family);
-
-  if (!shouldGroup) return filtered.slice(0, 4);
-
   const groups = new Map();
   filtered.forEach((protein) => {
-    const key = protein.family || protein.koreanName || protein.name;
+    const key = protein.family || inferProteinFamily(protein) || getStructureId(protein);
     const entries = groups.get(key) || [];
     entries.push(protein);
     groups.set(key, entries);
   });
 
   return Array.from(groups.values())
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 4)
     .map((items) => {
       const representative = chooseRepresentative(items, searchTerm);
       const relatedStates = items
@@ -392,7 +434,7 @@ function groupRelatedStructures(results, query) {
           name: item.koreanName || item.name,
           englishName: item.englishName || item.name,
           stateLabel: item.stateLabel || "다른 후보",
-          stateReason: item.stateReason || "실험 조건, 결합 분자, 생물종 또는 단백질 상태가 달라 별도 구조로 등록된 후보입니다.",
+          stateReason: describeDifferenceFromRepresentative(item, representative),
           method: item.method,
           resolution: item.resolution,
           source: item.source,
@@ -404,8 +446,7 @@ function groupRelatedStructures(results, query) {
         resultCount: items.length,
         relatedStates
       };
-    })
-    .slice(0, 4);
+    });
 }
 
 function chooseRepresentative(items, searchTerm) {
@@ -417,7 +458,8 @@ function scoreRepresentative(protein, searchTerm) {
   let score = 0;
   if (text.includes(searchTerm)) score += 5;
   if (/adult|hemoglobin a|haemoglobin a|representative/i.test(text)) score += 4;
-  if (/deoxy|oxy|carbonmonoxy|mutant|variant|complex/i.test(text)) score -= 2;
+  if (/transition state|inhibitor|tosyl|complex|mutant|variant|dimer/i.test(text)) score -= 2;
+  if (/refined|crystal structure|structure of/i.test(text)) score += 2;
   if (protein.pdbId === "4HHB") score += 8;
   if (protein.pdbId === "1HHO") score += 5;
   if (protein.pdbId === "2HHB") score += 3;
@@ -429,6 +471,75 @@ function scoreRepresentative(protein, searchTerm) {
 
 function getStructureId(protein) {
   return protein.pdbId || protein.accession || protein.alphaFoldId || protein.name;
+}
+
+function inferProteinFamily(protein) {
+  const source = protein.koreanName || protein.name || protein.englishName || "";
+  return normalizeFamilyName(source);
+}
+
+function normalizeFamilyName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\b(structure|crystal|crystalline|refined|atomic|resolution|of|the|a|an|at|and|complex|dimer|tetrahedral|transition|state|tosyl)\b/g, " ")
+    .replace(/\b[0-9]+(\.[0-9]+)?\s*-?\s*(angstroms?|a)\b/g, " ")
+    .replace(/[^a-z0-9가-힣]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function inferGenericState(protein) {
+  const text = `${protein.name || ""} ${protein.englishName || ""} ${protein.pdbId || ""}`.toLowerCase();
+  const id = protein.pdbId || protein.accession || protein.alphaFoldId || "ID 없음";
+
+  if (/transition state|tetrahedral/.test(text)) {
+    return {
+      stateLabel: "전이상태 복합체",
+      stateReason: `반응 중간 상태를 흉내 낸 구조입니다. 대표 구조와 비교하면 활성 부위가 기질을 처리하는 순간을 이해하기 좋습니다. (${id})`
+    };
+  }
+  if (/inhibitor|tosyl|ligand|bound|complex/.test(text)) {
+    return {
+      stateLabel: "결합형",
+      stateReason: `억제제나 리간드가 결합한 구조입니다. 대표 구조와 비교하면 결합 부위와 기능 조절 위치가 드러납니다. (${id})`
+    };
+  }
+  if (/dimer|trimer|tetramer|oligomer/.test(text)) {
+    return {
+      stateLabel: "올리고머형",
+      stateReason: `여러 사슬이 함께 있는 구조입니다. 대표 단량체 구조와 비교하면 사슬 사이 접촉면과 조립 상태를 볼 수 있습니다. (${id})`
+    };
+  }
+  if (/mutant|variant|mutation/.test(text)) {
+    return {
+      stateLabel: "변이형",
+      stateReason: `아미노산이 바뀐 구조입니다. 대표 구조와 비교하면 변이가 접힘, 표면 전하, 결합 부위에 주는 영향을 볼 수 있습니다. (${id})`
+    };
+  }
+  if (/apo|unbound|free|unliganded/.test(text)) {
+    return {
+      stateLabel: "비결합형",
+      stateReason: `리간드나 기질이 없는 구조입니다. 결합형 구조와 나란히 보면 결합 전후 변화를 이해하기 쉽습니다. (${id})`
+    };
+  }
+  if (/refined|high resolution|crystal structure|crystalline/.test(text)) {
+    return {
+      stateLabel: "정제 결정 구조",
+      stateReason: `해상도와 원자 위치를 정밀하게 다듬은 기준 구조입니다. 다른 결합형이나 복합체 구조와 비교할 대표 후보로 적합합니다. (${id})`
+    };
+  }
+
+  return {
+    stateLabel: "실험 조건형",
+    stateReason: `같은 단백질이지만 실험 조건, 해상도, 결합 분자, 사슬 조립 상태가 다를 수 있는 구조입니다. (${id})`
+  };
+}
+
+function describeDifferenceFromRepresentative(candidate, representative) {
+  const base = candidate.stateReason || inferGenericState(candidate).stateReason;
+  const repId = representative.pdbId || representative.accession || representative.alphaFoldId || representative.name;
+  return `${base} 대표 구조(${repId})와 비교해서 구조-기능 차이를 확인하세요.`;
 }
 
 function getCuratedPdbIds(query) {

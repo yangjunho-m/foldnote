@@ -45,6 +45,7 @@ const state = {
   reportSnapshot: "",
   variantQuery: "",
   isSidebarOpen: false,
+  newProjectName: "",
   language: window.localStorage.getItem("foldnote-language") || "ko"
 };
 
@@ -167,6 +168,9 @@ function renderTopbar() {
   const isKo = state.language === "ko";
   return `
     <header class="topbar">
+      <button class="icon-button menu-button" type="button" data-sidebar-toggle title="워크스페이스" aria-label="워크스페이스 열기">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+      </button>
       <button class="brand brand-button" type="button" data-home title="${t("home")}" aria-label="FoldNote ${t("home")}">
         <div class="brand-mark" aria-hidden="true">${icons.fold}</div>
         <div>
@@ -175,9 +179,6 @@ function renderTopbar() {
         </div>
       </button>
       <div class="topbar-actions">
-        <button class="icon-button" type="button" data-sidebar-toggle title="워크스페이스" aria-label="워크스페이스 열기">
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
-        </button>
         <div class="language-toggle" aria-label="${t("language")}">
           <button class="${state.language === "ko" ? "active" : ""}" type="button" data-language="ko">한국어</button>
           <button class="${state.language === "en" ? "active" : ""}" type="button" data-language="en">EN</button>
@@ -247,8 +248,11 @@ function renderWorkspaceSidebar() {
       <div class="workspace-section">
         <div class="workspace-section-head">
           <h3>폴더</h3>
-          <button type="button" data-create-project aria-label="폴더 추가">+</button>
         </div>
+        <form class="folder-create-form" data-create-project-form>
+          <input type="text" data-project-name-input value="${escapeHtml(state.newProjectName)}" placeholder="새 폴더 이름" aria-label="새 폴더 이름" />
+          <button type="submit" aria-label="폴더 추가">+</button>
+        </form>
         <div class="workspace-folder-list">
           ${state.projects
             .map(
@@ -1155,11 +1159,21 @@ function bindEvents() {
     });
   });
 
-  const createProjectButton = document.querySelector("[data-create-project]");
-  if (createProjectButton) {
-    createProjectButton.addEventListener("click", () => {
-      const name = window.prompt("새 프로젝트 폴더 이름을 입력하세요", "새 구조 프로젝트");
+  const projectNameInput = document.querySelector("[data-project-name-input]");
+  if (projectNameInput) {
+    projectNameInput.addEventListener("input", () => {
+      state.newProjectName = projectNameInput.value;
+    });
+  }
+
+  const createProjectForm = document.querySelector("[data-create-project-form]");
+  if (createProjectForm) {
+    createProjectForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = state.newProjectName.trim();
+      if (!name) return;
       state.projects = createProject(name);
+      state.newProjectName = "";
       state.currentProjectId = state.projects[state.projects.length - 1]?.id || DEFAULT_PROJECT_ID;
       state.isSidebarOpen = true;
       render();
