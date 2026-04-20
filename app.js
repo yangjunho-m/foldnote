@@ -587,10 +587,10 @@ function renderColorLegend(protein) {
     return `
       <div class="viewer-legend">
         <h3>색상 의미</h3>
-        <div><span style="background:#1f5eff"></span>매우 높음: 신뢰도 90+</div>
-        <div><span style="background:#19a7ce"></span>높음: 70-90</div>
-        <div><span style="background:#f2c94c"></span>낮음: 50-70</div>
-        <div><span style="background:#f97316"></span>매우 낮음: 50 미만</div>
+        <div><span style="background:#1f5eff"></span>파랑: 안정적이고 해석 신뢰가 높은 구간</div>
+        <div><span style="background:#19a7ce"></span>청록: 대체로 믿을 수 있는 접힘</div>
+        <div><span style="background:#f2c94c"></span>노랑: 유연하거나 조건에 따라 달라질 수 있음</div>
+        <div><span style="background:#f97316"></span>주황: 위치 해석을 조심해야 하는 구간</div>
       </div>
     `;
   }
@@ -611,9 +611,9 @@ function renderColorLegend(protein) {
     <div class="viewer-legend">
       <h3>색상 의미</h3>
       <div><span class="spectrum"></span>사슬의 처음부터 끝까지</div>
-      <div><span style="background:#58c4dd"></span>리본: 단백질 골격</div>
-      <div><span style="background:#4ade80"></span>스틱: 리간드/작은 분자</div>
-      <p>${protein.source === "AlphaFold" ? "신뢰도 버튼을 누르면 pLDDT 색상으로 바뀝니다." : "신뢰도 버튼은 B-factor 값을 기준으로 색을 입힙니다."}</p>
+      <div><span style="background:#58c4dd"></span>리본: 단백질의 주된 접힘 경로</div>
+      <div><span style="background:#4ade80"></span>스틱: 결합 부위의 작은 분자</div>
+      <div><span style="background:#f59e0b"></span>색 변화: 서로 다른 사슬/영역 구분</div>
     </div>
   `;
 }
