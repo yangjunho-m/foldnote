@@ -577,16 +577,6 @@
   background: rgba(255, 255, 255, 0.94);
   text-align: left;
   overflow: hidden;
-  transition:
-    border-color 150ms ease,
-    transform 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.result-card:hover {
-  border-color: rgba(49, 111, 246, 0.5);
-  box-shadow: var(--shadow);
-  transform: translateY(-1px);
 }
 
 .result-title-row {
@@ -608,6 +598,11 @@
   color: inherit;
   background: transparent;
   text-align: left;
+  transition: background 150ms ease;
+}
+
+.result-main:hover {
+  background: rgba(234, 242, 255, 0.42);
 }
 
 .english-name {
@@ -696,30 +691,44 @@
 .state-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .state-card {
   display: block;
   min-height: 126px;
-  padding: 11px;
-  border: 1px dashed rgba(49, 111, 246, 0.24);
+  padding: 12px;
+  border: 1px solid rgba(49, 111, 246, 0.18);
   border-radius: var(--radius);
   color: #445065;
-  background: rgba(255, 255, 255, 0.66);
+  background: rgba(255, 255, 255, 0.86);
   text-align: left;
+  box-shadow: 0 1px 0 rgba(24, 35, 58, 0.04);
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
 }
 
-.state-card.representative {
-  border-style: solid;
-  background: rgba(234, 242, 255, 0.54);
+.state-card:hover {
+  border-color: rgba(49, 111, 246, 0.52);
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(32, 43, 68, 0.12);
+  transform: translateY(-2px);
+}
+
+.state-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 9px;
 }
 
 .state-tag {
   display: inline-flex;
   min-height: 24px;
   align-items: center;
-  margin-bottom: 8px;
   padding: 0 8px;
   border-radius: 999px;
   color: #0754d6;
@@ -789,8 +798,7 @@
 }
 
 .app-shell.dark .pages-link,
-.app-shell.dark .workspace-folder-list button.active,
-.app-shell.dark .state-card.representative {
+.app-shell.dark .workspace-folder-list button.active {
   background: rgba(76, 132, 255, 0.14);
 }
 
@@ -802,6 +810,16 @@
 .app-shell.dark .state-card {
   color: #c9d2df;
   border-color: rgba(79, 140, 255, 0.26);
+}
+
+.app-shell.dark .result-main:hover,
+.app-shell.dark .state-card:hover {
+  background: rgba(31, 41, 55, 0.98);
+}
+
+.app-shell.dark .state-card:hover {
+  border-color: rgba(159, 193, 255, 0.58);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.38);
 }
 
 .app-shell.dark .state-tag,

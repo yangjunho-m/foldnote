@@ -393,7 +393,7 @@ function renderResults() {
                 <span>${protein.resultCount > 1 ? formatGroupedCount(protein.resultCount) : t("evidenceHint")}</span>
               </div>
               <div class="result-summary">
-                <strong>${t("representativeStructure")}</strong>
+                <strong>${t("selectedStructure")}</strong>
                 <p>${escapeHtml(localizedQuickSummary(protein))}</p>
               </div>
             </button>
@@ -417,17 +417,17 @@ function renderRelatedStates(protein, resultIndex) {
         <span>${t("stateComparisonHint")}</span>
       </div>
       <div class="state-grid">
-        <button class="state-card representative" type="button" data-result="${resultIndex}">
-          <span class="state-tag">#${escapeHtml(localizedStateLabel(protein))}</span>
-          <strong>${escapeHtml(getDisplayName(protein))}</strong>
+        <button class="state-card" type="button" data-result="${resultIndex}">
+          <div class="state-tags">${renderStructureTags(protein)}</div>
+          <strong>${escapeHtml(getOriginalStructureName(protein))}</strong>
           <p>${escapeHtml(localizedStateReason(protein) || protein.confidence || localizedQuickSummary(protein))}</p>
         </button>
       ${states
         .map(
           (stateItem) => `
             <button class="state-card" type="button" data-result-state="${resultIndex}:${escapeHtml(stateItem.id)}">
-              <span class="state-tag">#${escapeHtml(localizedStateLabel(stateItem))}</span>
-              <strong>${escapeHtml(getStateDisplayName(stateItem))}</strong>
+              <div class="state-tags">${renderStructureTags(stateItem)}</div>
+              <strong>${escapeHtml(getOriginalStructureName(stateItem))}</strong>
               <p>${escapeHtml(localizedStateReason(stateItem) || t("otherStateReason"))}</p>
             </button>
           `
@@ -1167,10 +1167,10 @@ function bindEvents() {
             name: getDisplayName(result),
             englishName: result.englishName,
             stateKey: result.stateKey,
-            stateLabel: result.stateLabel || "대표 구조",
-            stateLabelEn: result.stateLabelEn || "Representative structure",
-            stateReason: result.stateReason || "처음 선택한 대표 구조입니다.",
-            stateReasonEn: result.stateReasonEn || "This is the original representative structure.",
+            stateLabel: result.stateLabel || "선택 구조",
+            stateLabelEn: result.stateLabelEn || "Selected structure",
+            stateReason: result.stateReason || "처음 선택한 구조입니다.",
+            stateReasonEn: result.stateReasonEn || "This is the originally selected structure.",
             protein: result
           },
           ...(result.relatedStates || []).filter((item) => item.id !== stateId)
@@ -1269,10 +1269,10 @@ function bindEvents() {
             name: getDisplayName(state.selected),
             englishName: state.selected.englishName,
             stateKey: state.selected.stateKey,
-            stateLabel: state.selected.stateLabel || "대표 구조",
-            stateLabelEn: state.selected.stateLabelEn || "Representative structure",
-            stateReason: state.selected.stateReason || "처음 선택한 대표 구조입니다.",
-            stateReasonEn: state.selected.stateReasonEn || "This is the original representative structure.",
+            stateLabel: state.selected.stateLabel || "선택 구조",
+            stateLabelEn: state.selected.stateLabelEn || "Selected structure",
+            stateReason: state.selected.stateReason || "처음 선택한 구조입니다.",
+            stateReasonEn: state.selected.stateReasonEn || "This is the originally selected structure.",
             protein: state.selected
           },
           ...(state.selected.relatedStates || []).filter((item) => item.id !== related.id)
@@ -1618,11 +1618,11 @@ const translations = {
     organism: "생물종",
     evidenceHint: "전문 탭에서 논문 근거 확인",
     basicInfo: "기본정보",
-    groupedCount: "개 구조를 대표 1개로 묶음",
+    groupedCount: "개 구조 비교",
     otherStates: "다른 상태",
     otherState: "다른 상태",
     otherStateReason: "실험 조건이나 결합 상태가 다른 구조입니다.",
-    representativeStructure: "대표 구조",
+    selectedStructure: "선택 구조",
     stateComparison: "상태별 구조 비교",
     stateComparisonHint: "해시태그를 보고 구조-기능 차이를 나란히 확인하세요",
     description: "설명",
@@ -1659,11 +1659,11 @@ const translations = {
     organism: "Organism",
     evidenceHint: "Open the professional tab for literature evidence",
     basicInfo: "Basic info",
-    groupedCount: "structures grouped under one representative",
+    groupedCount: "structures to compare",
     otherStates: "Other states",
     otherState: "Other state",
     otherStateReason: "This structure differs by experimental condition, ligand, or binding state.",
-    representativeStructure: "Representative structure",
+    selectedStructure: "Selected structure",
     stateComparison: "State-by-state comparison",
     stateComparisonHint: "Use the hashtags to compare structure-function differences side by side.",
     description: "Description",
@@ -1719,6 +1719,33 @@ function getStateDisplayName(stateItem) {
   return stateItem.name || stateItem.koreanName || stateItem.englishName;
 }
 
+function getOriginalStructureName(item) {
+  return item.englishName || item.protein?.englishName || item.name || item.protein?.name || "";
+}
+
+function getStructureTagName(item) {
+  return item.protein?.name || item.name || item.koreanName || item.englishName || "Structure";
+}
+
+function getStructureTagId(item) {
+  return item.id || item.pdbId || item.protein?.pdbId || item.accession || item.protein?.accession || item.alphaFoldId || item.protein?.alphaFoldId || "";
+}
+
+function renderStructureTags(item) {
+  const tags = [getStructureTagName(item), getStructureTagId(item)]
+    .filter(Boolean)
+    .map((value) => `#${toHashTag(value)}`);
+  return tags.map((tag) => `<span class="state-tag">${escapeHtml(tag)}</span>`).join("");
+}
+
+function toHashTag(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w가-힣.-]/g, "")
+    .replace(/^-+|-+$/g, "");
+}
+
 function localizedStateLabel(item) {
   if (state.language === "en") {
     return item.stateLabelEn || stateLabelFallbackEn(item.stateLabel) || t("otherState");
@@ -1735,8 +1762,8 @@ function localizedStateReason(item) {
 
 function stateLabelFallbackEn(label) {
   const map = {
-    "대표": "Reference",
-    "대표 성인형": "Adult reference",
+    "선택 구조": "Selected structure",
+    "성인형": "Adult form",
     "산소 결합": "Oxygen-bound",
     "산소 결합형": "Oxygen-bound",
     "산소 없음": "Unbound",
@@ -1765,7 +1792,7 @@ function stateLabelFallbackEn(label) {
 
 function stateReasonFallbackEn(item) {
   const id = item.id || item.pdbId || item.accession || item.alphaFoldId || "this entry";
-  return `This related structure differs in condition, bound molecule, resolution, or assembly. Compare it with the representative structure to understand the functional difference. (${id})`;
+  return `This related structure differs in condition, bound molecule, resolution, or assembly. Compare it with the selected structure to understand the functional difference. (${id})`;
 }
 
 function renderProteinTitle(protein) {

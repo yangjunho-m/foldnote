@@ -217,7 +217,7 @@ function createMinimalPdbProtein(pdbId) {
       ["blue", "구조", "단백질의 전체적인 접힘과 사슬 구성을 볼 수 있습니다."],
       ["purple", "관찰 포인트", "리간드나 금속 이온이 있다면 활성 부위 주변을 먼저 살펴보세요."],
       ["green", "비교", "비슷한 단백질의 다른 구조와 비교하면 움직임이나 결합 차이를 이해하기 쉽습니다."],
-      ["amber", "해석 주의", "표시된 구조가 단백질의 모든 상태를 대표하지는 않을 수 있습니다."]
+      ["amber", "해석 주의", "표시된 구조가 단백질의 모든 상태를 보여주지는 않을 수 있습니다."]
     ]
   });
 }
@@ -334,10 +334,10 @@ function classifyHemoglobinState(protein, text) {
     return {
       koreanName: "헤모글로빈 A",
       stateKey: "adult",
-      stateLabel: "대표 성인형",
-      stateLabelEn: "Adult reference",
-      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id})`,
-      stateReasonEn: `The common adult hemoglobin reference. Use it as the baseline for comparing unbound, oxygen-bound, and variant forms. (${id})`
+      stateLabel: "성인형",
+      stateLabelEn: "Adult form",
+      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형과 비교할 때 기준점으로 쓰기 좋습니다. (${id})`,
+      stateReasonEn: `The common adult hemoglobin form. Use it as the baseline for comparing unbound, oxygen-bound, and variant forms. (${id})`
     };
   }
 
@@ -411,10 +411,10 @@ function classifyHemoglobinState(protein, text) {
     return {
       koreanName: "헤모글로빈 A",
       stateKey: "adult",
-      stateLabel: "대표 성인형",
-      stateLabelEn: "Adult reference",
-      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id || facts})`,
-      stateReasonEn: `The common adult hemoglobin reference. Use it as the baseline for comparing unbound, oxygen-bound, and variant forms. (${id || facts})`
+      stateLabel: "성인형",
+      stateLabelEn: "Adult form",
+      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형과 비교할 때 기준점으로 쓰기 좋습니다. (${id || facts})`,
+      stateReasonEn: `The common adult hemoglobin form. Use it as the baseline for comparing unbound, oxygen-bound, and variant forms. (${id || facts})`
     };
   }
 
@@ -445,7 +445,7 @@ function classifyHemoglobinState(protein, text) {
     stateKey: "condition",
     stateLabel: "실험 조건형",
     stateLabelEn: "Experimental condition",
-    stateReason: `같은 헤모글로빈이지만 등록된 실험 조건, 결합 분자, 해상도가 다른 구조입니다. 먼저 대표 성인형과 비교해 무엇이 붙었는지 확인합니다. (${id || facts})`,
+    stateReason: `같은 헤모글로빈이지만 등록된 실험 조건, 결합 분자, 해상도가 다른 구조입니다. 먼저 성인형과 비교해 무엇이 붙었는지 확인합니다. (${id || facts})`,
     stateReasonEn: `This is still hemoglobin, but its experimental condition, bound molecule, or resolution differs. Compare it against adult hemoglobin first. (${id || facts})`
   };
 }
@@ -548,8 +548,8 @@ function inferGenericState(protein) {
       stateKey: "transition",
       stateLabel: "전이상태 복합체",
       stateLabelEn: "Transition-state complex",
-      stateReason: `반응 중간 상태를 흉내 낸 구조입니다. 대표 구조와 비교하면 활성 부위가 기질을 처리하는 순간을 이해하기 좋습니다. (${id})`,
-      stateReasonEn: `This structure mimics a reaction intermediate. Compare it with the representative structure to understand how the active site handles the substrate. (${id})`
+      stateReason: `반응 중간 상태를 흉내 낸 구조입니다. 선택 구조와 비교하면 활성 부위가 기질을 처리하는 순간을 이해하기 좋습니다. (${id})`,
+      stateReasonEn: `This structure mimics a reaction intermediate. Compare it with the selected structure to understand how the active site handles the substrate. (${id})`
     };
   }
   if (/inhibitor|tosyl|ligand|bound|complex|substrate|product|drug|analog|analogue|calcium|zinc|metal/.test(text)) {
@@ -557,8 +557,8 @@ function inferGenericState(protein) {
       stateKey: "bound",
       stateLabel: "결합형",
       stateLabelEn: "Bound form",
-      stateReason: `억제제, 기질, 금속 이온 같은 분자가 결합한 구조입니다. 대표 구조와 비교하면 결합 부위와 기능 조절 위치가 드러납니다. (${id})`,
-      stateReasonEn: `A ligand, substrate, inhibitor, or metal ion is bound. Compare it with the representative structure to locate binding and regulation sites. (${id})`
+      stateReason: `억제제, 기질, 금속 이온 같은 분자가 결합한 구조입니다. 선택 구조와 비교하면 결합 부위와 기능 조절 위치가 드러납니다. (${id})`,
+      stateReasonEn: `A ligand, substrate, inhibitor, or metal ion is bound. Compare it with the selected structure to locate binding and regulation sites. (${id})`
     };
   }
   if (/dimer|trimer|tetramer|oligomer|assembly|multimer|hexamer/.test(text)) {
@@ -566,8 +566,8 @@ function inferGenericState(protein) {
       stateKey: "oligomer",
       stateLabel: "올리고머형",
       stateLabelEn: "Oligomeric form",
-      stateReason: `여러 사슬이 함께 있는 구조입니다. 대표 단량체 구조와 비교하면 사슬 사이 접촉면과 조립 상태를 볼 수 있습니다. (${id})`,
-      stateReasonEn: `Multiple chains are assembled together. Compare it with the representative structure to inspect chain interfaces and assembly state. (${id})`
+      stateReason: `여러 사슬이 함께 있는 구조입니다. 단량체 구조와 비교하면 사슬 사이 접촉면과 조립 상태를 볼 수 있습니다. (${id})`,
+      stateReasonEn: `Multiple chains are assembled together. Compare it with the selected structure to inspect chain interfaces and assembly state. (${id})`
     };
   }
   if (/mutant|variant|mutation/.test(text)) {
@@ -575,8 +575,8 @@ function inferGenericState(protein) {
       stateKey: "variant",
       stateLabel: "변이형",
       stateLabelEn: "Variant",
-      stateReason: `아미노산이 바뀐 구조입니다. 대표 구조와 비교하면 변이가 접힘, 표면 전하, 결합 부위에 주는 영향을 볼 수 있습니다. (${id})`,
-      stateReasonEn: `This structure contains a sequence change. Compare it with the representative structure to see effects on folding, surface charge, or binding. (${id})`
+      stateReason: `아미노산이 바뀐 구조입니다. 선택 구조와 비교하면 변이가 접힘, 표면 전하, 결합 부위에 주는 영향을 볼 수 있습니다. (${id})`,
+      stateReasonEn: `This structure contains a sequence change. Compare it with the selected structure to see effects on folding, surface charge, or binding. (${id})`
     };
   }
   if (/apo|unbound|free|unliganded/.test(text)) {
@@ -593,8 +593,8 @@ function inferGenericState(protein) {
       stateKey: "repeat_disruption",
       stateLabel: "반복 끊김 변형",
       stateLabelEn: "Repeat-disrupted fragment",
-      stateReason: `반복 서열이 끊기거나 변형된 단편 구조입니다. 대표 구조와 비교하면 반복성이 깨질 때 삼중나선 안정성이 어떻게 달라지는지 볼 수 있습니다. (${id}, ${resolutionText})`,
-      stateReasonEn: `This fragment contains a break or disruption in the repeat. Compare it with the representative structure to see how triple-helix stability changes. (${id}, ${resolutionText})`
+      stateReason: `반복 서열이 끊기거나 변형된 단편 구조입니다. 선택 구조와 비교하면 반복성이 깨질 때 삼중나선 안정성이 어떻게 달라지는지 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This fragment contains a break or disruption in the repeat. Compare it with the selected structure to see how triple-helix stability changes. (${id}, ${resolutionText})`
     };
   }
   if (/average|consensus/.test(text)) {
@@ -602,7 +602,7 @@ function inferGenericState(protein) {
       stateKey: "average_model",
       stateLabel: "평균 모델",
       stateLabelEn: "Averaged model",
-      stateReason: `여러 반복 단위의 평균적인 배열을 보여주는 구조입니다. 대표 구조로 삼으면 다른 단편들이 이 기준 배열에서 어떻게 벗어나는지 보기 좋습니다. (${id}, ${resolutionText})`,
+      stateReason: `여러 반복 단위의 평균적인 배열을 보여주는 구조입니다. 기준 구조로 삼으면 다른 단편들이 이 기준 배열에서 어떻게 벗어나는지 보기 좋습니다. (${id}, ${resolutionText})`,
       stateReasonEn: `This structure shows an averaged arrangement of repeat units. Use it as a baseline for seeing how other fragments deviate from the reference packing. (${id}, ${resolutionText})`
     };
   }
@@ -611,8 +611,8 @@ function inferGenericState(protein) {
       stateKey: "hydroxyproline_repeat",
       stateLabel: "Hyp 반복 단편",
       stateLabelEn: "Hyp-repeat fragment",
-      stateReason: `하이드록시프롤린(Hyp)이 들어간 반복 펩타이드 구조입니다. 대표 구조와 비교하면 콜라겐 삼중나선을 안정화하는 반복 서열 효과를 볼 수 있습니다. (${id}, ${resolutionText})`,
-      stateReasonEn: `This repeat peptide contains hydroxyproline (Hyp). Compare it with the representative structure to see how the repeat stabilizes the collagen triple helix. (${id}, ${resolutionText})`
+      stateReason: `하이드록시프롤린(Hyp)이 들어간 반복 펩타이드 구조입니다. 선택 구조와 비교하면 콜라겐 삼중나선을 안정화하는 반복 서열 효과를 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This repeat peptide contains hydroxyproline (Hyp). Compare it with the selected structure to see how the repeat stabilizes the collagen triple helix. (${id}, ${resolutionText})`
     };
   }
   if (/pro-pro-gly/.test(text)) {
@@ -620,8 +620,8 @@ function inferGenericState(protein) {
       stateKey: "proline_repeat",
       stateLabel: "Pro-Pro-Gly 반복",
       stateLabelEn: "Pro-Pro-Gly repeat",
-      stateReason: `Pro-Pro-Gly 반복 서열만 떼어 본 콜라겐 모델입니다. 대표 구조와 비교하면 반복 길이와 삼중나선 패킹 차이를 확인할 수 있습니다. (${id}, ${resolutionText})`,
-      stateReasonEn: `This collagen model isolates a Pro-Pro-Gly repeat. Compare it with the representative structure to inspect repeat length and triple-helix packing. (${id}, ${resolutionText})`
+      stateReason: `Pro-Pro-Gly 반복 서열만 떼어 본 콜라겐 모델입니다. 선택 구조와 비교하면 반복 길이와 삼중나선 패킹 차이를 확인할 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This collagen model isolates a Pro-Pro-Gly repeat. Compare it with the selected structure to inspect repeat length and triple-helix packing. (${id}, ${resolutionText})`
     };
   }
   if (/triple helix|triple-helical/.test(text)) {
@@ -629,8 +629,8 @@ function inferGenericState(protein) {
       stateKey: "triple_helix",
       stateLabel: "삼중나선 모델",
       stateLabelEn: "Triple-helix model",
-      stateReason: `콜라겐의 핵심 삼중나선 배열을 보여주는 구조입니다. 대표 구조와 비교하면 세 사슬의 감김과 수소결합 배열을 볼 수 있습니다. (${id}, ${resolutionText})`,
-      stateReasonEn: `This model emphasizes the collagen triple helix. Compare it with the representative structure to inspect chain wrapping and hydrogen-bond geometry. (${id}, ${resolutionText})`
+      stateReason: `콜라겐의 핵심 삼중나선 배열을 보여주는 구조입니다. 선택 구조와 비교하면 세 사슬의 감김과 수소결합 배열을 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This model emphasizes the collagen triple helix. Compare it with the selected structure to inspect chain wrapping and hydrogen-bond geometry. (${id}, ${resolutionText})`
     };
   }
   if (/model|fiber|fibre|peptide|fragment|collagen-like/.test(text)) {
@@ -638,8 +638,8 @@ function inferGenericState(protein) {
       stateKey: "model_fragment",
       stateLabel: "모델/단편 구조",
       stateLabelEn: "Model or fragment",
-      stateReason: `전체 단백질보다 반복 서열, 단편, 섬유 모델을 자세히 본 구조입니다. 대표 구조와 비교하면 특정 반복부나 섬유 배열이 어떻게 안정화되는지 볼 수 있습니다. (${id}, ${resolutionText})`,
-      stateReasonEn: `This focuses on a repeat, fragment, or fiber model rather than the whole protein. Compare it with the representative structure to understand local or fiber packing. (${id}, ${resolutionText})`
+      stateReason: `전체 단백질보다 반복 서열, 단편, 섬유 모델을 자세히 본 구조입니다. 선택 구조와 비교하면 특정 반복부나 섬유 배열이 어떻게 안정화되는지 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This focuses on a repeat, fragment, or fiber model rather than the whole protein. Compare it with the selected structure to understand local or fiber packing. (${id}, ${resolutionText})`
     };
   }
   if (/refined|high resolution|crystal structure|crystalline/.test(text) || Number.isFinite(resolution)) {
@@ -667,8 +667,8 @@ function describeDifferenceFromRepresentative(candidate, representative) {
   const baseEn = candidate.stateReasonEn || inferred.stateReasonEn;
   const repId = representative.pdbId || representative.accession || representative.alphaFoldId || representative.name;
   return {
-    ko: `${base} 대표 구조(${repId})와 비교해서 구조-기능 차이를 확인하세요.`,
-    en: `${baseEn} Compare it with the representative structure (${repId}) to understand the structure-function difference.`
+    ko: `${base} 선택 구조(${repId})와 비교해서 구조-기능 차이를 확인하세요.`,
+    en: `${baseEn} Compare it with the selected structure (${repId}) to understand the structure-function difference.`
   };
 }
 
