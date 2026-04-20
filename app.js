@@ -105,8 +105,6 @@ function scheduleSearch(query) {
   state.searchToken = token;
   state.error = "";
   state.notice = "";
-  state.isLoading = true;
-  render();
   state.debounceTimer = window.setTimeout(() => {
     searchRcsb(state.query, token);
   }, 650);
@@ -371,12 +369,21 @@ function renderResults() {
               <span>생물종: ${escapeHtml(protein.organism)}</span>
               <span>전문 탭에서 논문 근거 확인</span>
             </div>
+            <div class="result-summary">
+              <strong>기본정보</strong>
+              <p>${escapeHtml(protein.quickSummary || createQuickSummary(protein))}</p>
+            </div>
           </button>
         `
         )
         .join("")}
     </div>
   `;
+}
+
+function createQuickSummary(protein) {
+  const feature = protein.features?.find(([, title]) => /기능|구조|관찰/.test(title))?.[2];
+  return feature || `${protein.name}은 ${protein.organism}에서 보고된 ${protein.source} 구조로, 접힘과 결합 부위를 살펴볼 수 있습니다.`;
 }
 
 function renderHelpModal() {
@@ -982,8 +989,8 @@ function bindEvents() {
     }
   };
 
-  if (input && !state.isHelpOpen) {
-    input.focus();
+  if (input && !state.isHelpOpen && document.activeElement !== input) {
+    input.focus({ preventScroll: true });
     input.setSelectionRange(input.value.length, input.value.length);
     input.addEventListener("compositionstart", () => {
       state.isComposing = true;

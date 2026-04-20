@@ -165,6 +165,7 @@ function createProteinFromRcsb(pdbId, entry, entity) {
     pdbDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.pdb`,
     cifDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
     confidence: "실험으로 결정된 구조라서 전체 접힘과 원자 배치를 비교적 직접적으로 해석할 수 있습니다",
+    quickSummary: makeQuickSummary(displayName, organism, method),
     description: `${title} 구조입니다. ${organism}에서 유래한 단백질 또는 단백질 복합체로, 입체 구조를 통해 사슬의 접힘, 결합 부위, 보조인자나 리간드의 위치를 함께 살펴볼 수 있습니다.`,
     features: [
       ["blue", "구조", `${method}으로 관찰된 단백질 구조입니다.`],
@@ -191,6 +192,7 @@ function createMinimalPdbProtein(pdbId) {
     pdbDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.pdb`,
     cifDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
     confidence: "실험 구조 후보이지만 일부 상세 정보는 표시되지 않았습니다",
+    quickSummary: "PDB에 등록된 실험 구조 후보입니다. 전체 접힘, 사슬 배치, 결합 부위를 빠르게 확인할 수 있습니다.",
     description: `${pdbId} 구조입니다. 상세 주석은 제한적이지만, 3D 구조에서는 단백질의 전체 접힘과 사슬 배치를 직접 확인할 수 있습니다.`,
     features: [
       ["blue", "구조", "단백질의 전체적인 접힘과 사슬 구성을 볼 수 있습니다."],
@@ -225,6 +227,7 @@ function createProteinFromAlphaFold(record, structureUrl) {
     pdbDownloadUrl: structureUrl.replace(".cif", ".pdb"),
     cifDownloadUrl: structureUrl,
     confidence: "AlphaFold 예측 구조입니다. pLDDT가 높은 구간은 국소 접힘을 더 신뢰할 수 있고, 낮은 구간은 유연하거나 불확실할 수 있습니다.",
+    quickSummary: `${proteinName}의 예측 구조입니다. 전체 접힘과 도메인 배치를 먼저 이해하는 데 유용합니다.`,
     description:
       `${proteinName}의 예측 구조입니다. ${organism} 단백질로, 전체 접힘의 윤곽과 도메인 배치를 살펴보는 데 유용합니다. 다만 결합 상태나 복합체 형성은 별도 근거와 함께 해석하는 편이 좋습니다.`,
     features: [
@@ -253,4 +256,23 @@ function toTitleCase(value) {
   return String(value || "")
     .toLowerCase()
     .replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+}
+
+function makeQuickSummary(name, organism, method) {
+  const lowerName = String(name || "").toLowerCase();
+  const known = [
+    [/hemoglobin|haemoglobin/, "산소를 운반하는 혈액 단백질로, 헴 주변의 결합 구조가 핵심입니다."],
+    [/insulin/, "혈당 조절 신호를 전달하는 작은 호르몬 단백질입니다."],
+    [/p53|tumor protein p53/, "DNA 손상 반응과 세포주기 조절에 관여하는 종양 억제 단백질입니다."],
+    [/spike|glycoprotein/, "세포 표면 수용체와 결합해 감염이나 인식 과정에 관여하는 표면 단백질입니다."],
+    [/collagen/, "조직의 강도와 탄성을 만드는 긴 섬유성 구조 단백질입니다."],
+    [/lysozyme/, "세균 세포벽을 분해하는 효소로 결합 부위 구조를 보기 좋습니다."],
+    [/kinase/, "인산기를 붙여 세포 신호를 조절하는 효소 계열 단백질입니다."],
+    [/receptor/, "세포 안팎의 신호를 인식하고 전달하는 수용체 단백질입니다."],
+    [/antibody|immunoglobulin/, "항원을 인식해 면역 반응을 돕는 항체 단백질입니다."],
+    [/polymerase/, "DNA나 RNA 사슬을 합성하는 효소입니다."]
+  ];
+  const match = known.find(([pattern]) => pattern.test(lowerName));
+  if (match) return match[1];
+  return `${organism}에서 보고된 ${method} 구조입니다. 단백질의 접힘, 결합 부위, 상호작용 위치를 빠르게 파악할 수 있습니다.`;
 }

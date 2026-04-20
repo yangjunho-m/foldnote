@@ -538,6 +538,28 @@
   flex-wrap: wrap;
 }
 
+.result-summary {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(49, 111, 246, 0.14);
+  border-radius: var(--radius);
+  background: rgba(234, 242, 255, 0.48);
+}
+
+.result-summary strong {
+  display: block;
+  color: #0754d6;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.result-summary p {
+  margin: 0;
+  color: #384152;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .code-pill {
   padding: 2px 8px;
   border-radius: 5px;

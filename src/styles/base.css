@@ -209,6 +209,14 @@ button {
   color: #c9d2df;
 }
 
+.app-shell.dark .result-summary {
+  background: rgba(76, 132, 255, 0.12);
+}
+
+.app-shell.dark .result-summary p {
+  color: #c9d2df;
+}
+
 .app-shell.dark .search-input {
   border-color: var(--line);
 }
