@@ -59,6 +59,17 @@
     grid-template-columns: 1fr;
   }
 
+  .project-workspace,
+  .project-controls,
+  .recent-list,
+  .pro-module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-controls {
+    display: grid;
+  }
+
   .viewer-toolbar {
     flex-direction: column;
   }
@@ -88,7 +99,8 @@
   .meta-grid,
   .tool-grid,
   .action-row,
-  .check-grid {
+  .check-grid,
+  .variant-box {
     grid-template-columns: 1fr;
   }
 
@@ -114,5 +126,19 @@
   .source-links a {
     flex: 1 1 calc(50% - 8px);
     justify-content: center;
+  }
+
+  .report-backdrop {
+    padding: 12px;
+    align-items: end;
+  }
+
+  .report-modal {
+    max-height: calc(100vh - 24px);
+    padding: 22px 18px;
+  }
+
+  .report-head {
+    display: block;
   }
 }

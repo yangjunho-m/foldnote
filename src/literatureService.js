@@ -47,6 +47,7 @@ export async function fetchLiteratureEvidence(protein) {
     query,
     articles,
     summary: summarizeArticles(articles, protein),
+    claims: buildEvidenceClaims(articles, protein),
     relatedEntities: findRelatedEntities(articles)
   };
 }
@@ -116,6 +117,30 @@ function summarizeArticles(articles, protein) {
   return rankedSentences.map(
     ({ sentence, source }) => `${sentence} (${source.year}, ${source.journal})`
   );
+}
+
+function buildEvidenceClaims(articles, protein) {
+  if (!articles.length) return [];
+
+  const proteinTerms = [protein.name, protein.englishName, protein.pdbId, protein.accession]
+    .filter(Boolean)
+    .flatMap((term) => String(term).toLowerCase().split(/[^a-z0-9]+/))
+    .filter((term) => term.length > 2);
+
+  return articles
+    .flatMap((article) =>
+      splitSentences(article.abstractText).map((sentence) => ({
+        sentence,
+        score: scoreSentence(sentence, proteinTerms),
+        sourceTitle: article.title,
+        sourceUrl: article.url,
+        journal: article.journal,
+        year: article.year
+      }))
+    )
+    .filter((claim) => claim.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
 }
 
 function scoreSentence(sentence, proteinTerms) {

@@ -184,6 +184,9 @@ button {
 .app-shell.dark .result-card,
 .app-shell.dark .recommend-box,
 .app-shell.dark .recommend-card,
+.app-shell.dark .project-workspace,
+.app-shell.dark .recent-strip,
+.app-shell.dark .recent-list button,
 .app-shell.dark .saved-notes,
 .app-shell.dark .saved-note-card,
 .app-shell.dark .status-card,
@@ -195,6 +198,7 @@ button {
 .app-shell.dark .result-title,
 .app-shell.dark .recommend-card strong,
 .app-shell.dark .saved-note-card strong,
+.app-shell.dark .recent-list strong,
 .app-shell.dark .protein-heading h2,
 .app-shell.dark .section h3,
 .app-shell.dark .metric strong {
