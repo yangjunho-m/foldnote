@@ -63,17 +63,21 @@ button {
 }
 
 .app-shell.dark {
-  --background: #10131a;
-  --surface: #171c26;
-  --surface-soft: #202737;
-  --foreground: #f6f8fb;
-  --muted: #aab3c2;
-  --line: rgba(255, 255, 255, 0.12);
-  --primary-soft: rgba(76, 132, 255, 0.18);
+  --background: #0b0f17;
+  --surface: #121826;
+  --surface-soft: #1a2233;
+  --foreground: #e6edf3;
+  --muted: #9aa4b2;
+  --line: rgba(255, 255, 255, 0.06);
+  --primary: #4f8cff;
+  --primary-deep: #7c5cff;
+  --primary-soft: rgba(79, 140, 255, 0.12);
+  --purple-soft: rgba(124, 92, 255, 0.12);
+  --green-soft: rgba(34, 197, 94, 0.12);
+  --amber-soft: rgba(245, 158, 11, 0.12);
   background:
-    radial-gradient(circle at 78% 20%, rgba(49, 111, 246, 0.12), transparent 32%),
-    linear-gradient(180deg, #121722 0%, #171c26 52%, #10131a 100%);
-  color: var(--foreground);
+    radial-gradient(circle at 80% 20%, rgba(79, 140, 255, 0.08), transparent 40%),
+    linear-gradient(180deg, #0b0f17 0%, #121826 100%);
 }
 
 .topbar {
