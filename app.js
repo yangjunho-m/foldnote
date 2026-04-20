@@ -393,8 +393,8 @@ function renderResults() {
                 <span>${protein.resultCount > 1 ? formatGroupedCount(protein.resultCount) : t("evidenceHint")}</span>
               </div>
               <div class="result-summary">
-                <strong>대표 구조</strong>
-                <p>${escapeHtml(protein.quickSummary || createQuickSummary(protein))}</p>
+                <strong>${t("representativeStructure")}</strong>
+                <p>${escapeHtml(localizedQuickSummary(protein))}</p>
               </div>
             </button>
             ${renderRelatedStates(protein, index)}
@@ -413,22 +413,22 @@ function renderRelatedStates(protein, resultIndex) {
   return `
     <div class="state-comparison" aria-label="${t("otherStates")}">
       <div class="state-comparison-head">
-        <strong>상태별 구조 비교</strong>
-        <span>해시태그를 보고 구조-기능 차이를 나란히 확인하세요</span>
+        <strong>${t("stateComparison")}</strong>
+        <span>${t("stateComparisonHint")}</span>
       </div>
       <div class="state-grid">
         <button class="state-card representative" type="button" data-result="${resultIndex}">
-          <span class="state-tag">#대표</span>
+          <span class="state-tag">#${escapeHtml(localizedStateLabel(protein))}</span>
           <strong>${escapeHtml(getDisplayName(protein))}</strong>
-          <p>${escapeHtml(protein.stateReason || protein.confidence || createQuickSummary(protein))}</p>
+          <p>${escapeHtml(localizedStateReason(protein) || protein.confidence || localizedQuickSummary(protein))}</p>
         </button>
       ${states
         .map(
           (stateItem) => `
             <button class="state-card" type="button" data-result-state="${resultIndex}:${escapeHtml(stateItem.id)}">
-              <span class="state-tag">#${escapeHtml(stateItem.stateLabel || t("otherState"))}</span>
-              <strong>${escapeHtml(stateItem.name)}</strong>
-              <p>${escapeHtml(stateItem.stateReason || t("otherStateReason"))}</p>
+              <span class="state-tag">#${escapeHtml(localizedStateLabel(stateItem))}</span>
+              <strong>${escapeHtml(getStateDisplayName(stateItem))}</strong>
+              <p>${escapeHtml(localizedStateReason(stateItem) || t("otherStateReason"))}</p>
             </button>
           `
         )
@@ -439,8 +439,50 @@ function renderRelatedStates(protein, resultIndex) {
 }
 
 function createQuickSummary(protein) {
+  if (state.language === "en") return createEnglishQuickSummary(protein);
   const feature = protein.features?.find(([, title]) => /기능|구조|관찰/.test(title))?.[2];
   return feature || `${protein.name}은 ${protein.organism}에서 보고된 ${protein.source} 구조로, 접힘과 결합 부위를 살펴볼 수 있습니다.`;
+}
+
+function localizedQuickSummary(protein) {
+  if (state.language === "en") {
+    return protein.quickSummaryEn || createEnglishQuickSummary(protein);
+  }
+  return protein.quickSummary || createQuickSummary(protein);
+}
+
+function createEnglishQuickSummary(protein) {
+  const label = protein.stateLabelEn || stateLabelFallbackEn(protein.stateLabel) || "structure";
+  const name = protein.englishName || protein.name || "This protein";
+  const source = protein.source || "structure";
+  const organism = protein.organism && protein.organism !== "정보 없음" ? ` from ${protein.organism}` : "";
+  return `${name} is a ${source} ${label.toLowerCase()}${organism}. Compare its fold, binding sites, and assembly against the related structures.`;
+}
+
+function localizedDescription(protein) {
+  if (state.language === "en") {
+    return `${protein.englishName || protein.name} is shown as a ${localizedStateLabel(protein).toLowerCase()} structure. Use it with the related state cards to compare what changed: ligand binding, resolution, repeat fragment, mutation, or chain assembly.`;
+  }
+  return protein.description || localizedQuickSummary(protein);
+}
+
+function localizedFeatures(protein) {
+  if (state.language !== "en") return protein.features || [];
+  return [
+    ["blue", "Function", "Connect the visible fold to the protein's biological role."],
+    ["purple", "Structure", "Compare helices, strands, loops, chains, and repeated motifs."],
+    ["green", "What to inspect", "Look for ligands, metal ions, chain interfaces, mutations, and local fragments."],
+    ["amber", "Caution", "Each structure is one experimental or predicted state, not every possible state of the protein."]
+  ];
+}
+
+function localizedConfidence(protein) {
+  if (state.language === "en") {
+    return protein.source === "AlphaFold"
+      ? "This is a predicted model. Use the confidence coloring to separate reliable regions from flexible or uncertain regions."
+      : "This is an experimental structure. Resolution, B-factors, missing residues, and bound molecules should be checked before interpreting fine details.";
+  }
+  return `${protein.confidence}입니다. AlphaFold 구조라면 잔기별 pLDDT 색상과 낮은 신뢰도 구간을 반드시 함께 보여주는 것이 좋습니다.`;
 }
 
 function renderHelpModal() {
@@ -609,8 +651,8 @@ function renderSelectedRelatedStates(protein) {
           .map(
             (stateItem) => `
               <button type="button" data-related-state="${escapeHtml(stateItem.id)}">
-                <strong>${escapeHtml(stateItem.stateLabel)} · ${escapeHtml(stateItem.name)}</strong>
-                <span>${escapeHtml(stateItem.stateReason)}</span>
+                <strong>${escapeHtml(localizedStateLabel(stateItem))} · ${escapeHtml(getStateDisplayName(stateItem))}</strong>
+                <span>${escapeHtml(localizedStateReason(stateItem))}</span>
               </button>
             `
           )
@@ -623,14 +665,14 @@ function renderSelectedRelatedStates(protein) {
 function renderUnifiedInfo(protein) {
   return `
     <section class="section">
-      <h3>설명</h3>
-      <p>${escapeHtml(protein.description)}</p>
+      <h3>${t("description")}</h3>
+      <p>${escapeHtml(localizedDescription(protein))}</p>
     </section>
 
     <section class="section">
-      <h3>주요 특징</h3>
+      <h3>${t("keyFeatures")}</h3>
       <div class="feature-list">
-        ${protein.features
+        ${localizedFeatures(protein)
           .map(
             ([tone, title, text]) => `
               <div class="feature ${tone}">
@@ -643,8 +685,8 @@ function renderUnifiedInfo(protein) {
     </section>
 
     <section class="section">
-      <h3>신뢰도</h3>
-      <p>${escapeHtml(protein.confidence)}입니다. AlphaFold 구조라면 잔기별 pLDDT 색상과 낮은 신뢰도 구간을 반드시 함께 보여주는 것이 좋습니다.</p>
+      <h3>${t("confidence")}</h3>
+      <p>${escapeHtml(localizedConfidence(protein))}</p>
     </section>
 
     ${renderComparisonPanel(protein)}
@@ -880,8 +922,8 @@ function renderComparisonPanel(protein) {
               .map(
                 (stateItem) => `
                   <button type="button" data-related-state="${escapeHtml(stateItem.id)}">
-                    <strong>#${escapeHtml(stateItem.stateLabel)} · ${escapeHtml(stateItem.name)}</strong>
-                    <span>${escapeHtml(stateItem.stateReason)}</span>
+                    <strong>#${escapeHtml(localizedStateLabel(stateItem))} · ${escapeHtml(getStateDisplayName(stateItem))}</strong>
+                    <span>${escapeHtml(localizedStateReason(stateItem))}</span>
                   </button>
                 `
               )
@@ -1124,8 +1166,11 @@ function bindEvents() {
             id: getProteinKey(result),
             name: getDisplayName(result),
             englishName: result.englishName,
-            stateLabel: result.stateLabel || "대표",
-            stateReason: result.stateReason || "대표 구조입니다.",
+            stateKey: result.stateKey,
+            stateLabel: result.stateLabel || "대표 구조",
+            stateLabelEn: result.stateLabelEn || "Representative structure",
+            stateReason: result.stateReason || "처음 선택한 대표 구조입니다.",
+            stateReasonEn: result.stateReasonEn || "This is the original representative structure.",
             protein: result
           },
           ...(result.relatedStates || []).filter((item) => item.id !== stateId)
@@ -1223,8 +1268,11 @@ function bindEvents() {
             id: getProteinKey(state.selected),
             name: getDisplayName(state.selected),
             englishName: state.selected.englishName,
-            stateLabel: state.selected.stateLabel || "대표",
+            stateKey: state.selected.stateKey,
+            stateLabel: state.selected.stateLabel || "대표 구조",
+            stateLabelEn: state.selected.stateLabelEn || "Representative structure",
             stateReason: state.selected.stateReason || "처음 선택한 대표 구조입니다.",
+            stateReasonEn: state.selected.stateReasonEn || "This is the original representative structure.",
             protein: state.selected
           },
           ...(state.selected.relatedStates || []).filter((item) => item.id !== related.id)
@@ -1574,6 +1622,11 @@ const translations = {
     otherStates: "다른 상태",
     otherState: "다른 상태",
     otherStateReason: "실험 조건이나 결합 상태가 다른 구조입니다.",
+    representativeStructure: "대표 구조",
+    stateComparison: "상태별 구조 비교",
+    stateComparisonHint: "해시태그를 보고 구조-기능 차이를 나란히 확인하세요",
+    description: "설명",
+    keyFeatures: "주요 특징",
     structureView: "실제 구조 시각화",
     cartoon: "리본",
     stick: "스틱",
@@ -1610,6 +1663,11 @@ const translations = {
     otherStates: "Other states",
     otherState: "Other state",
     otherStateReason: "This structure differs by experimental condition, ligand, or binding state.",
+    representativeStructure: "Representative structure",
+    stateComparison: "State-by-state comparison",
+    stateComparisonHint: "Use the hashtags to compare structure-function differences side by side.",
+    description: "Description",
+    keyFeatures: "Key features",
     structureView: "structure viewer",
     cartoon: "Ribbon",
     stick: "Stick",
@@ -1652,6 +1710,62 @@ function getSecondaryName(protein) {
     return protein.englishName || protein.name;
   }
   return protein.koreanName || protein.name;
+}
+
+function getStateDisplayName(stateItem) {
+  if (state.language === "en") {
+    return stateItem.englishName || stateItem.name;
+  }
+  return stateItem.name || stateItem.koreanName || stateItem.englishName;
+}
+
+function localizedStateLabel(item) {
+  if (state.language === "en") {
+    return item.stateLabelEn || stateLabelFallbackEn(item.stateLabel) || t("otherState");
+  }
+  return item.stateLabel || t("otherState");
+}
+
+function localizedStateReason(item) {
+  if (state.language === "en") {
+    return item.stateReasonEn || stateReasonFallbackEn(item);
+  }
+  return item.stateReason || t("otherStateReason");
+}
+
+function stateLabelFallbackEn(label) {
+  const map = {
+    "대표": "Reference",
+    "대표 성인형": "Adult reference",
+    "산소 결합": "Oxygen-bound",
+    "산소 결합형": "Oxygen-bound",
+    "산소 없음": "Unbound",
+    "비결합형": "Unbound",
+    "CO 결합": "CO-bound",
+    "CO 결합형": "CO-bound",
+    "산화형": "Oxidized",
+    "태아형": "Fetal form",
+    "변이형": "Variant",
+    "결합형": "Bound form",
+    "전이상태 복합체": "Transition-state complex",
+    "올리고머형": "Oligomeric form",
+    "모델/단편 구조": "Model or fragment",
+    "평균 모델": "Averaged model",
+    "Hyp 반복 단편": "Hyp-repeat fragment",
+    "Pro-Pro-Gly 반복": "Pro-Pro-Gly repeat",
+    "삼중나선 모델": "Triple-helix model",
+    "반복 끊김 변형": "Repeat-disrupted fragment",
+    "정제 결정 구조": "Refined crystal structure",
+    "고해상도 결정 구조": "High-resolution crystal",
+    "실험 조건형": "Experimental condition",
+    "다른 후보": "Other candidate"
+  };
+  return map[label] || "";
+}
+
+function stateReasonFallbackEn(item) {
+  const id = item.id || item.pdbId || item.accession || item.alphaFoldId || "this entry";
+  return `This related structure differs in condition, bound molecule, resolution, or assembly. Compare it with the representative structure to understand the functional difference. (${id})`;
 }
 
 function renderProteinTitle(protein) {

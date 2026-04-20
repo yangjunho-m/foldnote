@@ -268,8 +268,11 @@ function addLocalizedMetadata(protein) {
     ...protein,
     koreanName: state?.koreanName || protein.koreanName || match.koreanName,
     family: protein.family || match.family,
-    stateLabel: state?.stateLabel || protein.stateLabel || match.stateLabel,
-    stateReason: state?.stateReason || protein.stateReason || match.stateReason
+    stateKey: state?.stateKey || protein.stateKey,
+    stateLabel: state?.stateLabel || protein.stateLabel,
+    stateLabelEn: state?.stateLabelEn || protein.stateLabelEn,
+    stateReason: state?.stateReason || protein.stateReason,
+    stateReasonEn: state?.stateReasonEn || protein.stateReasonEn
   });
 }
 
@@ -279,8 +282,11 @@ function addGenericMetadata(protein) {
   return {
     ...protein,
     family,
+    stateKey: protein.stateKey || state.stateKey,
     stateLabel: protein.stateLabel || state.stateLabel,
-    stateReason: protein.stateReason || state.stateReason
+    stateLabelEn: protein.stateLabelEn || state.stateLabelEn,
+    stateReason: protein.stateReason || state.stateReason,
+    stateReasonEn: protein.stateReasonEn || state.stateReasonEn
   };
 }
 
@@ -296,8 +302,11 @@ function addSearchContextMetadata(protein, query) {
       ...protein,
       koreanName: protein.koreanName || state.koreanName,
       family: "헤모글로빈",
+      stateKey: state.stateKey,
       stateLabel: state.stateLabel,
-      stateReason: state.stateReason
+      stateLabelEn: state.stateLabelEn,
+      stateReason: state.stateReason,
+      stateReasonEn: state.stateReasonEn
     };
   }
 
@@ -324,87 +333,120 @@ function classifyHemoglobinState(protein, text) {
   if (id === "4HHB") {
     return {
       koreanName: "헤모글로빈 A",
+      stateKey: "adult",
       stateLabel: "대표 성인형",
-      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id})`
+      stateLabelEn: "Adult reference",
+      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id})`,
+      stateReasonEn: `The common adult hemoglobin reference. Use it as the baseline for comparing unbound, oxygen-bound, and variant forms. (${id})`
     };
   }
 
   if (id === "1HHO") {
     return {
       koreanName: "산소 결합 헤모글로빈",
+      stateKey: "oxygen_bound",
       stateLabel: "산소 결합형",
-      stateReason: `산소가 헴에 붙은 R 상태에 가까운 구조입니다. 산소가 붙으며 친화도가 높아지는 협동성 설명에 좋습니다. (${id})`
+      stateLabelEn: "Oxygen-bound",
+      stateReason: `산소가 헴에 붙은 R 상태에 가까운 구조입니다. 산소가 붙으며 친화도가 높아지는 협동성 설명에 좋습니다. (${id})`,
+      stateReasonEn: `Oxygen is bound to the heme groups, close to the relaxed R state. Compare it with the unbound form to see cooperative oxygen binding. (${id})`
     };
   }
 
   if (id === "2HHB") {
     return {
       koreanName: "데옥시헤모글로빈",
+      stateKey: "unbound",
       stateLabel: "비결합형",
-      stateReason: `산소가 붙지 않은 T 상태 구조입니다. 산소 결합형과 비교하면 사슬 사이 배치와 헴 주변 위치가 달라집니다. (${id})`
+      stateLabelEn: "Unbound",
+      stateReason: `산소가 붙지 않은 T 상태 구조입니다. 산소 결합형과 비교하면 사슬 사이 배치와 헴 주변 위치가 달라집니다. (${id})`,
+      stateReasonEn: `Oxygen is not bound, so this is close to the tense T state. Compare it with the oxygen-bound form to see chain and heme rearrangements. (${id})`
     };
   }
 
   if (/2hhb|deoxy|unliganded|t-state|tense/.test(value)) {
     return {
       koreanName: "데옥시헤모글로빈",
+      stateKey: "unbound",
       stateLabel: "비결합형",
-      stateReason: `산소가 붙지 않은 T 상태 구조입니다. 산소 결합형과 비교하면 사슬 사이 배치와 헴 주변 위치가 달라집니다. (${id || facts})`
+      stateLabelEn: "Unbound",
+      stateReason: `산소가 붙지 않은 T 상태 구조입니다. 산소 결합형과 비교하면 사슬 사이 배치와 헴 주변 위치가 달라집니다. (${id || facts})`,
+      stateReasonEn: `Oxygen is not bound, so this is close to the tense T state. Compare it with oxygen-bound hemoglobin to see chain and heme rearrangements. (${id || facts})`
     };
   }
 
   if (/1hho|oxy|oxygenated|o2|liganded|r-state|relaxed/.test(value)) {
     return {
       koreanName: "산소 결합 헤모글로빈",
+      stateKey: "oxygen_bound",
       stateLabel: "산소 결합형",
-      stateReason: `산소가 헴에 붙은 R 상태에 가까운 구조입니다. 산소가 붙으며 친화도가 높아지는 협동성 설명에 좋습니다. (${id || facts})`
+      stateLabelEn: "Oxygen-bound",
+      stateReason: `산소가 헴에 붙은 R 상태에 가까운 구조입니다. 산소가 붙으며 친화도가 높아지는 협동성 설명에 좋습니다. (${id || facts})`,
+      stateReasonEn: `Oxygen is bound to heme, close to the relaxed R state. It helps explain why later oxygen molecules bind more easily. (${id || facts})`
     };
   }
 
   if (/carbonmonoxy|carboxy|carbon monoxide|\bco\b|co-/.test(value)) {
     return {
       koreanName: "일산화탄소 결합 헤모글로빈",
+      stateKey: "co_bound",
       stateLabel: "CO 결합형",
-      stateReason: `일산화탄소가 헴에 붙은 구조입니다. 산소보다 강하게 결합하는 이유와 중독 위험을 설명할 때 씁니다. (${id || facts})`
+      stateLabelEn: "CO-bound",
+      stateReason: `일산화탄소가 헴에 붙은 구조입니다. 산소보다 강하게 결합하는 이유와 중독 위험을 설명할 때 씁니다. (${id || facts})`,
+      stateReasonEn: `Carbon monoxide is bound to heme. Compare it with oxygen-bound hemoglobin to explain stronger binding and poisoning risk. (${id || facts})`
     };
   }
 
   if (/methemoglobin|met|ferric|aquomet|cyanomet/.test(value)) {
     return {
       koreanName: "메트헤모글로빈",
+      stateKey: "oxidized",
       stateLabel: "산화형",
-      stateReason: `철이 산화되었거나 물/시안화물이 결합한 상태입니다. 산소 운반이 어려운 변형 상태를 비교할 때 좋습니다. (${id || facts})`
+      stateLabelEn: "Oxidized",
+      stateReason: `철이 산화되었거나 물/시안화물이 결합한 상태입니다. 산소 운반이 어려운 변형 상태를 비교할 때 좋습니다. (${id || facts})`,
+      stateReasonEn: `The heme iron is oxidized or bound to water/cyanide. Use it to compare a form that cannot carry oxygen normally. (${id || facts})`
     };
   }
 
   if (/4hhb|adult|hemoglobin a|haemoglobin a/.test(value)) {
     return {
       koreanName: "헤모글로빈 A",
+      stateKey: "adult",
       stateLabel: "대표 성인형",
-      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id || facts})`
+      stateLabelEn: "Adult reference",
+      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id || facts})`,
+      stateReasonEn: `The common adult hemoglobin reference. Use it as the baseline for comparing unbound, oxygen-bound, and variant forms. (${id || facts})`
     };
   }
 
   if (/fetal|hemoglobin f|haemoglobin f/.test(value)) {
     return {
       koreanName: "태아 헤모글로빈",
+      stateKey: "fetal",
       stateLabel: "태아형",
-      stateReason: `태아에서 산소를 더 잘 붙잡도록 사슬 조성이 다른 형태입니다. 성인형과 산소 친화도 차이를 비교합니다. (${id || facts})`
+      stateLabelEn: "Fetal form",
+      stateReason: `태아에서 산소를 더 잘 붙잡도록 사슬 조성이 다른 형태입니다. 성인형과 산소 친화도 차이를 비교합니다. (${id || facts})`,
+      stateReasonEn: `This fetal form has a different chain composition that helps bind oxygen more tightly than adult hemoglobin. (${id || facts})`
     };
   }
 
   if (/sickle|mutant|variant|mutation|hb s|hbs/.test(value)) {
     return {
       koreanName: "변이 헤모글로빈",
+      stateKey: "variant",
       stateLabel: "변이형",
-      stateReason: `아미노산 변이 또는 질환 관련 구조입니다. 정상 성인형과 비교해 표면 전하와 사슬 접촉 차이를 봅니다. (${id || facts})`
+      stateLabelEn: "Variant",
+      stateReason: `아미노산 변이 또는 질환 관련 구조입니다. 정상 성인형과 비교해 표면 전하와 사슬 접촉 차이를 봅니다. (${id || facts})`,
+      stateReasonEn: `This disease- or mutation-related structure is useful for comparing surface charge and chain contacts against normal adult hemoglobin. (${id || facts})`
     };
   }
 
   return {
     koreanName: "헤모글로빈",
+    stateKey: "condition",
     stateLabel: "실험 조건형",
-    stateReason: `같은 헤모글로빈이지만 등록된 실험 조건, 결합 분자, 해상도가 다른 구조입니다. 먼저 대표 성인형과 비교해 무엇이 붙었는지 확인합니다. (${id || facts})`
+    stateLabelEn: "Experimental condition",
+    stateReason: `같은 헤모글로빈이지만 등록된 실험 조건, 결합 분자, 해상도가 다른 구조입니다. 먼저 대표 성인형과 비교해 무엇이 붙었는지 확인합니다. (${id || facts})`,
+    stateReasonEn: `This is still hemoglobin, but its experimental condition, bound molecule, or resolution differs. Compare it against adult hemoglobin first. (${id || facts})`
   };
 }
 
@@ -429,17 +471,23 @@ function groupRelatedStructures(results, query) {
       const relatedStates = items
         .filter((item) => getStructureId(item) !== getStructureId(representative))
         .slice(0, 5)
-        .map((item) => ({
-          id: getStructureId(item),
-          name: item.koreanName || item.name,
-          englishName: item.englishName || item.name,
-          stateLabel: item.stateLabel || "다른 후보",
-          stateReason: describeDifferenceFromRepresentative(item, representative),
-          method: item.method,
-          resolution: item.resolution,
-          source: item.source,
-          protein: item
-        }));
+        .map((item) => {
+          const difference = describeDifferenceFromRepresentative(item, representative);
+          return {
+            id: getStructureId(item),
+            name: item.koreanName || item.name,
+            englishName: item.englishName || item.name,
+            stateKey: item.stateKey,
+            stateLabel: item.stateLabel || "다른 후보",
+            stateLabelEn: item.stateLabelEn || "Other candidate",
+            stateReason: difference.ko,
+            stateReasonEn: difference.en,
+            method: item.method,
+            resolution: item.resolution,
+            source: item.source,
+            protein: item
+          };
+        });
 
       return {
         ...representative,
@@ -490,56 +538,138 @@ function normalizeFamilyName(value) {
 }
 
 function inferGenericState(protein) {
-  const text = `${protein.name || ""} ${protein.englishName || ""} ${protein.pdbId || ""}`.toLowerCase();
+  const text = `${protein.name || ""} ${protein.englishName || ""} ${protein.pdbId || ""} ${protein.method || ""} ${protein.resolution || ""}`.toLowerCase();
   const id = protein.pdbId || protein.accession || protein.alphaFoldId || "ID 없음";
+  const resolution = Number.parseFloat(protein.resolution);
+  const resolutionText = Number.isFinite(resolution) ? `${resolution} A` : protein.resolution || "resolution unknown";
 
   if (/transition state|tetrahedral/.test(text)) {
     return {
+      stateKey: "transition",
       stateLabel: "전이상태 복합체",
-      stateReason: `반응 중간 상태를 흉내 낸 구조입니다. 대표 구조와 비교하면 활성 부위가 기질을 처리하는 순간을 이해하기 좋습니다. (${id})`
+      stateLabelEn: "Transition-state complex",
+      stateReason: `반응 중간 상태를 흉내 낸 구조입니다. 대표 구조와 비교하면 활성 부위가 기질을 처리하는 순간을 이해하기 좋습니다. (${id})`,
+      stateReasonEn: `This structure mimics a reaction intermediate. Compare it with the representative structure to understand how the active site handles the substrate. (${id})`
     };
   }
-  if (/inhibitor|tosyl|ligand|bound|complex/.test(text)) {
+  if (/inhibitor|tosyl|ligand|bound|complex|substrate|product|drug|analog|analogue|calcium|zinc|metal/.test(text)) {
     return {
+      stateKey: "bound",
       stateLabel: "결합형",
-      stateReason: `억제제나 리간드가 결합한 구조입니다. 대표 구조와 비교하면 결합 부위와 기능 조절 위치가 드러납니다. (${id})`
+      stateLabelEn: "Bound form",
+      stateReason: `억제제, 기질, 금속 이온 같은 분자가 결합한 구조입니다. 대표 구조와 비교하면 결합 부위와 기능 조절 위치가 드러납니다. (${id})`,
+      stateReasonEn: `A ligand, substrate, inhibitor, or metal ion is bound. Compare it with the representative structure to locate binding and regulation sites. (${id})`
     };
   }
-  if (/dimer|trimer|tetramer|oligomer/.test(text)) {
+  if (/dimer|trimer|tetramer|oligomer|assembly|multimer|hexamer/.test(text)) {
     return {
+      stateKey: "oligomer",
       stateLabel: "올리고머형",
-      stateReason: `여러 사슬이 함께 있는 구조입니다. 대표 단량체 구조와 비교하면 사슬 사이 접촉면과 조립 상태를 볼 수 있습니다. (${id})`
+      stateLabelEn: "Oligomeric form",
+      stateReason: `여러 사슬이 함께 있는 구조입니다. 대표 단량체 구조와 비교하면 사슬 사이 접촉면과 조립 상태를 볼 수 있습니다. (${id})`,
+      stateReasonEn: `Multiple chains are assembled together. Compare it with the representative structure to inspect chain interfaces and assembly state. (${id})`
     };
   }
   if (/mutant|variant|mutation/.test(text)) {
     return {
+      stateKey: "variant",
       stateLabel: "변이형",
-      stateReason: `아미노산이 바뀐 구조입니다. 대표 구조와 비교하면 변이가 접힘, 표면 전하, 결합 부위에 주는 영향을 볼 수 있습니다. (${id})`
+      stateLabelEn: "Variant",
+      stateReason: `아미노산이 바뀐 구조입니다. 대표 구조와 비교하면 변이가 접힘, 표면 전하, 결합 부위에 주는 영향을 볼 수 있습니다. (${id})`,
+      stateReasonEn: `This structure contains a sequence change. Compare it with the representative structure to see effects on folding, surface charge, or binding. (${id})`
     };
   }
   if (/apo|unbound|free|unliganded/.test(text)) {
     return {
+      stateKey: "unbound",
       stateLabel: "비결합형",
-      stateReason: `리간드나 기질이 없는 구조입니다. 결합형 구조와 나란히 보면 결합 전후 변화를 이해하기 쉽습니다. (${id})`
+      stateLabelEn: "Unbound form",
+      stateReason: `리간드나 기질이 없는 구조입니다. 결합형 구조와 나란히 보면 결합 전후 변화를 이해하기 쉽습니다. (${id})`,
+      stateReasonEn: `No ligand or substrate is bound. Compare it with bound structures to see conformational changes after binding. (${id})`
     };
   }
-  if (/refined|high resolution|crystal structure|crystalline/.test(text)) {
+  if (/discontinuity|interruption|break in the repeating|sequence gap/.test(text)) {
     return {
-      stateLabel: "정제 결정 구조",
-      stateReason: `해상도와 원자 위치를 정밀하게 다듬은 기준 구조입니다. 다른 결합형이나 복합체 구조와 비교할 대표 후보로 적합합니다. (${id})`
+      stateKey: "repeat_disruption",
+      stateLabel: "반복 끊김 변형",
+      stateLabelEn: "Repeat-disrupted fragment",
+      stateReason: `반복 서열이 끊기거나 변형된 단편 구조입니다. 대표 구조와 비교하면 반복성이 깨질 때 삼중나선 안정성이 어떻게 달라지는지 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This fragment contains a break or disruption in the repeat. Compare it with the representative structure to see how triple-helix stability changes. (${id}, ${resolutionText})`
+    };
+  }
+  if (/average|consensus/.test(text)) {
+    return {
+      stateKey: "average_model",
+      stateLabel: "평균 모델",
+      stateLabelEn: "Averaged model",
+      stateReason: `여러 반복 단위의 평균적인 배열을 보여주는 구조입니다. 대표 구조로 삼으면 다른 단편들이 이 기준 배열에서 어떻게 벗어나는지 보기 좋습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This structure shows an averaged arrangement of repeat units. Use it as a baseline for seeing how other fragments deviate from the reference packing. (${id}, ${resolutionText})`
+    };
+  }
+  if (/pro-hyp-gly|hydroxyproline|hyp/.test(text)) {
+    return {
+      stateKey: "hydroxyproline_repeat",
+      stateLabel: "Hyp 반복 단편",
+      stateLabelEn: "Hyp-repeat fragment",
+      stateReason: `하이드록시프롤린(Hyp)이 들어간 반복 펩타이드 구조입니다. 대표 구조와 비교하면 콜라겐 삼중나선을 안정화하는 반복 서열 효과를 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This repeat peptide contains hydroxyproline (Hyp). Compare it with the representative structure to see how the repeat stabilizes the collagen triple helix. (${id}, ${resolutionText})`
+    };
+  }
+  if (/pro-pro-gly/.test(text)) {
+    return {
+      stateKey: "proline_repeat",
+      stateLabel: "Pro-Pro-Gly 반복",
+      stateLabelEn: "Pro-Pro-Gly repeat",
+      stateReason: `Pro-Pro-Gly 반복 서열만 떼어 본 콜라겐 모델입니다. 대표 구조와 비교하면 반복 길이와 삼중나선 패킹 차이를 확인할 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This collagen model isolates a Pro-Pro-Gly repeat. Compare it with the representative structure to inspect repeat length and triple-helix packing. (${id}, ${resolutionText})`
+    };
+  }
+  if (/triple helix|triple-helical/.test(text)) {
+    return {
+      stateKey: "triple_helix",
+      stateLabel: "삼중나선 모델",
+      stateLabelEn: "Triple-helix model",
+      stateReason: `콜라겐의 핵심 삼중나선 배열을 보여주는 구조입니다. 대표 구조와 비교하면 세 사슬의 감김과 수소결합 배열을 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This model emphasizes the collagen triple helix. Compare it with the representative structure to inspect chain wrapping and hydrogen-bond geometry. (${id}, ${resolutionText})`
+    };
+  }
+  if (/model|fiber|fibre|peptide|fragment|collagen-like/.test(text)) {
+    return {
+      stateKey: "model_fragment",
+      stateLabel: "모델/단편 구조",
+      stateLabelEn: "Model or fragment",
+      stateReason: `전체 단백질보다 반복 서열, 단편, 섬유 모델을 자세히 본 구조입니다. 대표 구조와 비교하면 특정 반복부나 섬유 배열이 어떻게 안정화되는지 볼 수 있습니다. (${id}, ${resolutionText})`,
+      stateReasonEn: `This focuses on a repeat, fragment, or fiber model rather than the whole protein. Compare it with the representative structure to understand local or fiber packing. (${id}, ${resolutionText})`
+    };
+  }
+  if (/refined|high resolution|crystal structure|crystalline/.test(text) || Number.isFinite(resolution)) {
+    return {
+      stateKey: Number.isFinite(resolution) && resolution <= 1.5 ? "high_resolution" : "refined",
+      stateLabel: Number.isFinite(resolution) && resolution <= 1.5 ? "고해상도 결정 구조" : "정제 결정 구조",
+      stateLabelEn: Number.isFinite(resolution) && resolution <= 1.5 ? "High-resolution crystal" : "Refined crystal structure",
+      stateReason: `${resolutionText} 해상도로 원자 위치를 다듬은 기준 구조입니다. 다른 결합형, 단편, 복합체와 비교할 출발점으로 적합합니다. (${id})`,
+      stateReasonEn: `A ${resolutionText} structure with refined atomic positions. Use it as a baseline for comparing bound, fragment, or complex structures. (${id})`
     };
   }
 
   return {
+    stateKey: "condition",
     stateLabel: "실험 조건형",
-    stateReason: `같은 단백질이지만 실험 조건, 해상도, 결합 분자, 사슬 조립 상태가 다를 수 있는 구조입니다. (${id})`
+    stateLabelEn: "Experimental condition",
+    stateReason: `같은 단백질이지만 실험 조건, 해상도, 결합 분자, 사슬 조립 상태가 다를 수 있는 구조입니다. (${id})`,
+    stateReasonEn: `This is the same protein family, but the experimental condition, resolution, bound molecule, or chain assembly may differ. (${id})`
   };
 }
 
 function describeDifferenceFromRepresentative(candidate, representative) {
-  const base = candidate.stateReason || inferGenericState(candidate).stateReason;
+  const inferred = inferGenericState(candidate);
+  const base = candidate.stateReason || inferred.stateReason;
+  const baseEn = candidate.stateReasonEn || inferred.stateReasonEn;
   const repId = representative.pdbId || representative.accession || representative.alphaFoldId || representative.name;
-  return `${base} 대표 구조(${repId})와 비교해서 구조-기능 차이를 확인하세요.`;
+  return {
+    ko: `${base} 대표 구조(${repId})와 비교해서 구조-기능 차이를 확인하세요.`,
+    en: `${baseEn} Compare it with the representative structure (${repId}) to understand the structure-function difference.`
+  };
 }
 
 function getCuratedPdbIds(query) {
