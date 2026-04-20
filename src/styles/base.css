@@ -95,6 +95,18 @@ button {
   gap: 12px;
 }
 
+.brand-button {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.brand-button:focus-visible {
+  outline: 3px solid rgba(49, 111, 246, 0.22);
+  outline-offset: 4px;
+}
+
 .brand-mark,
 .hero-icon {
   display: grid;

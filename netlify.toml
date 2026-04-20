@@ -5,3 +5,7 @@
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://3Dmol.org https://3dmol.org; style-src 'self' 'unsafe-inline'; connect-src 'self' https://search.rcsb.org https://data.rcsb.org https://files.rcsb.org https://rest.uniprot.org https://alphafold.ebi.ac.uk https://www.ebi.ac.uk; frame-ancestors 'none'; img-src 'self' data:;"

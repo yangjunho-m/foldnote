@@ -146,13 +146,13 @@ function render() {
 function renderTopbar() {
   return `
     <header class="topbar">
-      <div class="brand">
+      <button class="brand brand-button" type="button" data-home title="홈으로" aria-label="FoldNote 홈으로">
         <div class="brand-mark" aria-hidden="true">${icons.fold}</div>
         <div>
           <h1 class="brand-title">FoldNote <span>폴드노트</span></h1>
           <p class="brand-subtitle">단백질 구조를 쉽게 읽는 노트</p>
         </div>
-      </div>
+      </button>
       <div class="topbar-actions">
         <button class="icon-button" type="button" data-home title="홈으로" aria-label="홈으로">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
@@ -556,6 +556,8 @@ function renderProfessionalInfo(protein) {
 }
 
 function renderResearchTools(protein) {
+  const literatureUrl = buildLiteratureSearchUrl(protein);
+
   return `
     <section class="section compact-section">
       <h3>연구자 도구</h3>
@@ -563,7 +565,7 @@ function renderResearchTools(protein) {
         <button class="secondary-button" type="button" data-copy-id="${escapeHtml(protein.pdbId || protein.accession || "")}">ID 복사</button>
         <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF</a>
         <a class="secondary-button link-button" href="${escapeHtml(protein.pdbDownloadUrl)}" target="_blank" rel="noreferrer">PDB 파일</a>
-        <button class="secondary-button" type="button" data-view-style="confidence">신뢰도 색상</button>
+        <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">논문 검색</a>
       </div>
     </section>
 
@@ -572,6 +574,12 @@ function renderResearchTools(protein) {
       <button class="secondary-button" type="button">해설 저장</button>
     </div>
   `;
+}
+
+function buildLiteratureSearchUrl(protein) {
+  const term = protein.pdbId || protein.accession || protein.englishName || protein.name;
+  const query = `"${term}" protein structure function`;
+  return `https://europepmc.org/search?query=${encodeURIComponent(query)}`;
 }
 
 function renderColorLegend(protein) {
