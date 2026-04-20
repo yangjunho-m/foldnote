@@ -23,7 +23,8 @@ const state = {
   literatureErrors: {},
   literatureLoading: {},
   recommendations: [],
-  theme: "light"
+  theme: "light",
+  isHelpOpen: false
 };
 
 
@@ -130,7 +131,8 @@ function render() {
       <main class="main">
         ${state.selected ? renderViewer(state.selected) : renderSearch()}
       </main>
-      <button class="help-float" type="button" aria-label="도움말">?</button>
+      <button class="help-float" type="button" data-help-open aria-label="도움말">?</button>
+      ${state.isHelpOpen ? renderHelpModal() : ""}
     </div>
   `;
 
@@ -145,7 +147,7 @@ function renderTopbar() {
   return `
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">${icons.database}</div>
+        <div class="brand-mark" aria-hidden="true">${icons.fold}</div>
         <div>
           <h1 class="brand-title">FoldNote <span>폴드노트</span></h1>
           <p class="brand-subtitle">단백질 구조를 쉽게 읽는 노트</p>
@@ -175,7 +177,7 @@ function renderSearch() {
         <div class="hero">
           <div class="hero-icon" aria-hidden="true">${icons.search}</div>
           <h2>단백질 구조를 검색하세요</h2>
-          <p>단백질 이름이나 PDB ID를 입력하면 구조, 기능, 논문 근거를 함께 확인할 수 있습니다</p>
+          <p>단백질 이름이나 PDB ID를 입력하면 구조와 기능, 근거 자료를 함께 확인할 수 있습니다</p>
         </div>
 
         <form class="search-form" data-search-form>
@@ -232,12 +234,58 @@ function renderResults() {
             <div class="result-meta">
               <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
               <span>생물종: ${escapeHtml(protein.organism)}</span>
-              <span>구조 · 기능 · 논문 근거</span>
+              <span>전문 탭에서 논문 근거 확인</span>
             </div>
           </button>
         `
         )
         .join("")}
+    </div>
+  `;
+}
+
+function renderHelpModal() {
+  return `
+    <div class="help-backdrop" data-help-close>
+      <section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <button class="modal-close" type="button" data-help-close aria-label="닫기">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
+        </button>
+        <h2 id="help-title">FoldNote 도움말</h2>
+        <p>검색 결과를 선택한 뒤 오른쪽 패널의 전문 탭에서 구조 판독, 논문 근거 요약, 연관 키워드, 참고문헌을 볼 수 있습니다.</p>
+
+        <div class="help-grid">
+          <div>
+            <h3>사용 방법</h3>
+            <ul>
+              <li>단백질명, UniProt accession, PDB ID로 검색합니다.</li>
+              <li>리본, 스틱, 구체, 표면, 신뢰도 보기로 구조를 바꿔 봅니다.</li>
+              <li>구조 위 원자를 클릭하면 잔기 설명을 볼 수 있습니다.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>데이터 출처</h3>
+            <ul>
+              <li>구조: RCSB PDB, AlphaFold DB</li>
+              <li>논문 초록/참고문헌: Europe PMC</li>
+              <li>3D 시각화: 3Dmol.js</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="license-note">
+          <h3>상용화 전 체크</h3>
+          <p>PDB 구조 데이터는 CC0로 제공되지만 원 구조 저자 표기를 권장합니다. AlphaFold DB는 상업적 사용이 가능한 CC BY 4.0 데이터라 출처와 라이선스 표기가 필요합니다. Europe PMC 논문 초록은 각 출판사/저자의 저작권이 유지되므로 원문 대량 복제 대신 짧은 요약, 링크, 인용 정보를 중심으로 제공하는 편이 안전합니다.</p>
+          <p>의학적 판단이나 치료 조언이 아니라 연구/교육용 구조 탐색 도구로 표시하는 것이 좋습니다.</p>
+        </div>
+
+        <div class="source-links">
+          <a href="https://www.rcsb.org/pages/usage-policy" target="_blank" rel="noreferrer">RCSB 정책</a>
+          <a href="https://alphafold.com/" target="_blank" rel="noreferrer">AlphaFold 라이선스</a>
+          <a href="https://europepmc.org/Copyright" target="_blank" rel="noreferrer">Europe PMC 저작권</a>
+          <a href="https://github.com/3dmol/3Dmol.js" target="_blank" rel="noreferrer">3Dmol.js</a>
+        </div>
+      </section>
     </div>
   `;
 }
@@ -428,6 +476,7 @@ function renderLiteraturePanel(protein) {
   return `
     <section class="section pro-section">
       <h3>논문 근거 요약</h3>
+      <p class="section-lead">Europe PMC 초록에서 구조, 기능, 상호작용 문장을 골라 짧게 정리합니다.</p>
       <div class="evidence-summary">
         ${evidence.summary
           .map((sentence) => `<p>${escapeHtml(sentence)}</p>`)
@@ -448,6 +497,7 @@ function renderLiteraturePanel(protein) {
 
     <section class="section pro-section">
       <h3>참고문헌</h3>
+      <p class="section-lead">제목을 누르면 DOI 또는 Europe PMC 원문 페이지로 이동합니다.</p>
       <div class="reference-list">
         ${evidence.articles.length
           ? evidence.articles.map(renderReference).join("")
@@ -596,7 +646,30 @@ function bindEvents() {
     });
   }
 
-  if (input) {
+  const helpOpenButton = document.querySelector("[data-help-open]");
+  if (helpOpenButton) {
+    helpOpenButton.addEventListener("click", () => {
+      state.isHelpOpen = true;
+      render();
+    });
+  }
+
+  document.querySelectorAll("[data-help-close]").forEach((element) => {
+    element.addEventListener("click", (event) => {
+      if (event.target !== element && !element.classList.contains("modal-close")) return;
+      state.isHelpOpen = false;
+      render();
+    });
+  });
+
+  document.onkeydown = (event) => {
+    if (event.key === "Escape" && state.isHelpOpen) {
+      state.isHelpOpen = false;
+      render();
+    }
+  };
+
+  if (input && !state.isHelpOpen) {
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
     input.addEventListener("compositionstart", () => {

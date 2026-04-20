@@ -179,6 +179,8 @@ export const fallbackProtein = (query) => ({
 });
 
 export const icons = {
+  fold:
+    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7c2.8-3 7.2-3 10 0s1.2 7-2.2 6.2C9.2 12.4 8 17 11.2 18.5c2.6 1.2 5.3-.2 6.8-2.5"/><path d="M7.5 9.5h.01"/><path d="M12 7.5h.01"/><path d="M15 11h.01"/><path d="M9 15h.01"/><path d="M18.5 14.5h.01"/></svg>',
   database:
     '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v14c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>',
   search:

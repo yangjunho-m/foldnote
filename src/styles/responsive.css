@@ -74,9 +74,7 @@
   }
 
   .viewer-legend {
-    left: 14px;
-    bottom: 116px;
-    width: min(230px, calc(100% - 28px));
+    display: none;
   }
 
   .info-inner {
@@ -97,5 +95,24 @@
   .detail-list div {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+
+  .help-backdrop {
+    padding: 12px;
+    align-items: end;
+  }
+
+  .help-modal {
+    max-height: calc(100vh - 24px);
+    padding: 22px 18px;
+  }
+
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .source-links a {
+    flex: 1 1 calc(50% - 8px);
+    justify-content: center;
   }
 }
