@@ -152,6 +152,32 @@ button {
   gap: 8px;
 }
 
+.language-toggle {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.language-toggle button {
+  min-width: 58px;
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.language-toggle button.active {
+  color: #0754d6;
+  background: var(--primary-soft);
+}
+
 .icon-button,
 .plain-button {
   display: inline-grid;
@@ -177,21 +203,36 @@ button {
   background: rgba(16, 19, 26, 0.82);
 }
 
+.app-shell.dark .brand-title,
+.app-shell.dark .brand-title span,
+.app-shell.dark .brand-subtitle,
+.app-shell.dark .hero h2 {
+  color: #ffffff;
+}
+
+.app-shell.dark .hero p {
+  color: #dbe3ef;
+}
+
 .app-shell.dark .icon-button,
-.app-shell.dark .plain-button {
+.app-shell.dark .plain-button,
+.app-shell.dark .language-toggle {
   color: #dbe3ef;
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--line);
+}
+
+.app-shell.dark .language-toggle button.active {
+  color: #dbe7ff;
+  background: rgba(76, 132, 255, 0.18);
 }
 
 .app-shell.dark .search-input,
 .app-shell.dark .result-card,
 .app-shell.dark .recommend-box,
 .app-shell.dark .recommend-card,
-.app-shell.dark .project-workspace,
 .app-shell.dark .recent-strip,
 .app-shell.dark .recent-list button,
-.app-shell.dark .saved-notes,
 .app-shell.dark .saved-note-card,
 .app-shell.dark .status-card,
 .app-shell.dark .info-panel {
@@ -223,6 +264,23 @@ button {
 
 .app-shell.dark .search-input {
   border-color: var(--line);
+}
+
+.app-shell.dark .pro-module-grid article,
+.app-shell.dark .refresh-button,
+.app-shell.dark .code-pill,
+.app-shell.dark .tip-box,
+.app-shell.dark .pro-modules,
+.app-shell.dark .help-float {
+  background: var(--surface-soft);
+  color: var(--foreground);
+  border-color: var(--line);
+}
+
+.app-shell.dark .status-card.warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #f7d48a;
+  border-color: rgba(245, 158, 11, 0.22);
 }
 
 .app-shell.dark .metric,

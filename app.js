@@ -30,7 +30,6 @@ const state = {
   debounceTimer: null,
   viewer: null,
   viewerStyle: "cartoon",
-  infoMode: "simple",
   literature: {},
   literatureErrors: {},
   literatureLoading: {},
@@ -45,7 +44,7 @@ const state = {
   isReportOpen: false,
   reportSnapshot: "",
   variantQuery: "",
-  educationMode: "research"
+  language: window.localStorage.getItem("foldnote-language") || "ko"
 };
 
 
@@ -164,22 +163,21 @@ function render() {
 }
 
 function renderTopbar() {
+  const isKo = state.language === "ko";
   return `
     <header class="topbar">
-      <button class="brand brand-button" type="button" data-home title="홈으로" aria-label="FoldNote 홈으로">
+      <button class="brand brand-button" type="button" data-home title="${t("home")}" aria-label="FoldNote ${t("home")}">
         <div class="brand-mark" aria-hidden="true">${icons.fold}</div>
         <div>
-          <h1 class="brand-title">FoldNote <span>폴드노트</span></h1>
-          <p class="brand-subtitle">단백질 구조를 쉽게 읽는 노트</p>
+          <h1 class="brand-title">FoldNote <span>${isKo ? "폴드노트" : "Protein notes"}</span></h1>
+          <p class="brand-subtitle">${t("brandSubtitle")}</p>
         </div>
       </button>
       <div class="topbar-actions">
-        <button class="icon-button" type="button" data-home title="홈으로" aria-label="홈으로">
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
-        </button>
-        <button class="icon-button" type="button" data-random-recommend title="추천 단백질 바꾸기" aria-label="추천 단백질 바꾸기">
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg>
-        </button>
+        <div class="language-toggle" aria-label="${t("language")}">
+          <button class="${state.language === "ko" ? "active" : ""}" type="button" data-language="ko">한국어</button>
+          <button class="${state.language === "en" ? "active" : ""}" type="button" data-language="en">EN</button>
+        </div>
         <button class="icon-button" type="button" data-theme-toggle title="테마 전환" aria-label="테마 전환">
           ${state.theme === "dark"
             ? '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
@@ -193,34 +191,80 @@ function renderTopbar() {
 function renderSearch() {
   return `
     <section class="search-screen">
-      <div class="search-wrap">
-        <div class="hero">
-          <div class="hero-icon" aria-hidden="true">${icons.search}</div>
-          <h2>단백질 구조를 검색하세요</h2>
-          <p>단백질 이름이나 PDB ID를 입력하면 구조와 기능, 근거 자료를 함께 확인할 수 있습니다</p>
+      ${renderWorkspaceSidebar()}
+      <div class="search-main">
+        <div class="search-wrap">
+          <div class="hero">
+            <div class="hero-icon" aria-hidden="true">${icons.search}</div>
+            <h2>${t("heroTitle")}</h2>
+            <p>${t("heroText")}</p>
+          </div>
+
+          <form class="search-form" data-search-form>
+            <span class="search-symbol" aria-hidden="true">${icons.search}</span>
+            <input
+              class="search-input"
+              data-search-input
+              type="search"
+              value="${escapeHtml(state.query)}"
+              placeholder="${t("searchPlaceholder")}"
+              autocomplete="off"
+            />
+          </form>
+
+          ${renderSearchState()}
+          ${renderProModules()}
+          ${renderRecommendations()}
+          ${renderTips()}
         </div>
-
-        <form class="search-form" data-search-form>
-          <span class="search-symbol" aria-hidden="true">${icons.search}</span>
-          <input
-            class="search-input"
-            data-search-input
-            type="search"
-            value="${escapeHtml(state.query)}"
-            placeholder="예: p53, 헤모글로빈, 인슐린, 1HHO..."
-            autocomplete="off"
-          />
-        </form>
-
-        ${renderSearchState()}
-        ${renderProjectWorkspace()}
-        ${renderSavedNotes()}
-        ${renderRecentProteins()}
-        ${renderProModules()}
-        ${renderRecommendations()}
-        ${renderTips()}
       </div>
     </section>
+  `;
+}
+
+function renderWorkspaceSidebar() {
+  const currentProject = state.projects.find((project) => project.id === state.currentProjectId) || state.projects[0];
+  const notes = state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === currentProject.id);
+
+  return `
+    <aside class="workspace-sidebar" aria-label="GitHub 워크스페이스">
+      <div class="workspace-head">
+        <div>
+          <h2>GitHub 워크스페이스</h2>
+          <p>GitHub Pages에서 구조 노트를 정리합니다.</p>
+        </div>
+        <a href="https://yangjunho-m.github.io/foldnote/" target="_blank" rel="noreferrer">Pages</a>
+      </div>
+
+      <div class="workspace-section">
+        <div class="workspace-section-head">
+          <h3>폴더</h3>
+          <button type="button" data-create-project aria-label="폴더 추가">+</button>
+        </div>
+        <div class="workspace-folder-list">
+          ${state.projects
+            .map(
+              (project) => `
+                <button class="${project.id === state.currentProjectId ? "active" : ""}" type="button" data-project-id="${escapeHtml(project.id)}">
+                  <strong>${escapeHtml(project.name)}</strong>
+                  <span>${state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === project.id).length}개 노트</span>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      </div>
+
+      <div class="workspace-section">
+        <div class="workspace-section-head">
+          <h3>${escapeHtml(currentProject.name)}</h3>
+          <span>${notes.length}개</span>
+        </div>
+        ${renderSavedNotes(notes)}
+      </div>
+
+      ${renderRecentProteins()}
+    </aside>
   `;
 }
 
@@ -249,62 +293,28 @@ function renderProModules() {
   `;
 }
 
-function renderProjectWorkspace() {
-  return `
-    <section class="project-workspace">
-      <div>
-        <h3>로컬 워크스페이스</h3>
-        <p>계정 없이 브라우저에 프로젝트 폴더와 구조 노트를 저장합니다.</p>
-      </div>
-      <div class="project-controls">
-        <select data-project-select aria-label="프로젝트 선택">
-          ${state.projects
-            .map(
-              (project) => `
-                <option value="${escapeHtml(project.id)}" ${project.id === state.currentProjectId ? "selected" : ""}>${escapeHtml(project.name)}</option>
-              `
-            )
-            .join("")}
-        </select>
-        <button type="button" data-create-project>폴더 추가</button>
-      </div>
-    </section>
-  `;
-}
-
-function renderSavedNotes() {
-  const currentProject = state.projects.find((project) => project.id === state.currentProjectId) || state.projects[0];
-  const notes = state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === currentProject.id);
-  if (!notes.length) return "";
+function renderSavedNotes(notes) {
+  if (!notes.length) return `<div class="workspace-empty">저장한 구조 노트가 여기에 표시됩니다.</div>`;
 
   return `
-    <section class="saved-notes">
-      <div class="saved-notes-head">
-        <div>
-          <h3>${escapeHtml(currentProject.name)}</h3>
-          <p>프로젝트 폴더 안에 저장한 구조 노트입니다.</p>
-        </div>
-        <span>${notes.length}개</span>
-      </div>
-      <div class="saved-note-list">
-        ${notes
-          .map(
-            (note) => `
-              <article class="saved-note-card">
-                <button type="button" data-open-note="${escapeHtml(note.id)}">
-                  <strong>${escapeHtml(note.name)}</strong>
-                  <span>${escapeHtml(note.structureId)} · ${escapeHtml(note.source)} · ${formatSavedDate(note.savedAt)}</span>
-                  <p>${escapeHtml(note.summary?.[0] || note.description || "저장된 구조 노트입니다.")}</p>
-                </button>
-                <button class="note-delete" type="button" data-delete-note="${escapeHtml(note.id)}" aria-label="노트 삭제">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
-                </button>
-              </article>
-            `
-          )
-          .join("")}
-      </div>
-    </section>
+    <div class="saved-note-list">
+      ${notes
+        .map(
+          (note) => `
+            <article class="saved-note-card">
+              <button type="button" data-open-note="${escapeHtml(note.id)}">
+                <strong>${escapeHtml(note.name)}</strong>
+                <span>${escapeHtml(note.structureId)} · ${escapeHtml(note.source)} · ${formatSavedDate(note.savedAt)}</span>
+                <p>${escapeHtml(note.summary?.[0] || note.description || "저장된 구조 노트입니다.")}</p>
+              </button>
+              <button class="note-delete" type="button" data-delete-note="${escapeHtml(note.id)}" aria-label="노트 삭제">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
+              </button>
+            </article>
+          `
+        )
+        .join("")}
+    </div>
   `;
 }
 
@@ -339,8 +349,8 @@ function renderSearchState() {
       <div class="status-card">
         <span class="spinner" aria-hidden="true"></span>
         <div>
-          <strong>RCSB PDB에서 후보를 찾고 있습니다</strong>
-          <p>검색어를 PDB 실험 구조 데이터베이스에 질의하는 중입니다.</p>
+          <strong>${t("loadingTitle")}</strong>
+          <p>${t("loadingText")}</p>
         </div>
       </div>
     `;
@@ -359,24 +369,59 @@ function renderResults() {
       ${state.results
         .map(
           (protein, index) => `
-          <button class="result-card" type="button" data-result="${index}">
-            <div class="result-title-row">
-              <h3 class="result-title">${escapeHtml(protein.name)} (${escapeHtml(protein.englishName)})</h3>
-              ${badge(protein)}
-            </div>
-            <div class="result-meta">
-              <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
-              <span>생물종: ${escapeHtml(protein.organism)}</span>
-              <span>전문 탭에서 논문 근거 확인</span>
-            </div>
-            <div class="result-summary">
-              <strong>기본정보</strong>
-              <p>${escapeHtml(protein.quickSummary || createQuickSummary(protein))}</p>
-            </div>
-          </button>
+          <article class="result-card">
+            <button class="result-main" type="button" data-result="${index}">
+              <div class="result-title-row">
+                <h3 class="result-title">${renderProteinTitle(protein)}</h3>
+                ${badge(protein)}
+              </div>
+              <div class="result-meta">
+                <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
+                <span>${t("organism")}: ${escapeHtml(protein.organism)}</span>
+                <span>${protein.resultCount > 1 ? formatGroupedCount(protein.resultCount) : t("evidenceHint")}</span>
+              </div>
+              <div class="result-summary">
+                <strong>대표 구조</strong>
+                <p>${escapeHtml(protein.quickSummary || createQuickSummary(protein))}</p>
+              </div>
+            </button>
+            ${renderRelatedStates(protein, index)}
+          </article>
         `
         )
         .join("")}
+    </div>
+  `;
+}
+
+function renderRelatedStates(protein, resultIndex) {
+  const states = protein.relatedStates || [];
+  if (!states.length) return "";
+
+  return `
+    <div class="state-comparison" aria-label="${t("otherStates")}">
+      <div class="state-comparison-head">
+        <strong>상태별 구조 비교</strong>
+        <span>해시태그를 보고 구조-기능 차이를 나란히 확인하세요</span>
+      </div>
+      <div class="state-grid">
+        <button class="state-card representative" type="button" data-result="${resultIndex}">
+          <span class="state-tag">#대표</span>
+          <strong>${escapeHtml(getDisplayName(protein))}</strong>
+          <p>${escapeHtml(protein.stateReason || protein.confidence || createQuickSummary(protein))}</p>
+        </button>
+      ${states
+        .map(
+          (stateItem) => `
+            <button class="state-card" type="button" data-result-state="${resultIndex}:${escapeHtml(stateItem.id)}">
+              <span class="state-tag">#${escapeHtml(stateItem.stateLabel || t("otherState"))}</span>
+              <strong>${escapeHtml(stateItem.name)}</strong>
+              <p>${escapeHtml(stateItem.stateReason || t("otherStateReason"))}</p>
+            </button>
+          `
+        )
+        .join("")}
+      </div>
     </div>
   `;
 }
@@ -443,9 +488,6 @@ function renderRecommendations() {
           <h3>오늘의 추천 단백질</h3>
           <p>어디서부터 볼지 모르겠다면 이런 단백질부터 시작해보세요.</p>
         </div>
-        <button class="icon-button refresh-button" type="button" data-refresh-recommendations aria-label="추천 새로고침">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg>
-        </button>
       </div>
       <div class="recommend-grid">
         ${items
@@ -498,16 +540,16 @@ function renderViewer(protein) {
         </div>
         <div class="viewer-toolbar">
           <div class="viewer-title-card">
-            <p>${protein.source} 실제 구조 시각화</p>
-            <h2>${escapeHtml(protein.name)} (${escapeHtml(protein.englishName)})</h2>
+            <p>${protein.source} ${t("structureView")}</p>
+            <h2>${renderProteinTitle(protein)}</h2>
           </div>
         </div>
         <div class="control-strip" aria-label="구조 보기 컨트롤">
-          <button class="glass-button ${state.viewerStyle === "cartoon" ? "active" : ""}" type="button" data-view-style="cartoon" title="리본 보기">리본</button>
-          <button class="glass-button ${state.viewerStyle === "stick" ? "active" : ""}" type="button" data-view-style="stick" title="원자 결합 보기">스틱</button>
-          <button class="glass-button ${state.viewerStyle === "sphere" ? "active" : ""}" type="button" data-view-style="sphere" title="공간 채움 보기">구체</button>
-          <button class="glass-button ${state.viewerStyle === "surface" ? "active" : ""}" type="button" data-view-style="surface" title="분자 표면 보기">표면</button>
-          <button class="glass-button ${state.viewerStyle === "confidence" ? "active" : ""}" type="button" data-view-style="confidence" title="B-factor 또는 pLDDT 색상 보기">신뢰도</button>
+          <button class="glass-button ${state.viewerStyle === "cartoon" ? "active" : ""}" type="button" data-view-style="cartoon" title="${t("cartoonView")}">${t("cartoon")}</button>
+          <button class="glass-button ${state.viewerStyle === "stick" ? "active" : ""}" type="button" data-view-style="stick" title="${t("stickView")}">${t("stick")}</button>
+          <button class="glass-button ${state.viewerStyle === "sphere" ? "active" : ""}" type="button" data-view-style="sphere" title="${t("sphereView")}">${t("sphere")}</button>
+          <button class="glass-button ${state.viewerStyle === "surface" ? "active" : ""}" type="button" data-view-style="surface" title="${t("surfaceView")}">${t("surface")}</button>
+          <button class="glass-button ${state.viewerStyle === "confidence" ? "active" : ""}" type="button" data-view-style="confidence" title="${t("confidenceView")}">${t("confidence")}</button>
         </div>
         ${renderColorLegend(protein)}
         <div class="atom-tooltip" data-atom-tooltip></div>
@@ -522,60 +564,54 @@ function renderInfoPanel(protein) {
     <aside class="info-panel">
       <div class="info-inner">
         <div class="protein-heading">
-          <h2>${escapeHtml(protein.name)}</h2>
+          <h2>${escapeHtml(getDisplayName(protein))}</h2>
           ${badge(protein)}
         </div>
-        <p class="brand-subtitle">${escapeHtml(protein.englishName)}</p>
-
-        <div class="mode-switch" aria-label="설명 모드">
-          <button class="${state.educationMode === "research" ? "active" : ""}" type="button" data-education-mode="research">연구 모드</button>
-          <button class="${state.educationMode === "classroom" ? "active" : ""}" type="button" data-education-mode="classroom">교육 모드</button>
-        </div>
-
-        <div class="panel-tabs" role="tablist" aria-label="정보 깊이 선택">
-          <button class="${state.infoMode === "simple" ? "active" : ""}" type="button" data-info-mode="simple">기본</button>
-          <button class="${state.infoMode === "pro" ? "active" : ""}" type="button" data-info-mode="pro">전문</button>
-        </div>
+        <p class="brand-subtitle">${escapeHtml(getSecondaryName(protein))}</p>
 
         <div class="meta-grid">
           <div class="metric"><span>${protein.source === "PDB" ? "PDB ID" : "UniProt"}</span><strong>${protein.pdbId || protein.accession || "AlphaFold"}</strong></div>
-          <div class="metric"><span>생물종</span><strong>${escapeHtml(protein.organism)}</strong></div>
-          <div class="metric"><span>방법</span><strong>${escapeHtml(protein.method)}</strong></div>
-          <div class="metric"><span>해상도</span><strong>${escapeHtml(protein.resolution)}</strong></div>
-          <div class="metric"><span>크기</span><strong>${escapeHtml(protein.size)}</strong></div>
-          <div class="metric"><span>분자량</span><strong>${escapeHtml(protein.mass)}</strong></div>
+          <div class="metric"><span>${t("organism")}</span><strong>${escapeHtml(protein.organism)}</strong></div>
+          <div class="metric"><span>${t("method")}</span><strong>${escapeHtml(protein.method)}</strong></div>
+          <div class="metric"><span>${t("resolution")}</span><strong>${escapeHtml(protein.resolution)}</strong></div>
+          <div class="metric"><span>${t("size")}</span><strong>${escapeHtml(protein.size)}</strong></div>
+          <div class="metric"><span>${t("mass")}</span><strong>${escapeHtml(protein.mass)}</strong></div>
         </div>
 
-        ${state.infoMode === "pro" ? renderProfessionalInfo(protein) : renderSimpleInfo(protein)}
+        ${renderSelectedRelatedStates(protein)}
+        ${renderUnifiedInfo(protein)}
       </div>
     </aside>
   `;
 }
 
-function renderSimpleInfo(protein) {
-  if (state.educationMode === "classroom") {
-    return `
-      <section class="section">
-        <h3>한 문장 요약</h3>
-        <p>${escapeHtml(protein.name)}은 구조 모양을 보면 기능을 더 쉽게 이해할 수 있는 생체 분자입니다.</p>
-      </section>
-
-      <section class="section">
-        <h3>학습 카드</h3>
-        <div class="quiz-list">
-          <div><strong>무엇을 하나요?</strong><span>${escapeHtml(protein.description)}</span></div>
-          <div><strong>어디를 보면 좋나요?</strong><span>리본은 전체 접힘, 스틱은 결합 부위의 작은 분자를 보여줍니다.</span></div>
-          <div><strong>주의할 점은?</strong><span>실험 구조와 예측 구조는 해석 신뢰도가 다를 수 있습니다.</span></div>
-        </div>
-      </section>
-
-      ${renderResearchTools(protein)}
-    `;
-  }
+function renderSelectedRelatedStates(protein) {
+  const states = protein.relatedStates || [];
+  if (!states.length) return "";
 
   return `
+    <section class="section compact-section">
+      <h3>${t("otherStates")}</h3>
+      <div class="state-detail-list">
+        ${states
+          .map(
+            (stateItem) => `
+              <button type="button" data-related-state="${escapeHtml(stateItem.id)}">
+                <strong>${escapeHtml(stateItem.stateLabel)} · ${escapeHtml(stateItem.name)}</strong>
+                <span>${escapeHtml(stateItem.stateReason)}</span>
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderUnifiedInfo(protein) {
+  return `
     <section class="section">
-      <h3>쉬운 설명</h3>
+      <h3>설명</h3>
       <p>${escapeHtml(protein.description)}</p>
     </section>
 
@@ -598,6 +634,14 @@ function renderSimpleInfo(protein) {
       <h3>신뢰도</h3>
       <p>${escapeHtml(protein.confidence)}입니다. AlphaFold 구조라면 잔기별 pLDDT 색상과 낮은 신뢰도 구간을 반드시 함께 보여주는 것이 좋습니다.</p>
     </section>
+
+    ${renderComparisonPanel(protein)}
+
+    <details class="detail-toggle">
+      <summary>자세히 보기</summary>
+      ${renderDetailedInfo(protein)}
+      ${renderVariantPanel(protein)}
+    </details>
 
     ${renderLiteraturePanel(protein)}
     ${renderResearchTools(protein)}
@@ -768,7 +812,7 @@ function renderReportModal(protein) {
   `;
 }
 
-function renderProfessionalInfo(protein) {
+function renderDetailedInfo(protein) {
   const structureId = protein.pdbId || protein.accession || "AlphaFold";
   const confidenceLabel = protein.source === "PDB" ? "B-factor 해석" : "pLDDT 해석";
 
@@ -801,10 +845,6 @@ function renderProfessionalInfo(protein) {
         <span>동종 구조 비교</span>
       </div>
     </section>
-
-    ${renderComparisonPanel(protein)}
-    ${renderVariantPanel(protein)}
-    ${renderResearchTools(protein)}
   `;
 }
 
@@ -816,18 +856,30 @@ function renderComparisonPanel(protein) {
   return `
     <section class="section pro-section">
       <h3>구조 비교</h3>
-      <p class="section-lead">여러 PDB 후보, PDB 구조와 AlphaFold 예측, 결합 상태 차이를 비교하는 출발점입니다.</p>
+      <p class="section-lead">검색된 상태별 구조를 나란히 보면서 결합 상태와 기능 차이를 비교합니다.</p>
       <div class="compare-grid">
         <div>
           <strong>현재 구조</strong>
           <span>${escapeHtml(protein.source)} · ${escapeHtml(protein.method)} · ${escapeHtml(protein.resolution)}</span>
         </div>
-        ${candidates.length
+        ${(protein.relatedStates || []).length
+          ? protein.relatedStates
+              .slice(0, 4)
+              .map(
+                (stateItem) => `
+                  <button type="button" data-related-state="${escapeHtml(stateItem.id)}">
+                    <strong>#${escapeHtml(stateItem.stateLabel)} · ${escapeHtml(stateItem.name)}</strong>
+                    <span>${escapeHtml(stateItem.stateReason)}</span>
+                  </button>
+                `
+              )
+              .join("")
+          : candidates.length
           ? candidates
               .map(
                 (candidate) => `
                   <button type="button" data-compare-key="${escapeHtml(getProteinKey(candidate))}">
-                    <strong>${escapeHtml(candidate.name)}</strong>
+                    <strong>${escapeHtml(getDisplayName(candidate))}</strong>
                     <span>${escapeHtml(candidate.source)} · ${escapeHtml(candidate.method)} · ${escapeHtml(candidate.resolution)}</span>
                   </button>
                 `
@@ -934,8 +986,7 @@ function bindEvents() {
   const input = document.querySelector("[data-search-input]");
   const form = document.querySelector("[data-search-form]");
 
-  const homeButton = document.querySelector("[data-home]");
-  if (homeButton) {
+  document.querySelectorAll("[data-home]").forEach((homeButton) => {
     homeButton.addEventListener("click", () => {
       window.clearTimeout(state.debounceTimer);
       state.query = "";
@@ -947,16 +998,7 @@ function bindEvents() {
       state.viewer = null;
       render();
     });
-  }
-
-  const randomButton = document.querySelector("[data-random-recommend]");
-  if (randomButton) {
-    randomButton.addEventListener("click", () => {
-      state.recommendations = getRandomRecommendations();
-      state.selected = null;
-      render();
-    });
-  }
+  });
 
   const themeButton = document.querySelector("[data-theme-toggle]");
   if (themeButton) {
@@ -965,6 +1007,14 @@ function bindEvents() {
       render();
     });
   }
+
+  document.querySelectorAll("[data-language]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.language = button.dataset.language;
+      window.localStorage.setItem("foldnote-language", state.language);
+      render();
+    });
+  });
 
   const helpOpenButton = document.querySelector("[data-help-open]");
   if (helpOpenButton) {
@@ -1029,6 +1079,31 @@ function bindEvents() {
     });
   });
 
+  document.querySelectorAll("[data-result-state]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const [resultIndex, stateId] = button.dataset.resultState.split(":");
+      const result = state.results[Number(resultIndex)];
+      const related = result?.relatedStates?.find((item) => item.id === stateId);
+      if (!related?.protein) return;
+      state.selected = {
+        ...related.protein,
+        relatedStates: [
+          {
+            id: getProteinKey(result),
+            name: getDisplayName(result),
+            englishName: result.englishName,
+            stateLabel: result.stateLabel || "대표",
+            stateReason: result.stateReason || "대표 구조입니다.",
+            protein: result
+          },
+          ...(result.relatedStates || []).filter((item) => item.id !== stateId)
+        ]
+      };
+      state.recentProteins = recordRecentProtein(state.selected);
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-open-note]").forEach((button) => {
     button.addEventListener("click", () => {
       const note = state.notes.find((item) => item.id === button.dataset.openNote);
@@ -1044,13 +1119,12 @@ function bindEvents() {
     });
   });
 
-  const projectSelect = document.querySelector("[data-project-select]");
-  if (projectSelect) {
-    projectSelect.addEventListener("change", () => {
-      state.currentProjectId = projectSelect.value;
+  document.querySelectorAll("[data-project-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.currentProjectId = button.dataset.projectId;
       render();
     });
-  }
+  });
 
   const createProjectButton = document.querySelector("[data-create-project]");
   if (createProjectButton) {
@@ -1075,14 +1149,6 @@ function bindEvents() {
     });
   });
 
-  const refreshRecommendations = document.querySelector("[data-refresh-recommendations]");
-  if (refreshRecommendations) {
-    refreshRecommendations.addEventListener("click", () => {
-      state.recommendations = getRandomRecommendations();
-      render();
-    });
-  }
-
   const back = document.querySelector("[data-back]");
   if (back) {
     back.addEventListener("click", () => {
@@ -1092,26 +1158,35 @@ function bindEvents() {
     });
   }
 
-  document.querySelectorAll("[data-info-mode]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.infoMode = button.dataset.infoMode;
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-education-mode]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.educationMode = button.dataset.educationMode;
-      render();
-    });
-  });
-
   document.querySelectorAll("[data-compare-key]").forEach((button) => {
     button.addEventListener("click", () => {
       const candidate = state.results.find((item) => getProteinKey(item) === button.dataset.compareKey);
       if (!candidate) return;
       state.selected = candidate;
       state.recentProteins = recordRecentProtein(candidate);
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-related-state]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const related = state.selected?.relatedStates?.find((item) => item.id === button.dataset.relatedState);
+      if (!related?.protein) return;
+      state.selected = {
+        ...related.protein,
+        relatedStates: [
+          {
+            id: getProteinKey(state.selected),
+            name: getDisplayName(state.selected),
+            englishName: state.selected.englishName,
+            stateLabel: state.selected.stateLabel || "대표",
+            stateReason: state.selected.stateReason || "처음 선택한 대표 구조입니다.",
+            protein: state.selected
+          },
+          ...(state.selected.relatedStates || []).filter((item) => item.id !== related.id)
+        ]
+      };
+      state.recentProteins = recordRecentProtein(state.selected);
       render();
     });
   });
@@ -1436,6 +1511,116 @@ function confidenceColor(value) {
   if (value >= 70) return "#19a7ce";
   if (value >= 50) return "#f2c94c";
   return "#f97316";
+}
+
+const translations = {
+  ko: {
+    home: "홈으로",
+    language: "언어 선택",
+    brandSubtitle: "단백질 구조를 쉽게 읽는 노트",
+    heroTitle: "단백질 구조를 검색하세요",
+    heroText: "단백질 이름이나 PDB ID를 입력하면 구조와 기능, 근거 자료를 함께 확인할 수 있습니다",
+    searchPlaceholder: "예: p53, 헤모글로빈, 인슐린, 스파이크 단백질, 1HHO...",
+    loadingTitle: "RCSB PDB에서 후보를 찾고 있습니다",
+    loadingText: "검색어를 PDB 실험 구조 데이터베이스에 질의하는 중입니다.",
+    organism: "생물종",
+    evidenceHint: "전문 탭에서 논문 근거 확인",
+    basicInfo: "기본정보",
+    groupedCount: "개 구조를 대표 1개로 묶음",
+    otherStates: "다른 상태",
+    otherState: "다른 상태",
+    otherStateReason: "실험 조건이나 결합 상태가 다른 구조입니다.",
+    structureView: "실제 구조 시각화",
+    cartoon: "리본",
+    stick: "스틱",
+    sphere: "구체",
+    surface: "표면",
+    confidence: "신뢰도",
+    cartoonView: "리본 보기",
+    stickView: "원자 결합 보기",
+    sphereView: "공간 채움 보기",
+    surfaceView: "분자 표면 보기",
+    confidenceView: "B-factor 또는 pLDDT 색상 보기",
+    researchMode: "연구 모드",
+    classroomMode: "교육 모드",
+    basic: "기본",
+    professional: "전문",
+    method: "방법",
+    resolution: "해상도",
+    size: "크기",
+    mass: "분자량"
+  },
+  en: {
+    home: "Home",
+    language: "Language",
+    brandSubtitle: "Readable notes for protein structures",
+    heroTitle: "Search protein structures",
+    heroText: "Enter a protein name or PDB ID to inspect structure, function, and supporting evidence.",
+    searchPlaceholder: "Try p53, hemoglobin, insulin, spike protein, 1HHO...",
+    loadingTitle: "Searching RCSB PDB",
+    loadingText: "Querying the experimental structure database for matching entries.",
+    organism: "Organism",
+    evidenceHint: "Open the professional tab for literature evidence",
+    basicInfo: "Basic info",
+    groupedCount: "structures grouped under one representative",
+    otherStates: "Other states",
+    otherState: "Other state",
+    otherStateReason: "This structure differs by experimental condition, ligand, or binding state.",
+    structureView: "structure viewer",
+    cartoon: "Ribbon",
+    stick: "Stick",
+    sphere: "Sphere",
+    surface: "Surface",
+    confidence: "Confidence",
+    cartoonView: "Ribbon view",
+    stickView: "Atomic bond view",
+    sphereView: "Space filling view",
+    surfaceView: "Molecular surface view",
+    confidenceView: "B-factor or pLDDT color view",
+    researchMode: "Research",
+    classroomMode: "Classroom",
+    basic: "Basic",
+    professional: "Professional",
+    method: "Method",
+    resolution: "Resolution",
+    size: "Size",
+    mass: "Mass"
+  }
+};
+
+function t(key) {
+  return translations[state.language]?.[key] || translations.ko[key] || key;
+}
+
+function formatGroupedCount(count) {
+  return state.language === "ko" ? `${count}${t("groupedCount")}` : `${count} ${t("groupedCount")}`;
+}
+
+function getDisplayName(protein) {
+  if (state.language === "ko") {
+    return protein.koreanName || protein.name;
+  }
+  return protein.englishName || protein.name;
+}
+
+function getSecondaryName(protein) {
+  if (state.language === "ko") {
+    return protein.englishName || protein.name;
+  }
+  return protein.koreanName || protein.name;
+}
+
+function renderProteinTitle(protein) {
+  const primary = getDisplayName(protein);
+  const secondary = getSecondaryName(protein);
+  if (!secondary || normalizeForCompare(primary) === normalizeForCompare(secondary)) {
+    return escapeHtml(primary);
+  }
+  return `${escapeHtml(primary)} <span class="english-name">(${escapeHtml(secondary)})</span>`;
+}
+
+function normalizeForCompare(value) {
+  return String(value || "").toLowerCase().replace(/\s+/g, "");
 }
 
 function showViewerMessage(message) {

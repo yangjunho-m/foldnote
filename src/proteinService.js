@@ -9,6 +9,7 @@ import {
   UNIPROT_SEARCH_URL,
   fallbackProtein,
   koreanQueryMap,
+  proteinNameTranslations,
   proteins
 } from "./catalog.js";
 
@@ -26,16 +27,20 @@ export async function findProteinStructures(query) {
   }
 
   const data = await response.json();
-  const pdbIds = (data.result_set || [])
+  const apiPdbIds = (data.result_set || [])
     .map((item) => item.identifier)
     .filter(Boolean)
     .slice(0, 6);
+  const pdbIds = mergeUniqueIds([...getCuratedPdbIds(trimmedQuery), ...apiPdbIds]).slice(0, 8);
 
-  return pdbIds.length ? fetchPdbDetails(pdbIds) : fetchAlphaFoldResults(query);
+  const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(query);
+  return groupRelatedStructures(results.map(addLocalizedMetadata), query);
 }
 
 function normalize(text) {
-  return text.toLowerCase().replace(/\s+/g, "");
+  return String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, "");
 }
 
 export function searchProteins(query) {
@@ -150,7 +155,7 @@ function createProteinFromRcsb(pdbId, entry, entity) {
   const formulaWeight = entity?.rcsb_polymer_entity?.formula_weight;
   const displayName = entityName || title;
 
-  return {
+  return addLocalizedMetadata({
     name: toTitleCase(displayName),
     englishName: title,
     pdbId,
@@ -173,11 +178,11 @@ function createProteinFromRcsb(pdbId, entry, entity) {
       ["green", "관찰 포인트", "리본의 접힘 방향, 작은 분자 결합 위치, 사슬 사이 접촉면을 함께 보면 좋습니다."],
       ["amber", "해석 주의", "한 구조는 특정 실험 조건의 모습이므로 실제 세포 안에서는 다른 상태도 존재할 수 있습니다."]
     ]
-  };
+  });
 }
 
 function createMinimalPdbProtein(pdbId) {
-  return {
+  return addLocalizedMetadata({
     name: `PDB ${pdbId}`,
     englishName: "RCSB PDB entry",
     pdbId,
@@ -200,7 +205,7 @@ function createMinimalPdbProtein(pdbId) {
       ["green", "비교", "비슷한 단백질의 다른 구조와 비교하면 움직임이나 결합 차이를 이해하기 쉽습니다."],
       ["amber", "해석 주의", "표시된 구조가 단백질의 모든 상태를 대표하지는 않을 수 있습니다."]
     ]
-  };
+  });
 }
 
 function createProteinFromAlphaFold(record, structureUrl) {
@@ -210,7 +215,7 @@ function createProteinFromAlphaFold(record, structureUrl) {
   const length = record.sequence?.length || record.length;
   const alphaFoldId = `AF-${accession}-F1`;
 
-  return {
+  return addLocalizedMetadata({
     name: proteinName,
     englishName: `${accession} AlphaFold predicted model`,
     pdbId: "",
@@ -236,7 +241,178 @@ function createProteinFromAlphaFold(record, structureUrl) {
       ["green", "생물종", organism],
       ["amber", "주의", "예측 구조는 실험 구조가 아니므로 결합 부위, 유연한 영역, 복합체 해석에는 주의가 필요합니다."]
     ]
+  });
+}
+
+function addLocalizedMetadata(protein) {
+  const text = `${protein.name || ""} ${protein.englishName || ""}`;
+  const match = proteinNameTranslations.find((item) => item.pattern.test(text));
+  if (!match) return protein;
+  const state = match.family === "헤모글로빈" ? classifyHemoglobinState(protein, text) : null;
+
+  return {
+    ...protein,
+    koreanName: state?.koreanName || protein.koreanName || match.koreanName,
+    family: protein.family || match.family,
+    stateLabel: state?.stateLabel || protein.stateLabel || match.stateLabel,
+    stateReason: state?.stateReason || protein.stateReason || match.stateReason
   };
+}
+
+function classifyHemoglobinState(protein, text) {
+  const value = `${text} ${protein.pdbId || ""}`.toLowerCase();
+  const id = String(protein.pdbId || "").toUpperCase();
+  const facts = `${protein.method || "실험"} · ${protein.resolution || "해상도 정보 없음"}`;
+
+  if (/2hhb|deoxy|unliganded|t-state|tense/.test(value)) {
+    return {
+      koreanName: "데옥시헤모글로빈",
+      stateLabel: "비결합형",
+      stateReason: `산소가 붙지 않은 T 상태 구조입니다. 산소 결합형과 비교하면 사슬 사이 배치와 헴 주변 위치가 달라집니다. (${id || facts})`
+    };
+  }
+
+  if (/1hho|oxy|oxygenated|o2|liganded|r-state|relaxed/.test(value)) {
+    return {
+      koreanName: "산소 결합 헤모글로빈",
+      stateLabel: "산소 결합형",
+      stateReason: `산소가 헴에 붙은 R 상태에 가까운 구조입니다. 산소가 붙으며 친화도가 높아지는 협동성 설명에 좋습니다. (${id || facts})`
+    };
+  }
+
+  if (/carbonmonoxy|carboxy|carbon monoxide|\bco\b|co-/.test(value)) {
+    return {
+      koreanName: "일산화탄소 결합 헤모글로빈",
+      stateLabel: "CO 결합형",
+      stateReason: `일산화탄소가 헴에 붙은 구조입니다. 산소보다 강하게 결합하는 이유와 중독 위험을 설명할 때 씁니다. (${id || facts})`
+    };
+  }
+
+  if (/methemoglobin|met|ferric|aquomet|cyanomet/.test(value)) {
+    return {
+      koreanName: "메트헤모글로빈",
+      stateLabel: "산화형",
+      stateReason: `철이 산화되었거나 물/시안화물이 결합한 상태입니다. 산소 운반이 어려운 변형 상태를 비교할 때 좋습니다. (${id || facts})`
+    };
+  }
+
+  if (/4hhb|adult|hemoglobin a|haemoglobin a/.test(value)) {
+    return {
+      koreanName: "헤모글로빈 A",
+      stateLabel: "대표 성인형",
+      stateReason: `성인에게 가장 흔한 표준 헤모글로빈입니다. 비결합형, 산소 결합형, 변이형을 비교할 때 기준점으로 쓰기 좋습니다. (${id || facts})`
+    };
+  }
+
+  if (/fetal|hemoglobin f|haemoglobin f/.test(value)) {
+    return {
+      koreanName: "태아 헤모글로빈",
+      stateLabel: "태아형",
+      stateReason: `태아에서 산소를 더 잘 붙잡도록 사슬 조성이 다른 형태입니다. 성인형과 산소 친화도 차이를 비교합니다. (${id || facts})`
+    };
+  }
+
+  if (/sickle|mutant|variant|mutation|hb s|hbs/.test(value)) {
+    return {
+      koreanName: "변이 헤모글로빈",
+      stateLabel: "변이형",
+      stateReason: `아미노산 변이 또는 질환 관련 구조입니다. 정상 성인형과 비교해 표면 전하와 사슬 접촉 차이를 봅니다. (${id || facts})`
+    };
+  }
+
+  return {
+    koreanName: "헤모글로빈",
+    stateLabel: "실험 조건형",
+    stateReason: `같은 헤모글로빈이지만 등록된 실험 조건, 결합 분자, 해상도가 다른 구조입니다. 먼저 대표 성인형과 비교해 무엇이 붙었는지 확인합니다. (${id || facts})`
+  };
+}
+
+function groupRelatedStructures(results, query) {
+  const filtered = results.filter(Boolean);
+  if (filtered.length <= 1) return filtered;
+
+  const searchTerm = resolveSearchTerm(query).toLowerCase();
+  const shouldGroup =
+    proteinNameTranslations.some((item) => item.pattern.test(searchTerm)) ||
+    filtered.some((item) => item.family);
+
+  if (!shouldGroup) return filtered.slice(0, 4);
+
+  const groups = new Map();
+  filtered.forEach((protein) => {
+    const key = protein.family || protein.koreanName || protein.name;
+    const entries = groups.get(key) || [];
+    entries.push(protein);
+    groups.set(key, entries);
+  });
+
+  return Array.from(groups.values())
+    .map((items) => {
+      const representative = chooseRepresentative(items, searchTerm);
+      const relatedStates = items
+        .filter((item) => getStructureId(item) !== getStructureId(representative))
+        .slice(0, 5)
+        .map((item) => ({
+          id: getStructureId(item),
+          name: item.koreanName || item.name,
+          englishName: item.englishName || item.name,
+          stateLabel: item.stateLabel || "다른 후보",
+          stateReason: item.stateReason || "실험 조건, 결합 분자, 생물종 또는 단백질 상태가 달라 별도 구조로 등록된 후보입니다.",
+          method: item.method,
+          resolution: item.resolution,
+          source: item.source,
+          protein: item
+        }));
+
+      return {
+        ...representative,
+        resultCount: items.length,
+        relatedStates
+      };
+    })
+    .slice(0, 4);
+}
+
+function chooseRepresentative(items, searchTerm) {
+  return [...items].sort((a, b) => scoreRepresentative(b, searchTerm) - scoreRepresentative(a, searchTerm))[0];
+}
+
+function scoreRepresentative(protein, searchTerm) {
+  const text = `${protein.name || ""} ${protein.englishName || ""}`.toLowerCase();
+  let score = 0;
+  if (text.includes(searchTerm)) score += 5;
+  if (/adult|hemoglobin a|haemoglobin a|representative/i.test(text)) score += 4;
+  if (/deoxy|oxy|carbonmonoxy|mutant|variant|complex/i.test(text)) score -= 2;
+  if (protein.pdbId === "4HHB") score += 8;
+  if (protein.pdbId === "1HHO") score += 5;
+  if (protein.pdbId === "2HHB") score += 3;
+  if (protein.source === "PDB") score += 1;
+  const resolution = Number.parseFloat(protein.resolution);
+  if (Number.isFinite(resolution)) score += Math.max(0, 3 - resolution);
+  return score;
+}
+
+function getStructureId(protein) {
+  return protein.pdbId || protein.accession || protein.alphaFoldId || protein.name;
+}
+
+function getCuratedPdbIds(query) {
+  const searchTerm = resolveSearchTerm(query).toLowerCase();
+  if (!/h[ae]moglobin/.test(searchTerm)) return [];
+  return proteins
+    .filter((protein) => /hemoglobin/i.test(`${protein.name} ${protein.englishName}`))
+    .map((protein) => protein.pdbId)
+    .filter(Boolean);
+}
+
+function mergeUniqueIds(ids) {
+  const seen = new Set();
+  return ids.filter((id) => {
+    const key = String(id || "").toUpperCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function buildAlphaFoldStructureUrl(accession) {
