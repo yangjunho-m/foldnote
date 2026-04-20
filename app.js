@@ -45,6 +45,7 @@ const state = {
   reportSnapshot: "",
   variantQuery: "",
   isSidebarOpen: false,
+  isProjectFormOpen: false,
   newProjectName: "",
   language: window.localStorage.getItem("foldnote-language") || "ko"
 };
@@ -218,6 +219,7 @@ function renderSearch() {
             />
           </form>
 
+          ${renderRecentProteins()}
           ${renderSearchState()}
           ${renderProModules()}
           ${renderRecommendations()}
@@ -243,16 +245,17 @@ function renderWorkspaceSidebar() {
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
         </button>
       </div>
-      <a class="pages-link" href="https://yangjunho-m.github.io/foldnote/" target="_blank" rel="noreferrer">GitHub Pages에서 보기</a>
-
       <div class="workspace-section">
         <div class="workspace-section-head">
           <h3>폴더</h3>
+          <button type="button" data-show-project-form aria-label="폴더 추가">+</button>
         </div>
-        <form class="folder-create-form" data-create-project-form>
-          <input type="text" data-project-name-input value="${escapeHtml(state.newProjectName)}" placeholder="새 폴더 이름" aria-label="새 폴더 이름" />
-          <button type="submit" aria-label="폴더 추가">+</button>
-        </form>
+        ${state.isProjectFormOpen
+          ? `<form class="folder-create-form" data-create-project-form>
+              <input type="text" data-project-name-input value="${escapeHtml(state.newProjectName)}" placeholder="새 폴더 이름" aria-label="새 폴더 이름" />
+              <button type="submit" aria-label="폴더 추가">추가</button>
+            </form>`
+          : ""}
         <div class="workspace-folder-list">
           ${state.projects
             .map(
@@ -274,8 +277,6 @@ function renderWorkspaceSidebar() {
         </div>
         ${renderSavedNotes(notes)}
       </div>
-
-      ${renderRecentProteins()}
     </aside>
   `;
 }
@@ -389,7 +390,7 @@ function renderResults() {
               </div>
               <div class="result-meta">
                 <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
-                <span>${t("organism")}: ${escapeHtml(protein.organism)}</span>
+                ${protein.organism ? `<span>${t("organism")}: ${escapeHtml(protein.organism)}</span>` : ""}
                 <span>${protein.resultCount > 1 ? formatGroupedCount(protein.resultCount) : t("evidenceHint")}</span>
               </div>
               <div class="result-summary">
@@ -441,7 +442,8 @@ function renderRelatedStates(protein, resultIndex) {
 function createQuickSummary(protein) {
   if (state.language === "en") return createEnglishQuickSummary(protein);
   const feature = protein.features?.find(([, title]) => /기능|구조|관찰/.test(title))?.[2];
-  return feature || `${protein.name}은 ${protein.organism}에서 보고된 ${protein.source} 구조로, 접힘과 결합 부위를 살펴볼 수 있습니다.`;
+  const organismText = protein.organism ? `${protein.organism}에서 보고된 ` : "";
+  return feature || `${protein.name}은 ${organismText}${protein.source} 구조로, 접힘과 결합 부위를 살펴볼 수 있습니다.`;
 }
 
 function localizedQuickSummary(protein) {
@@ -455,7 +457,7 @@ function createEnglishQuickSummary(protein) {
   const label = protein.stateLabelEn || stateLabelFallbackEn(protein.stateLabel) || "structure";
   const name = protein.englishName || protein.name || "This protein";
   const source = protein.source || "structure";
-  const organism = protein.organism && protein.organism !== "정보 없음" ? ` from ${protein.organism}` : "";
+  const organism = protein.organism ? ` from ${protein.organism}` : "";
   return `${name} is a ${source} ${label.toLowerCase()}${organism}. Compare its fold, binding sites, and assembly against the related structures.`;
 }
 
@@ -625,11 +627,11 @@ function renderInfoPanel(protein) {
 
         <div class="meta-grid">
           <div class="metric"><span>${protein.source === "PDB" ? "PDB ID" : "UniProt"}</span><strong>${protein.pdbId || protein.accession || "AlphaFold"}</strong></div>
-          <div class="metric"><span>${t("organism")}</span><strong>${escapeHtml(protein.organism)}</strong></div>
-          <div class="metric"><span>${t("method")}</span><strong>${escapeHtml(protein.method)}</strong></div>
-          <div class="metric"><span>${t("resolution")}</span><strong>${escapeHtml(protein.resolution)}</strong></div>
-          <div class="metric"><span>${t("size")}</span><strong>${escapeHtml(protein.size)}</strong></div>
-          <div class="metric"><span>${t("mass")}</span><strong>${escapeHtml(protein.mass)}</strong></div>
+          ${renderMetric(t("organism"), protein.organism)}
+          ${renderMetric(t("method"), protein.method)}
+          ${renderMetric(t("resolution"), protein.resolution)}
+          ${renderMetric(t("size"), protein.size)}
+          ${renderMetric(t("mass"), protein.mass)}
         </div>
 
         ${renderSelectedRelatedStates(protein)}
@@ -660,6 +662,11 @@ function renderSelectedRelatedStates(protein) {
       </div>
     </section>
   `;
+}
+
+function renderMetric(label, value) {
+  if (!value || /정보\s*(없음|로딩 실패)|unknown/i.test(String(value))) return "";
+  return `<div class="metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
 }
 
 function renderUnifiedInfo(protein) {
@@ -1001,10 +1008,32 @@ function buildLiteratureSearchUrl(protein) {
 }
 
 function renderColorLegend(protein) {
+  if (state.viewerStyle === "cartoon") {
+    return `
+      <div class="viewer-legend">
+        <h3>리본 보기</h3>
+        <div><span class="spectrum"></span>사슬의 처음부터 끝까지 이어지는 접힘 흐름</div>
+        <div><span style="background:#58c4dd"></span>나선과 판이 만드는 전체 골격</div>
+        <div><span style="background:#f59e0b"></span>색이 바뀌는 구간은 다른 영역이나 사슬 경계를 보기 좋습니다</div>
+      </div>
+    `;
+  }
+
+  if (state.viewerStyle === "surface") {
+    return `
+      <div class="viewer-legend">
+        <h3>표면 보기</h3>
+        <div><span style="background:#ffffff;border:1px solid #cbd5e1"></span>흰 표면: 용매가 닿는 단백질 바깥쪽</div>
+        <div><span class="spectrum"></span>안쪽 리본: 표면 아래의 사슬 흐름</div>
+        <div><span style="background:#4ade80"></span>홈이나 패인 곳은 결합 부위 후보로 볼 수 있습니다</div>
+      </div>
+    `;
+  }
+
   if (state.viewerStyle === "confidence") {
     return `
       <div class="viewer-legend">
-        <h3>색상 의미</h3>
+        <h3>신뢰도 색상</h3>
         <div><span style="background:#1f5eff"></span>파랑: 안정적이고 해석 신뢰가 높은 구간</div>
         <div><span style="background:#19a7ce"></span>청록: 대체로 믿을 수 있는 접힘</div>
         <div><span style="background:#f2c94c"></span>노랑: 유연하거나 조건에 따라 달라질 수 있음</div>
@@ -1016,7 +1045,7 @@ function renderColorLegend(protein) {
   if (state.viewerStyle === "stick" || state.viewerStyle === "sphere") {
     return `
       <div class="viewer-legend">
-        <h3>색상 의미</h3>
+        <h3>원자 색상</h3>
         <div><span style="background:#909090"></span>탄소 C</div>
         <div><span style="background:#3050f8"></span>질소 N</div>
         <div><span style="background:#ff0d0d"></span>산소 O</div>
@@ -1025,15 +1054,7 @@ function renderColorLegend(protein) {
     `;
   }
 
-  return `
-    <div class="viewer-legend">
-      <h3>색상 의미</h3>
-      <div><span class="spectrum"></span>사슬의 처음부터 끝까지</div>
-      <div><span style="background:#58c4dd"></span>리본: 단백질의 주된 접힘 경로</div>
-      <div><span style="background:#4ade80"></span>스틱: 결합 부위의 작은 분자</div>
-      <div><span style="background:#f59e0b"></span>색 변화: 서로 다른 사슬/영역 구분</div>
-    </div>
-  `;
+  return "";
 }
 
 function bindEvents() {
@@ -1204,6 +1225,15 @@ function bindEvents() {
     });
   });
 
+  const showProjectFormButton = document.querySelector("[data-show-project-form]");
+  if (showProjectFormButton) {
+    showProjectFormButton.addEventListener("click", () => {
+      state.isProjectFormOpen = true;
+      render();
+      window.requestAnimationFrame(() => document.querySelector("[data-project-name-input]")?.focus());
+    });
+  }
+
   const projectNameInput = document.querySelector("[data-project-name-input]");
   if (projectNameInput) {
     projectNameInput.addEventListener("input", () => {
@@ -1219,6 +1249,7 @@ function bindEvents() {
       if (!name) return;
       state.projects = createProject(name);
       state.newProjectName = "";
+      state.isProjectFormOpen = false;
       state.currentProjectId = state.projects[state.projects.length - 1]?.id || DEFAULT_PROJECT_ID;
       state.isSidebarOpen = true;
       render();
@@ -1624,7 +1655,7 @@ const translations = {
     otherStateReason: "실험 조건이나 결합 상태가 다른 구조입니다.",
     selectedStructure: "선택 구조",
     stateComparison: "상태별 구조 비교",
-    stateComparisonHint: "해시태그를 보고 구조-기능 차이를 나란히 확인하세요",
+    stateComparisonHint: "해시태그로 구조 이름과 PDB ID를 구분해 보세요",
     description: "설명",
     keyFeatures: "주요 특징",
     structureView: "실제 구조 시각화",
@@ -1665,7 +1696,7 @@ const translations = {
     otherStateReason: "This structure differs by experimental condition, ligand, or binding state.",
     selectedStructure: "Selected structure",
     stateComparison: "State-by-state comparison",
-    stateComparisonHint: "Use the hashtags to compare structure-function differences side by side.",
+    stateComparisonHint: "Use the hashtags to identify each structure name and PDB ID.",
     description: "Description",
     keyFeatures: "Key features",
     structureView: "structure viewer",
@@ -1792,7 +1823,7 @@ function stateLabelFallbackEn(label) {
 
 function stateReasonFallbackEn(item) {
   const id = item.id || item.pdbId || item.accession || item.alphaFoldId || "this entry";
-  return `This related structure differs in condition, bound molecule, resolution, or assembly. Compare it with the selected structure to understand the functional difference. (${id})`;
+  return `This structure differs in condition, bound molecule, resolution, or assembly. (${id})`;
 }
 
 function renderProteinTitle(protein) {
