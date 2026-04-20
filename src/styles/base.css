@@ -1,0 +1,202 @@
+:root {
+  --background: #fbfcff;
+  --surface: #ffffff;
+  --surface-soft: #f5f8fc;
+  --foreground: #171923;
+  --muted: #6d7280;
+  --line: rgba(23, 25, 35, 0.1);
+  --primary: #316ff6;
+  --primary-deep: #7447f4;
+  --primary-soft: #eaf2ff;
+  --purple-soft: #f1ecff;
+  --green-soft: #edf9f2;
+  --amber-soft: #fff6db;
+  --danger-soft: #fff0f2;
+  --radius: 8px;
+  --shadow: 0 8px 24px rgba(32, 43, 68, 0.09);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at 84% 18%, rgba(116, 71, 244, 0.08), transparent 30%),
+    linear-gradient(180deg, #f6f9fd 0%, #ffffff 47%, #fbfaff 100%);
+  color: var(--foreground);
+  font-family:
+    Inter,
+    Pretendard,
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell.dark {
+  --background: #10131a;
+  --surface: #171c26;
+  --surface-soft: #202737;
+  --foreground: #f6f8fb;
+  --muted: #aab3c2;
+  --line: rgba(255, 255, 255, 0.12);
+  --primary-soft: rgba(76, 132, 255, 0.18);
+  background:
+    radial-gradient(circle at 78% 20%, rgba(49, 111, 246, 0.12), transparent 32%),
+    linear-gradient(180deg, #121722 0%, #171c26 52%, #10131a 100%);
+  color: var(--foreground);
+}
+
+.topbar {
+  min-height: 82px;
+  padding: 12px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(28, 36, 54, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark,
+.hero-icon {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(78, 91, 238, 0.22);
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.brand-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.brand-title span {
+  margin-left: 7px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.brand-subtitle {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-button,
+.plain-button {
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: #4b5565;
+  background: transparent;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+}
+
+.plain-button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.app-shell.dark .topbar {
+  background: rgba(16, 19, 26, 0.82);
+}
+
+.app-shell.dark .icon-button,
+.app-shell.dark .plain-button {
+  color: #dbe3ef;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--line);
+}
+
+.app-shell.dark .search-input,
+.app-shell.dark .result-card,
+.app-shell.dark .recommend-box,
+.app-shell.dark .recommend-card,
+.app-shell.dark .status-card,
+.app-shell.dark .info-panel {
+  background: rgba(23, 28, 38, 0.95);
+  color: var(--foreground);
+}
+
+.app-shell.dark .result-title,
+.app-shell.dark .recommend-card strong,
+.app-shell.dark .protein-heading h2,
+.app-shell.dark .section h3,
+.app-shell.dark .metric strong {
+  color: var(--foreground);
+}
+
+.app-shell.dark .search-input {
+  border-color: var(--line);
+}
+
+.app-shell.dark .metric,
+.app-shell.dark .secondary-button {
+  background: var(--surface-soft);
+  color: var(--foreground);
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+}

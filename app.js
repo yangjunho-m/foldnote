@@ -1,218 +1,9 @@
-const proteins = [
-  {
-    name: "헤모글로빈",
-    englishName: "Hemoglobin",
-    pdbId: "1HHO",
-    source: "PDB",
-    organism: "Homo sapiens",
-    method: "X-ray",
-    resolution: "1.74 A",
-    size: "574 aa",
-    mass: "~64.5 kDa",
-    confidence: "실험 구조",
-    description:
-      "적혈구 안에서 산소를 붙잡아 폐에서 조직까지 옮기는 단백질입니다. 네 개의 사슬이 모여 있고, 각 사슬의 헴 그룹이 산소 결합의 핵심 역할을 합니다.",
-    features: [
-      ["blue", "기능", "산소를 운반하고 조직의 산소 농도에 따라 놓아줍니다."],
-      ["purple", "구조", "알파 사슬 2개와 베타 사슬 2개가 모인 사량체입니다."],
-      ["green", "볼 포인트", "산소가 하나 붙으면 다음 산소가 더 잘 붙는 협동성이 있습니다."],
-      ["amber", "생활 연결", "빈혈, 일산화탄소 중독, 운동 능력과도 연결해서 설명할 수 있습니다."]
-    ]
-  },
-  {
-    name: "데옥시헤모글로빈",
-    englishName: "Deoxyhemoglobin",
-    pdbId: "2HHB",
-    source: "PDB",
-    organism: "Homo sapiens",
-    method: "X-ray",
-    resolution: "1.74 A",
-    size: "574 aa",
-    mass: "~64.5 kDa",
-    confidence: "실험 구조",
-    description:
-      "산소가 결합하지 않은 헤모글로빈 상태입니다. 산소가 붙은 상태와 비교하면 사슬의 상대적 위치가 달라져 단백질이 상태에 따라 움직인다는 것을 보여줍니다.",
-    features: [
-      ["blue", "기능", "산소가 부족한 조직에서 산소를 내어준 뒤의 구조 상태입니다."],
-      ["purple", "구조", "긴장 상태에 가까운 배치를 가지며 산소 결합 친화도가 낮습니다."],
-      ["green", "볼 포인트", "산소 결합 전후 구조 변화를 비교하기 좋은 대표 예시입니다."],
-      ["amber", "학습 연결", "단백질은 고정된 조각상이 아니라 환경에 따라 움직이는 기계에 가깝습니다."]
-    ]
-  },
-  {
-    name: "헤모글로빈 A",
-    englishName: "Adult Hemoglobin",
-    pdbId: "4HHB",
-    source: "PDB",
-    organism: "Homo sapiens",
-    method: "X-ray",
-    resolution: "1.90 A",
-    size: "574 aa",
-    mass: "~64.5 kDa",
-    confidence: "실험 구조",
-    description:
-      "성인에게 가장 흔한 헤모글로빈 형태입니다. 산소 운반을 이해하는 표준 모델로 자주 쓰이며, 유전 변이와 혈액 질환 설명에도 좋습니다.",
-    features: [
-      ["blue", "기능", "폐에서 산소를 싣고 몸 전체 조직으로 배달합니다."],
-      ["purple", "구조", "2개의 알파 사슬과 2개의 베타 사슬로 이루어집니다."],
-      ["green", "볼 포인트", "겸상 적혈구 빈혈처럼 작은 아미노산 변화가 큰 결과를 만들 수 있습니다."],
-      ["amber", "해설 아이디어", "정상 구조와 변이 구조를 나란히 비교하면 일반인도 차이를 빠르게 이해합니다."]
-    ]
-  },
-  {
-    name: "인슐린",
-    englishName: "Insulin",
-    pdbId: "4INS",
-    source: "PDB",
-    organism: "Homo sapiens",
-    method: "X-ray",
-    resolution: "1.50 A",
-    size: "51 aa",
-    mass: "~5.8 kDa",
-    confidence: "실험 구조",
-    description:
-      "혈당을 낮추는 호르몬 단백질입니다. 작은 두 사슬이 이황화 결합으로 묶여 있으며, 당뇨병 치료제와 바로 연결되는 친숙한 구조입니다.",
-    features: [
-      ["blue", "기능", "세포가 포도당을 받아들이도록 신호를 보냅니다."],
-      ["purple", "구조", "A 사슬과 B 사슬이 이황화 결합으로 안정화됩니다."],
-      ["green", "볼 포인트", "작은 단백질이지만 생리 효과는 매우 큽니다."],
-      ["amber", "생활 연결", "제형 변화가 작용 시간 차이를 만드는 과정을 설명하기 좋습니다."]
-    ]
-  }
-];
-
-const recommendedProteins = [
-  {
-    name: "헤모글로빈",
-    query: "헤모글로빈",
-    tag: "오늘의 추천",
-    note: "산소 운반을 이해하기 좋은 대표 단백질"
-  },
-  {
-    name: "인슐린",
-    query: "인슐린",
-    tag: "인기",
-    note: "혈당 조절과 당뇨병을 연결해서 보기 좋습니다"
-  },
-  {
-    name: "p53",
-    query: "p53 tumor suppressor",
-    tag: "암 연구",
-    note: "DNA 손상 반응과 종양 억제 기능으로 유명합니다"
-  },
-  {
-    name: "스파이크 단백질",
-    query: "SARS-CoV-2 spike glycoprotein",
-    tag: "바이러스",
-    note: "바이러스가 세포에 붙는 과정을 설명하기 좋습니다"
-  },
-  {
-    name: "GFP",
-    query: "green fluorescent protein",
-    tag: "형광",
-    note: "생명과학 실험에서 표지 단백질로 널리 쓰입니다"
-  },
-  {
-    name: "CRISPR Cas9",
-    query: "Cas9",
-    tag: "유전자 편집",
-    note: "DNA를 인식하고 자르는 구조를 살펴볼 수 있습니다"
-  },
-  {
-    name: "콜라겐",
-    query: "collagen",
-    tag: "구조 단백질",
-    note: "피부와 결합조직의 강도를 만드는 섬유성 단백질"
-  },
-  {
-    name: "라이소자임",
-    query: "lysozyme",
-    tag: "효소",
-    note: "세균 세포벽을 분해하는 고전적인 구조 예시"
-  }
-];
-
-const RCSB_SEARCH_URL = "https://search.rcsb.org/rcsbsearch/v2/query";
-const RCSB_DATA_ENTRY_URL = "https://data.rcsb.org/rest/v1/core/entry";
-const RCSB_DATA_POLYMER_ENTITY_URL = "https://data.rcsb.org/rest/v1/core/polymer_entity";
-const RCSB_STRUCTURE_FILE_URL = "https://files.rcsb.org/download";
-const UNIPROT_SEARCH_URL = "https://rest.uniprot.org/uniprotkb/search";
-const ALPHAFOLD_FILE_URL = "https://alphafold.ebi.ac.uk/files";
-const ALPHAFOLD_ENTRY_URL = "https://alphafold.ebi.ac.uk/entry";
-const ALPHAFOLD_MODEL_VERSION = 6;
-
-const koreanQueryMap = [
-  ["헤모글로빈", "hemoglobin"],
-  ["헤모", "hemoglobin"],
-  ["헤", "hemoglobin"],
-  ["인슐린", "insulin"],
-  ["콜라겐", "collagen"],
-  ["케라틴", "keratin"],
-  ["미오글로빈", "myoglobin"],
-  ["알부민", "albumin"],
-  ["항체", "antibody"],
-  ["아밀레이스", "amylase"],
-  ["아밀라아제", "amylase"],
-  ["카탈레이스", "catalase"],
-  ["라이소자임", "lysozyme"],
-  ["리소자임", "lysozyme"]
-];
-
-const fallbackProtein = (query) => ({
-  name: query,
-  englishName: "Predicted protein",
-  source: "AlphaFold",
-  organism: "입력 후 후보 선택 필요",
-  method: "AI prediction",
-  resolution: "예측 모델",
-  size: "미확인",
-  mass: "미확인",
-  confidence: "pLDDT 확인 예정",
-  description:
-    "PDB 실험 구조 후보가 없을 때는 UniProt ID 또는 서열을 기준으로 AlphaFold 예측 구조를 연결하는 흐름이 좋습니다. 예측 구조는 신뢰도 색상과 함께 보여줘야 오해가 줄어듭니다.",
-  features: [
-    ["blue", "검색 흐름", "먼저 PDB 후보를 찾고, 없으면 AlphaFold DB 또는 직접 예측으로 넘어갑니다."],
-    ["purple", "주의", "예측 구조는 실험으로 검증된 구조가 아니므로 신뢰도 점수를 함께 보여줘야 합니다."],
-    ["green", "UX", "일반인에게는 '믿을 만한 부분'과 '조심해서 볼 부분'을 색으로 나누면 좋습니다."],
-    ["amber", "다음 단계", "UniProt 자동완성, 생물종 필터, 구조 출처 표시를 붙이면 제품 완성도가 크게 올라갑니다."]
-  ]
-});
-
-const icons = {
-  database:
-    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v14c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>',
-  search:
-    '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
-  info:
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
-  sparkle:
-    '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/></svg>'
-};
-
-const residueDescriptions = {
-  ALA: "알라닌은 작은 소수성 아미노산이라 단백질 내부를 안정화하는 데 자주 쓰입니다.",
-  ARG: "아르지닌은 양전하를 띠어 DNA, 인산기, 산성 잔기와 상호작용하기 쉽습니다.",
-  ASN: "아스파라긴은 극성 잔기로 수소 결합을 만들 수 있습니다.",
-  ASP: "아스파르트산은 음전하를 띠어 금속 이온이나 양전하 잔기와 상호작용할 수 있습니다.",
-  CYS: "시스테인은 황을 포함하며 이황화 결합으로 구조를 단단히 고정할 수 있습니다.",
-  GLN: "글루타민은 극성 잔기로 단백질 표면에서 수소 결합에 자주 참여합니다.",
-  GLU: "글루탐산은 음전하를 띠는 산성 잔기입니다.",
-  GLY: "글라이신은 가장 작은 아미노산이라 꺾임이나 유연한 부위에 자주 나타납니다.",
-  HIS: "히스티딘은 pH 변화와 금속 결합에 민감해 활성 부위에서 자주 보입니다.",
-  ILE: "아이소류신은 소수성 잔기로 단백질 내부 코어를 안정화합니다.",
-  LEU: "류신은 소수성 잔기로 단백질 내부에서 접힘을 돕습니다.",
-  LYS: "라이신은 양전하를 띠어 DNA나 산성 잔기와 상호작용하기 쉽습니다.",
-  MET: "메티오닌은 황을 포함한 소수성 잔기이며 번역 시작 잔기로도 쓰입니다.",
-  PHE: "페닐알라닌은 방향족 고리를 가진 소수성 잔기입니다.",
-  PRO: "프롤린은 고리 구조 때문에 단백질 사슬의 방향을 꺾는 역할을 자주 합니다.",
-  SER: "세린은 극성 잔기이며 인산화 같은 조절 위치가 될 수 있습니다.",
-  THR: "트레오닌은 극성 잔기이며 인산화 조절에 참여할 수 있습니다.",
-  TRP: "트립토판은 큰 방향족 잔기로 단백질 내부 안정화와 결합 부위에 자주 보입니다.",
-  TYR: "타이로신은 방향족 잔기이며 인산화 신호 조절에도 중요합니다.",
-  VAL: "발린은 소수성 잔기로 단백질 내부 코어 형성에 기여합니다.",
-  HEM: "헴은 철을 포함한 보조인자로, 헤모글로빈에서는 산소 결합의 핵심입니다.",
-  HOH: "물 분자입니다. 구조 안정화나 결합 부위 주변 상호작용에 관여할 수 있습니다."
-};
+import {
+  icons,
+  recommendedProteins,
+  residueDescriptions
+} from "./src/catalog.js";
+import { findProteinStructures } from "./src/proteinService.js";
 
 const state = {
   query: "",
@@ -226,60 +17,12 @@ const state = {
   debounceTimer: null,
   viewer: null,
   viewerStyle: "cartoon",
+  infoMode: "simple",
   recommendations: [],
   theme: "light"
 };
 
-function normalize(text) {
-  return text.toLowerCase().replace(/\s+/g, "");
-}
 
-function searchProteins(query) {
-  const value = normalize(query);
-  if (!value) return [];
-
-  const matches = proteins.filter((protein) => {
-    const haystack = normalize(
-      `${protein.name}${protein.englishName}${protein.pdbId || ""}${protein.organism}`
-    );
-    return haystack.includes(value) || value.includes("헤모") || value.includes("hemo");
-  });
-
-  return matches.length ? matches : [fallbackProtein(query)];
-}
-
-function resolveSearchTerm(query) {
-  const compactQuery = normalize(query);
-  const match = koreanQueryMap.find(([korean]) => compactQuery.includes(normalize(korean)));
-  return match ? match[1] : query.trim();
-}
-
-function buildRcsbSearchPayload(query) {
-  return {
-    query: {
-      type: "terminal",
-      service: "full_text",
-      parameters: {
-        value: resolveSearchTerm(query)
-      }
-    },
-    return_type: "entry",
-    request_options: {
-      paginate: {
-        start: 0,
-        rows: 8
-      },
-      results_content_type: ["experimental"],
-      scoring_strategy: "combined",
-      sort: [
-        {
-          sort_by: "score",
-          direction: "desc"
-        }
-      ]
-    }
-  };
-}
 
 async function searchRcsb(query, token) {
   const trimmedQuery = query.trim();
@@ -298,26 +41,7 @@ async function searchRcsb(query, token) {
   render();
 
   try {
-    const response = await fetch(RCSB_SEARCH_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(buildRcsbSearchPayload(trimmedQuery))
-    });
-
-    if (!response.ok) {
-      throw new Error(`RCSB 검색 요청 실패 (${response.status})`);
-    }
-
-    const data = await response.json();
-    const pdbIds = (data.result_set || [])
-      .map((item) => item.identifier)
-      .filter(Boolean)
-      .slice(0, 6);
-
-    const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(trimmedQuery);
-
+    const results = await findProteinStructures(trimmedQuery);
     if (token !== state.searchToken) return;
     state.results = results;
     state.isLoading = false;
@@ -335,170 +59,6 @@ async function searchRcsb(query, token) {
     state.notice = "";
     render();
   }
-}
-
-async function fetchAlphaFoldResults(query) {
-  const searchTerm = resolveSearchTerm(query);
-  const params = new URLSearchParams({
-    query: `${searchTerm} reviewed:true`,
-    format: "json",
-    size: "6",
-    fields: "accession,protein_name,organism_name,length"
-  });
-
-  const response = await fetch(`${UNIPROT_SEARCH_URL}?${params}`);
-  if (!response.ok) throw new Error(`UniProt 검색 요청 실패 (${response.status})`);
-
-  const data = await response.json();
-  const candidates = data.results || [];
-  const checked = await Promise.all(
-    candidates.map(async (record) => {
-      const accession = record.primaryAccession;
-      const structureUrl = buildAlphaFoldStructureUrl(accession);
-      try {
-        const response = await fetch(structureUrl, { method: "HEAD" });
-        return response.ok ? createProteinFromAlphaFold(record, structureUrl) : null;
-      } catch (error) {
-        return createProteinFromAlphaFold(record, structureUrl);
-      }
-    })
-  );
-
-  return checked.filter(Boolean);
-}
-
-async function fetchPdbDetails(pdbIds) {
-  const details = await Promise.all(
-    pdbIds.map(async (pdbId) => {
-      try {
-        const entry = await fetchJson(`${RCSB_DATA_ENTRY_URL}/${pdbId}`);
-        const entityId = entry?.rcsb_entry_container_identifiers?.polymer_entity_ids?.[0];
-        const entity = entityId
-          ? await fetchJson(`${RCSB_DATA_POLYMER_ENTITY_URL}/${pdbId}/${entityId}`)
-          : null;
-        return createProteinFromRcsb(pdbId, entry, entity);
-      } catch (error) {
-        return createMinimalPdbProtein(pdbId);
-      }
-    })
-  );
-
-  return details;
-}
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Data API 요청 실패 (${response.status})`);
-  return response.json();
-}
-
-function createProteinFromRcsb(pdbId, entry, entity) {
-  const entityName = entity?.rcsb_polymer_entity?.pdbx_description;
-  const title = entry?.struct?.title || `${pdbId} structure`;
-  const organism = entity?.rcsb_entity_source_organism?.[0]?.scientific_name || "정보 없음";
-  const method = entry?.exptl?.[0]?.method || "실험 정보 없음";
-  const resolutionValue = entry?.rcsb_entry_info?.resolution_combined?.[0];
-  const sequenceLength = entity?.entity_poly?.rcsb_sample_sequence_length;
-  const formulaWeight = entity?.rcsb_polymer_entity?.formula_weight;
-  const displayName = entityName || title;
-
-  return {
-    name: toTitleCase(displayName),
-    englishName: title,
-    pdbId,
-    source: "PDB",
-    organism,
-    method,
-    resolution: resolutionValue ? `${resolutionValue} A` : "정보 없음",
-    size: sequenceLength ? `${sequenceLength} aa` : "정보 없음",
-    mass: formulaWeight ? `~${Math.round(formulaWeight / 1000)} kDa` : "정보 없음",
-    externalUrl: `https://www.rcsb.org/structure/${pdbId}`,
-    structureUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
-    pdbDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.pdb`,
-    cifDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
-    confidence: "실험으로 결정된 구조라서 전체 접힘과 원자 배치를 비교적 직접적으로 해석할 수 있습니다",
-    description: `${title} 구조입니다. ${organism}에서 유래한 단백질 또는 단백질 복합체로, 입체 구조를 통해 사슬의 접힘, 결합 부위, 보조인자나 리간드의 위치를 함께 살펴볼 수 있습니다.`,
-    features: [
-      ["blue", "구조", `${method}으로 관찰된 단백질 구조입니다.`],
-      ["purple", "생물학적 맥락", `${organism}에서 보고된 구조입니다.`],
-      ["green", "관찰 포인트", "리본의 접힘 방향, 작은 분자 결합 위치, 사슬 사이 접촉면을 함께 보면 좋습니다."],
-      ["amber", "해석 주의", "한 구조는 특정 실험 조건의 모습이므로 실제 세포 안에서는 다른 상태도 존재할 수 있습니다."]
-    ]
-  };
-}
-
-function createMinimalPdbProtein(pdbId) {
-  return {
-    name: `PDB ${pdbId}`,
-    englishName: "RCSB PDB entry",
-    pdbId,
-    source: "PDB",
-    organism: "정보 로딩 실패",
-    method: "정보 없음",
-    resolution: "정보 없음",
-    size: "정보 없음",
-    mass: "정보 없음",
-    externalUrl: `https://www.rcsb.org/structure/${pdbId}`,
-    structureUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
-    pdbDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.pdb`,
-    cifDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
-    confidence: "실험 구조 후보이지만 일부 상세 정보는 표시되지 않았습니다",
-    description: `${pdbId} 구조입니다. 상세 주석은 제한적이지만, 3D 구조에서는 단백질의 전체 접힘과 사슬 배치를 직접 확인할 수 있습니다.`,
-    features: [
-      ["blue", "구조", "단백질의 전체적인 접힘과 사슬 구성을 볼 수 있습니다."],
-      ["purple", "관찰 포인트", "리간드나 금속 이온이 있다면 활성 부위 주변을 먼저 살펴보세요."],
-      ["green", "비교", "비슷한 단백질의 다른 구조와 비교하면 움직임이나 결합 차이를 이해하기 쉽습니다."],
-      ["amber", "해석 주의", "표시된 구조가 단백질의 모든 상태를 대표하지는 않을 수 있습니다."]
-    ]
-  };
-}
-
-function createProteinFromAlphaFold(record, structureUrl) {
-  const accession = record.primaryAccession;
-  const proteinName = getUniProtProteinName(record);
-  const organism = record.organism?.scientificName || "정보 없음";
-  const length = record.sequence?.length || record.length;
-  const alphaFoldId = `AF-${accession}-F1`;
-
-  return {
-    name: proteinName,
-    englishName: `${accession} AlphaFold predicted model`,
-    pdbId: "",
-    accession,
-    alphaFoldId,
-    source: "AlphaFold",
-    organism,
-    method: "AI prediction",
-    resolution: "예측 모델",
-    size: length ? `${length} aa` : "정보 없음",
-    mass: "UniProt 기반",
-    externalUrl: `${ALPHAFOLD_ENTRY_URL}/${accession}`,
-    structureUrl,
-    pdbDownloadUrl: structureUrl.replace(".cif", ".pdb"),
-    cifDownloadUrl: structureUrl,
-    confidence: "AlphaFold 예측 구조입니다. pLDDT가 높은 구간은 국소 접힘을 더 신뢰할 수 있고, 낮은 구간은 유연하거나 불확실할 수 있습니다.",
-    description:
-      `${proteinName}의 예측 구조입니다. ${organism} 단백질로, 전체 접힘의 윤곽과 도메인 배치를 살펴보는 데 유용합니다. 다만 결합 상태나 복합체 형성은 별도 근거와 함께 해석하는 편이 좋습니다.`,
-    features: [
-      ["blue", "구조", "단일 사슬의 접힘과 도메인 배치를 이해하는 데 적합합니다."],
-      ["purple", "신뢰도", "pLDDT가 높을수록 해당 잔기 주변의 국소 구조를 더 신뢰할 수 있습니다."],
-      ["green", "생물종", organism],
-      ["amber", "주의", "예측 구조는 실험 구조가 아니므로 결합 부위, 유연한 영역, 복합체 해석에는 주의가 필요합니다."]
-    ]
-  };
-}
-
-function buildAlphaFoldStructureUrl(accession) {
-  return `${ALPHAFOLD_FILE_URL}/AF-${accession}-F1-model_v${ALPHAFOLD_MODEL_VERSION}.cif`;
-}
-
-function getUniProtProteinName(record) {
-  return (
-    record.proteinDescription?.recommendedName?.fullName?.value ||
-    record.proteinDescription?.submissionNames?.[0]?.fullName?.value ||
-    record.proteinDescription?.alternativeNames?.[0]?.fullName?.value ||
-    record.primaryAccession
-  );
 }
 
 function scheduleSearch(query) {
@@ -524,12 +84,6 @@ function scheduleSearch(query) {
   state.debounceTimer = window.setTimeout(() => {
     searchRcsb(state.query, token);
   }, 650);
-}
-
-function toTitleCase(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 }
 
 function badge(protein) {
@@ -720,7 +274,6 @@ function renderViewer(protein) {
           </div>
         </div>
         <div class="viewer-toolbar">
-          <button class="back-button" type="button" data-back>← 검색으로 돌아가기</button>
           <div class="viewer-title-card">
             <p>${protein.source} 실제 구조 시각화</p>
             <h2>${escapeHtml(protein.name)} (${escapeHtml(protein.englishName)})</h2>
@@ -732,74 +285,130 @@ function renderViewer(protein) {
           <button class="glass-button ${state.viewerStyle === "sphere" ? "active" : ""}" type="button" data-view-style="sphere" title="공간 채움 보기">구체</button>
           <button class="glass-button ${state.viewerStyle === "surface" ? "active" : ""}" type="button" data-view-style="surface" title="분자 표면 보기">표면</button>
           <button class="glass-button ${state.viewerStyle === "confidence" ? "active" : ""}" type="button" data-view-style="confidence" title="B-factor 또는 pLDDT 색상 보기">신뢰도</button>
-          <button class="glass-button fit-button" type="button" data-view-reset title="구조 전체를 화면 중앙에 맞춤">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3H3v5"/><path d="M16 3h5v5"/><path d="M21 16v5h-5"/><path d="M3 16v5h5"/><path d="M9 9h6v6H9z"/></svg>
-            전체 보기
-          </button>
         </div>
         ${renderColorLegend(protein)}
-        <div class="viewer-toast" data-viewer-toast></div>
         <div class="atom-tooltip" data-atom-tooltip></div>
       </div>
-      <aside class="info-panel">
-        <div class="info-inner">
-          <div class="protein-heading">
-            <h2>${escapeHtml(protein.name)}</h2>
-            ${badge(protein)}
-          </div>
-          <p class="brand-subtitle">${escapeHtml(protein.englishName)}</p>
-
-          <div class="meta-grid">
-            <div class="metric"><span>${protein.source === "PDB" ? "PDB ID" : "UniProt"}</span><strong>${protein.pdbId || protein.accession || "AlphaFold"}</strong></div>
-            <div class="metric"><span>생물종</span><strong>${escapeHtml(protein.organism)}</strong></div>
-            <div class="metric"><span>방법</span><strong>${escapeHtml(protein.method)}</strong></div>
-            <div class="metric"><span>해상도</span><strong>${escapeHtml(protein.resolution)}</strong></div>
-            <div class="metric"><span>크기</span><strong>${escapeHtml(protein.size)}</strong></div>
-            <div class="metric"><span>분자량</span><strong>${escapeHtml(protein.mass)}</strong></div>
-          </div>
-
-          <section class="section">
-            <h3>쉬운 설명</h3>
-            <p>${escapeHtml(protein.description)}</p>
-          </section>
-
-          <section class="section">
-            <h3>주요 특징</h3>
-            <div class="feature-list">
-              ${protein.features
-                .map(
-                  ([tone, title, text]) => `
-                    <div class="feature ${tone}">
-                      <strong>${escapeHtml(title)}:</strong> ${escapeHtml(text)}
-                    </div>
-                  `
-                )
-                .join("")}
-            </div>
-          </section>
-
-          <section class="section">
-            <h3>신뢰도</h3>
-            <p>${escapeHtml(protein.confidence)}입니다. AlphaFold 구조라면 잔기별 pLDDT 색상과 낮은 신뢰도 구간을 반드시 함께 보여주는 것이 좋습니다.</p>
-          </section>
-
-          <section class="section compact-section">
-            <h3>연구자 도구</h3>
-            <div class="tool-grid">
-              <button class="secondary-button" type="button" data-copy-id="${escapeHtml(protein.pdbId || protein.accession || "")}">ID 복사</button>
-              <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF</a>
-              <a class="secondary-button link-button" href="${escapeHtml(protein.pdbDownloadUrl)}" target="_blank" rel="noreferrer">PDB 파일</a>
-              <button class="secondary-button" type="button" data-view-style="confidence">신뢰도 색상</button>
-            </div>
-          </section>
-
-          <div class="action-row">
-            <a class="primary-button link-button" href="${escapeHtml(protein.externalUrl)}" target="_blank" rel="noreferrer">${protein.source === "PDB" ? "PDB에서 보기" : "AlphaFold 보기"}</a>
-            <button class="secondary-button" type="button">해설 저장</button>
-          </div>
-        </div>
-      </aside>
+      ${renderInfoPanel(protein)}
     </section>
+  `;
+}
+
+function renderInfoPanel(protein) {
+  return `
+    <aside class="info-panel">
+      <div class="info-inner">
+        <div class="protein-heading">
+          <h2>${escapeHtml(protein.name)}</h2>
+          ${badge(protein)}
+        </div>
+        <p class="brand-subtitle">${escapeHtml(protein.englishName)}</p>
+
+        <div class="panel-tabs" role="tablist" aria-label="정보 깊이 선택">
+          <button class="${state.infoMode === "simple" ? "active" : ""}" type="button" data-info-mode="simple">기본</button>
+          <button class="${state.infoMode === "pro" ? "active" : ""}" type="button" data-info-mode="pro">전문</button>
+        </div>
+
+        <div class="meta-grid">
+          <div class="metric"><span>${protein.source === "PDB" ? "PDB ID" : "UniProt"}</span><strong>${protein.pdbId || protein.accession || "AlphaFold"}</strong></div>
+          <div class="metric"><span>생물종</span><strong>${escapeHtml(protein.organism)}</strong></div>
+          <div class="metric"><span>방법</span><strong>${escapeHtml(protein.method)}</strong></div>
+          <div class="metric"><span>해상도</span><strong>${escapeHtml(protein.resolution)}</strong></div>
+          <div class="metric"><span>크기</span><strong>${escapeHtml(protein.size)}</strong></div>
+          <div class="metric"><span>분자량</span><strong>${escapeHtml(protein.mass)}</strong></div>
+        </div>
+
+        ${state.infoMode === "pro" ? renderProfessionalInfo(protein) : renderSimpleInfo(protein)}
+      </div>
+    </aside>
+  `;
+}
+
+function renderSimpleInfo(protein) {
+  return `
+    <section class="section">
+      <h3>쉬운 설명</h3>
+      <p>${escapeHtml(protein.description)}</p>
+    </section>
+
+    <section class="section">
+      <h3>주요 특징</h3>
+      <div class="feature-list">
+        ${protein.features
+          .map(
+            ([tone, title, text]) => `
+              <div class="feature ${tone}">
+                <strong>${escapeHtml(title)}:</strong> ${escapeHtml(text)}
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>신뢰도</h3>
+      <p>${escapeHtml(protein.confidence)}입니다. AlphaFold 구조라면 잔기별 pLDDT 색상과 낮은 신뢰도 구간을 반드시 함께 보여주는 것이 좋습니다.</p>
+    </section>
+
+    ${renderResearchTools(protein)}
+  `;
+}
+
+function renderProfessionalInfo(protein) {
+  const structureId = protein.pdbId || protein.accession || "AlphaFold";
+  const confidenceLabel = protein.source === "PDB" ? "B-factor 해석" : "pLDDT 해석";
+
+  return `
+    <section class="section pro-section">
+      <h3>구조 판독</h3>
+      <dl class="detail-list">
+        <div><dt>Entry</dt><dd>${escapeHtml(structureId)}</dd></div>
+        <div><dt>Source</dt><dd>${escapeHtml(protein.source)}</dd></div>
+        <div><dt>Method</dt><dd>${escapeHtml(protein.method)}</dd></div>
+        <div><dt>Resolution</dt><dd>${escapeHtml(protein.resolution)}</dd></div>
+      </dl>
+    </section>
+
+    <section class="section pro-section">
+      <h3>분석 포인트</h3>
+      <div class="analysis-list">
+        <p><strong>도메인/사슬:</strong> 리본 보기에서 사슬 흐름과 접힘 단위를 먼저 확인한 뒤, 스틱 보기로 결합 부위 주변 원자 배치를 좁혀보세요.</p>
+        <p><strong>${confidenceLabel}:</strong> 신뢰도 색상은 구조의 확실한 영역과 유연하거나 조건 의존적인 영역을 구분하는 기준으로 쓰면 좋습니다.</p>
+        <p><strong>해석 범위:</strong> 단일 구조는 특정 조건의 스냅샷입니다. 변이, 리간드, pH, 복합체 상태에 따라 다른 배치가 나올 수 있습니다.</p>
+      </div>
+    </section>
+
+    <section class="section pro-section">
+      <h3>다음 확인</h3>
+      <div class="check-grid">
+        <span>리간드/보조인자</span>
+        <span>체인 접촉면</span>
+        <span>저신뢰도 루프</span>
+        <span>동종 구조 비교</span>
+      </div>
+    </section>
+
+    ${renderResearchTools(protein)}
+  `;
+}
+
+function renderResearchTools(protein) {
+  return `
+    <section class="section compact-section">
+      <h3>연구자 도구</h3>
+      <div class="tool-grid">
+        <button class="secondary-button" type="button" data-copy-id="${escapeHtml(protein.pdbId || protein.accession || "")}">ID 복사</button>
+        <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF</a>
+        <a class="secondary-button link-button" href="${escapeHtml(protein.pdbDownloadUrl)}" target="_blank" rel="noreferrer">PDB 파일</a>
+        <button class="secondary-button" type="button" data-view-style="confidence">신뢰도 색상</button>
+      </div>
+    </section>
+
+    <div class="action-row">
+      <a class="primary-button link-button" href="${escapeHtml(protein.externalUrl)}" target="_blank" rel="noreferrer">${protein.source === "PDB" ? "PDB에서 보기" : "AlphaFold 보기"}</a>
+      <button class="secondary-button" type="button">해설 저장</button>
+    </div>
   `;
 }
 
@@ -938,6 +547,13 @@ function bindEvents() {
     });
   }
 
+  document.querySelectorAll("[data-info-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.infoMode = button.dataset.infoMode;
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-view-style]").forEach((button) => {
     button.addEventListener("click", () => {
       state.viewerStyle = button.dataset.viewStyle;
@@ -948,17 +564,6 @@ function bindEvents() {
       updateColorLegend(state.selected);
     });
   });
-
-  const reset = document.querySelector("[data-view-reset]");
-  if (reset) {
-    reset.addEventListener("click", () => {
-      if (!state.viewer) return;
-      state.viewer.zoomTo();
-      state.viewer.center();
-      state.viewer.render();
-      showViewerToast("구조를 화면 중앙에 맞췄습니다");
-    });
-  }
 
   document.querySelectorAll("[data-copy-id]").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -1119,17 +724,6 @@ function showViewerMessage(message) {
   const container = document.querySelector("[data-protein-viewer]");
   if (!container) return;
   container.innerHTML = `<div class="viewer-loading error">${escapeHtml(message)}</div>`;
-}
-
-function showViewerToast(message) {
-  const toast = document.querySelector("[data-viewer-toast]");
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.add("visible");
-  window.clearTimeout(toast.hideTimer);
-  toast.hideTimer = window.setTimeout(() => {
-    toast.classList.remove("visible");
-  }, 1400);
 }
 
 function escapeHtml(value) {

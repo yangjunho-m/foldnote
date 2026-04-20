@@ -1,0 +1,101 @@
+@media (max-width: 900px) {
+  .topbar {
+    padding: 12px 18px;
+    align-items: flex-start;
+  }
+
+  .topbar-actions {
+    display: none;
+  }
+
+  .search-screen {
+    padding-top: 12vh;
+  }
+
+  .viewer-screen {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .viewer-pane {
+    height: 58vh;
+    min-height: 420px;
+  }
+
+  .info-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 560px) {
+  .brand-title {
+    font-size: 17px;
+  }
+
+  .brand-subtitle {
+    font-size: 12px;
+  }
+
+  .search-screen {
+    padding: 8vh 14px 40px;
+  }
+
+  .hero h2 {
+    font-size: 28px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .tip-box {
+    padding: 18px;
+  }
+
+  .recommend-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .viewer-toolbar {
+    flex-direction: column;
+  }
+
+  .control-strip {
+    width: calc(100% - 28px);
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    transform: none;
+  }
+
+  .viewer-legend {
+    left: 14px;
+    bottom: 116px;
+    width: min(230px, calc(100% - 28px));
+  }
+
+  .info-inner {
+    padding: 20px;
+  }
+
+  .protein-heading {
+    flex-direction: column;
+  }
+
+  .meta-grid,
+  .tool-grid,
+  .action-row,
+  .check-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-list div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

@@ -15,16 +15,28 @@
 
 ## 실행
 
-브라우저에서 `index.html`을 열면 됩니다.
+로컬 서버를 실행합니다.
 
-```text
-D:\workspace\protein3d2\index.html
+```bash
+npm start
 ```
 
-인터넷 연결이 필요합니다. 3Dmol, RCSB PDB, UniProt, AlphaFold DB의 공개 리소스를 사용합니다.
+브라우저에서 `http://localhost:4173`을 열면 됩니다. 인터넷 연결이 필요합니다. 3Dmol, RCSB PDB, UniProt, AlphaFold DB의 공개 리소스를 사용합니다.
+
+## 호스팅
+
+정적 파일만으로 동작하므로 Netlify, Vercel, GitHub Pages에 그대로 배포할 수 있습니다.
+
+- GitHub Pages: `master` 브랜치에 push하면 GitHub Actions가 자동 배포합니다. 공개 주소는 `https://yangjunho-m.github.io/foldnote/`입니다.
+- Netlify: 저장소를 연결하면 `netlify.toml`의 `publish = "."` 설정을 사용합니다.
+- Vercel: 저장소를 연결하면 `vercel.json` 헤더 설정이 적용됩니다.
 
 ## 주요 파일
 
 - `index.html`: 앱 진입점
-- `styles.css`: 전체 레이아웃과 UI 스타일
-- `app.js`: 검색, 구조 데이터 연결, 3D 시각화 로직
+- `src/catalog.js`: 예시 단백질, 추천, API URL, 아이콘, 잔기 설명 데이터
+- `src/proteinService.js`: RCSB, UniProt, AlphaFold 데이터 검색 로직
+- `src/styles/`: 기본, 검색 화면, 뷰어, 반응형 스타일
+- `styles.css`: 스타일 모듈 진입점
+- `app.js`: 화면 상태, 렌더링, 3D 시각화 연결
+- `scripts/serve.mjs`: 로컬 정적 서버
