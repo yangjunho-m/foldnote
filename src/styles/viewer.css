@@ -351,6 +351,114 @@
   background: var(--surface-soft);
 }
 
+.evidence-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(49, 111, 246, 0.18);
+  border-radius: var(--radius);
+  background: rgba(234, 242, 255, 0.62);
+}
+
+.evidence-empty {
+  padding: 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.evidence-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.evidence-summary p {
+  padding: 13px 14px;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface-soft);
+}
+
+.entity-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.entity-cloud span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #27415f;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.entity-cloud small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.reference-list {
+  display: grid;
+  gap: 10px;
+}
+
+.reference-item {
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.reference-item a {
+  display: block;
+  color: #174ea6;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.reference-item a:hover {
+  text-decoration: underline;
+}
+
+.reference-item p {
+  margin-top: 7px;
+}
+
+.reference-item span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.app-shell.dark .evidence-status,
+.app-shell.dark .reference-item,
+.app-shell.dark .evidence-summary p {
+  background: var(--surface-soft);
+}
+
+.app-shell.dark .entity-cloud span {
+  color: #dbe7ff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-shell.dark .reference-item a {
+  color: #9fc1ff;
+}
+
 .check-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

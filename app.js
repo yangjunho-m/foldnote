@@ -3,6 +3,7 @@ import {
   recommendedProteins,
   residueDescriptions
 } from "./src/catalog.js";
+import { fetchLiteratureEvidence } from "./src/literatureService.js";
 import { findProteinStructures } from "./src/proteinService.js";
 
 const state = {
@@ -18,6 +19,9 @@ const state = {
   viewer: null,
   viewerStyle: "cartoon",
   infoMode: "simple",
+  literature: {},
+  literatureErrors: {},
+  literatureLoading: {},
   recommendations: [],
   theme: "light"
 };
@@ -86,6 +90,31 @@ function scheduleSearch(query) {
   }, 650);
 }
 
+async function ensureLiterature(protein) {
+  const key = getProteinKey(protein);
+  if (state.literature[key] || state.literatureLoading[key]) return;
+
+  state.literatureLoading[key] = true;
+  state.literatureErrors[key] = "";
+
+  try {
+    const evidence = await fetchLiteratureEvidence(protein);
+    state.literature[key] = evidence;
+  } catch (error) {
+    state.literatureErrors[key] =
+      "논문 초록을 불러오지 못했습니다. 잠시 후 다시 시도하거나 영문 단백질명으로 검색해 주세요.";
+  } finally {
+    state.literatureLoading[key] = false;
+    if (state.selected && getProteinKey(state.selected) === key) {
+      render();
+    }
+  }
+}
+
+function getProteinKey(protein) {
+  return protein.pdbId || protein.accession || protein.englishName || protein.name;
+}
+
 function badge(protein) {
   const isPdb = protein.source === "PDB";
   return `<span class="badge ${isPdb ? "pdb" : "alpha"}">
@@ -106,7 +135,10 @@ function render() {
   `;
 
   bindEvents();
-  if (state.selected) initProteinViewer(state.selected);
+  if (state.selected) {
+    initProteinViewer(state.selected);
+    ensureLiterature(state.selected);
+  }
 }
 
 function renderTopbar() {
@@ -143,7 +175,7 @@ function renderSearch() {
         <div class="hero">
           <div class="hero-icon" aria-hidden="true">${icons.search}</div>
           <h2>단백질 구조를 검색하세요</h2>
-          <p>단백질 이름이나 PDB ID를 입력하면 구조와 상세 정보를 확인할 수 있습니다</p>
+          <p>단백질 이름이나 PDB ID를 입력하면 구조, 기능, 논문 근거를 함께 확인할 수 있습니다</p>
         </div>
 
         <form class="search-form" data-search-form>
@@ -153,7 +185,7 @@ function renderSearch() {
             data-search-input
             type="search"
             value="${escapeHtml(state.query)}"
-            placeholder="예: 헤모글로빈, 인슐린, 1HHO..."
+            placeholder="예: p53, 헤모글로빈, 인슐린, 1HHO..."
             autocomplete="off"
           />
         </form>
@@ -200,6 +232,7 @@ function renderResults() {
             <div class="result-meta">
               <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
               <span>생물종: ${escapeHtml(protein.organism)}</span>
+              <span>구조 · 기능 · 논문 근거</span>
             </div>
           </button>
         `
@@ -250,7 +283,7 @@ function renderTips() {
         <ul>
           <li>한글 또는 영문 단백질 이름으로 검색할 수 있습니다</li>
           <li>PDB ID(예: 1HHO)로 직접 검색도 가능합니다</li>
-          <li>PDB에 없는 단백질은 AlphaFold 예측 구조를 제공합니다</li>
+          <li>전문 탭에서 관련 초록, 연관 DNA/RNA/단백질, 참고문헌을 볼 수 있습니다</li>
         </ul>
       </div>
     </aside>
@@ -351,7 +384,86 @@ function renderSimpleInfo(protein) {
       <p>${escapeHtml(protein.confidence)}입니다. AlphaFold 구조라면 잔기별 pLDDT 색상과 낮은 신뢰도 구간을 반드시 함께 보여주는 것이 좋습니다.</p>
     </section>
 
+    ${renderLiteraturePanel(protein)}
     ${renderResearchTools(protein)}
+  `;
+}
+
+function renderLiteraturePanel(protein) {
+  const key = getProteinKey(protein);
+  const evidence = state.literature[key];
+  const error = state.literatureErrors[key];
+  const isLoading = state.literatureLoading[key];
+
+  if (isLoading) {
+    return `
+      <section class="section pro-section">
+        <h3>논문 근거</h3>
+        <div class="evidence-status">
+          <span class="spinner" aria-hidden="true"></span>
+          <p>Europe PMC에서 관련 초록과 참고문헌을 찾고 있습니다.</p>
+        </div>
+      </section>
+    `;
+  }
+
+  if (error) {
+    return `
+      <section class="section pro-section">
+        <h3>논문 근거</h3>
+        <div class="evidence-empty">${escapeHtml(error)}</div>
+      </section>
+    `;
+  }
+
+  if (!evidence) {
+    return `
+      <section class="section pro-section">
+        <h3>논문 근거</h3>
+        <div class="evidence-empty">논문 초록을 준비하고 있습니다.</div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="section pro-section">
+      <h3>논문 근거 요약</h3>
+      <div class="evidence-summary">
+        ${evidence.summary
+          .map((sentence) => `<p>${escapeHtml(sentence)}</p>`)
+          .join("")}
+      </div>
+    </section>
+
+    <section class="section pro-section">
+      <h3>연관 키워드</h3>
+      <div class="entity-cloud">
+        ${evidence.relatedEntities.length
+          ? evidence.relatedEntities
+              .map((entity) => `<span>${escapeHtml(entity.label)} <small>${entity.count}</small></span>`)
+              .join("")
+          : "<p>초록에서 반복적으로 등장하는 DNA/RNA/단백질 키워드를 찾지 못했습니다.</p>"}
+      </div>
+    </section>
+
+    <section class="section pro-section">
+      <h3>참고문헌</h3>
+      <div class="reference-list">
+        ${evidence.articles.length
+          ? evidence.articles.map(renderReference).join("")
+          : "<p>표시할 참고문헌이 없습니다.</p>"}
+      </div>
+    </section>
+  `;
+}
+
+function renderReference(article) {
+  return `
+    <article class="reference-item">
+      <a href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${escapeHtml(article.title)}</a>
+      <p>${escapeHtml(article.authors)}</p>
+      <span>${escapeHtml(article.journal)} · ${escapeHtml(article.year)} · 인용 ${article.citedByCount}</span>
+    </article>
   `;
 }
 
