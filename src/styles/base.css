@@ -231,6 +231,28 @@ button {
   color: var(--foreground);
 }
 
+.app-shell.dark .pro-module-grid .module-card {
+  background: #121826;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.app-shell.dark .pro-module-grid .module-card:hover {
+  border-color: rgba(79, 140, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.app-shell.dark .pro-module-grid h4 {
+  color: #e6edf3;
+}
+
+.app-shell.dark .pro-module-grid p {
+  color: #9aa4b2;
+}
+
+.app-shell.dark .pro-module-grid .module-icon {
+  background: rgba(79, 140, 255, 0.15);
+}
+
 .main {
   flex: 1;
   min-height: 0;

@@ -286,7 +286,7 @@
   background: #ffffff;
 }
 
-.saved-note-card > button:first-child {
+.saved-note-card>button:first-child {
   width: 100%;
   min-height: 96px;
   padding: 13px 48px 13px 13px;
