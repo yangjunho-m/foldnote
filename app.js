@@ -6,17 +6,22 @@ import {
 import { fetchLiteratureEvidence } from "./src/literatureService.js";
 import {
   DEFAULT_PROJECT_ID,
-  createProject,
   deleteNote,
   getProteinKey as getStoredProteinKey,
   isSaved,
   loadNotes,
-  loadProjects,
   loadRecentProteins,
   recordRecentProtein,
   saveNote
 } from "./src/noteStore.js";
 import { findProteinStructures } from "./src/proteinService.js";
+
+const fixedProjects = [
+  { id: DEFAULT_PROJECT_ID, name: "구조 노트", icon: "folder" },
+  { id: "recent-analysis", name: "최근 분석", icon: "activity" },
+  { id: "report-drafts", name: "리포트", icon: "report" },
+  { id: "classroom", name: "수업 자료", icon: "book" }
+];
 
 const state = {
   query: "",
@@ -37,7 +42,6 @@ const state = {
   theme: "light",
   isHelpOpen: false,
   notes: loadNotes(),
-  projects: loadProjects(),
   currentProjectId: DEFAULT_PROJECT_ID,
   recentProteins: loadRecentProteins(),
   saveMessage: "",
@@ -45,10 +49,7 @@ const state = {
   isUpgradeOpen: false,
   reportSnapshot: "",
   variantQuery: "",
-  showPredictionCompare: false,
   isSidebarOpen: false,
-  isProjectFormOpen: false,
-  newProjectName: "",
   isLearningOpen: false,
   activeLearningTopic: "amino",
   language: window.localStorage.getItem("foldnote-language") || "ko"
@@ -528,7 +529,7 @@ function renderLearningIcon(name) {
 }
 
 function renderWorkspaceSidebar() {
-  const currentProject = state.projects.find((project) => project.id === state.currentProjectId) || state.projects[0];
+  const currentProject = fixedProjects.find((project) => project.id === state.currentProjectId) || fixedProjects[0];
   const notes = state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === currentProject.id);
 
   return `
@@ -539,21 +540,12 @@ function renderWorkspaceSidebar() {
         </button>
       </div>
       <div class="workspace-section">
-        <div class="workspace-section-head">
-          <h3>폴더</h3>
-          <button type="button" data-show-project-form aria-label="폴더 추가">+</button>
-        </div>
-        ${state.isProjectFormOpen
-          ? `<form class="folder-create-form" data-create-project-form>
-              <input type="text" data-project-name-input value="${escapeHtml(state.newProjectName)}" placeholder="새 폴더 이름" aria-label="새 폴더 이름" />
-              <button type="submit" aria-label="폴더 추가">추가</button>
-            </form>`
-          : ""}
         <div class="workspace-folder-list">
-          ${state.projects
+          ${fixedProjects
             .map(
               (project) => `
                 <button class="${project.id === state.currentProjectId ? "active" : ""}" type="button" data-project-id="${escapeHtml(project.id)}">
+                  <span class="folder-icon" aria-hidden="true">${renderFolderIcon(project.icon)}</span>
                   <strong>${escapeHtml(project.name)}</strong>
                   <span>${state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === project.id).length}개 노트</span>
                 </button>
@@ -636,6 +628,16 @@ function renderSavedNotes(notes) {
   `;
 }
 
+function renderFolderIcon(icon) {
+  const map = {
+    folder: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+    activity: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg>',
+    report: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6"/><path d="M10 17h4"/></svg>',
+    book: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/></svg>'
+  };
+  return map[icon] || map.folder;
+}
+
 function renderRecentProteins() {
   if (!state.recentProteins.length) return "";
 
@@ -700,7 +702,6 @@ function renderResults() {
               </div>
               <div class="result-meta">
                 ${protein.organism ? `<span>${t("organism")}: ${escapeHtml(protein.organism)}</span>` : ""}
-                <span>${t("evidenceHint")}</span>
               </div>
               <div class="result-summary">
                 <p>${escapeHtml(getResultComparisonText(protein))}</p>
@@ -797,12 +798,21 @@ function findFeatureText(features, pattern) {
 }
 
 function localizedFeatures(protein) {
-  if (state.language !== "en") return protein.features || [];
+  if (state.language !== "en") {
+    const name = getDisplayName(protein);
+    const stateReason = stripTrailingStructureId(localizedStateReason(protein), protein);
+    return [
+      ["blue", "무엇을 하는가", `${name}의 구조는 이 단백질이 세포 안에서 어떤 일을 하는지 이해하기 위한 지도입니다. 접힘 모양, 표면의 홈, 결합 부위를 함께 보면 기능을 더 쉽게 연결할 수 있습니다.`],
+      ["purple", "구조에서 볼 것", "리본에서는 전체 접힘과 도메인 배치를 보고, 스틱/표면 보기에서는 결합 부위 주변 원자와 표면 노출을 확인하세요."],
+      ["green", "비교 포인트", stateReason || "다른 구조 후보와 비교하면서 리간드, 체인 수, 해상도, 변이 위치가 어떻게 달라지는지 확인하세요."],
+      ["amber", "주의할 점", "하나의 구조는 특정 실험 조건이나 예측 상태를 보여줍니다. 기능을 단정하기보다 참고문헌, 결합 분자, 다른 구조와 함께 해석하는 것이 좋습니다."]
+    ];
+  }
   return [
-    ["blue", "Function", "Connect the visible fold to the protein's biological role."],
-    ["purple", "Structure", "Compare helices, strands, loops, chains, and repeated motifs."],
-    ["green", "What to inspect", "Look for ligands, metal ions, chain interfaces, mutations, and local fragments."],
-    ["amber", "Caution", "Each structure is one experimental or predicted state, not every possible state of the protein."]
+    ["blue", "What it does", "Use this structure as a map for connecting the fold, surface pockets, and binding sites to the protein's biological role."],
+    ["purple", "What to inspect", "Use ribbon view for the overall fold and stick or surface views for local atoms, pockets, and exposed interfaces."],
+    ["green", "Comparison point", stripTrailingStructureId(localizedStateReason(protein), protein) || "Compare ligands, chain assembly, resolution, and mutation sites against related structures."],
+    ["amber", "Caution", "One structure captures one experimental or predicted state. Interpret it together with references, bound molecules, and related structures."]
   ];
 }
 
@@ -1299,16 +1309,11 @@ function renderComparisonPanel(protein) {
   const candidates = state.results
     .filter((candidate) => getProteinKey(candidate) !== getProteinKey(protein))
     .slice(0, 3);
-  const predictionCompare = buildPredictionComparison(protein);
 
   return `
     <section class="section pro-section">
       <h3>구조 비교</h3>
       <p class="section-lead">검색된 상태별 구조를 나란히 보면서 결합 상태와 기능 차이를 비교합니다.</p>
-      <button class="prediction-toggle" type="button" data-prediction-compare>
-        ${state.showPredictionCompare ? "PDB/AlphaFold 비교 접기" : "PDB 실험 구조와 AlphaFold 예측 비교"}
-      </button>
-      ${state.showPredictionCompare ? renderPredictionComparison(predictionCompare) : ""}
       <div class="compare-grid">
         <div>
           <strong>현재 구조</strong>
@@ -1442,23 +1447,22 @@ function renderVariantPanel(protein) {
 function renderResearchTools(protein) {
   const literatureUrl = buildLiteratureSearchUrl(protein);
   const saved = isSaved(protein, state.notes);
+  const sourceLabel = protein.source === "PDB" ? "PDB에서 보기" : "AlphaFold에서 보기";
 
   return `
     <section class="section compact-section">
       <h3>연구자 도구</h3>
       <div class="tool-grid">
-        <button class="secondary-button" type="button" data-copy-id="${escapeHtml(protein.pdbId || protein.accession || "")}">ID 복사</button>
+        <a class="secondary-button link-button" href="${escapeHtml(protein.externalUrl)}" target="_blank" rel="noreferrer">${sourceLabel}</a>
         <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF</a>
-        <a class="secondary-button link-button" href="${escapeHtml(protein.pdbDownloadUrl)}" target="_blank" rel="noreferrer">PDB 파일</a>
         <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">논문 검색</a>
       </div>
     </section>
 
-    <div class="action-row">
-      <a class="primary-button link-button" href="${escapeHtml(protein.externalUrl)}" target="_blank" rel="noreferrer">${protein.source === "PDB" ? "PDB에서 보기" : "AlphaFold 보기"}</a>
-      <button class="secondary-button" type="button" data-save-note>${saved ? "저장됨" : "노트 저장"}</button>
+    <div class="viewer-action-stack">
+      <button class="report-button note-save-button" type="button" data-save-note>${saved ? "노트 저장됨" : "노트 저장"}</button>
+      <button class="report-button" type="button" data-open-report>Pro 리포트 생성</button>
     </div>
-    <button class="report-button" type="button" data-open-report>Pro 리포트 생성</button>
     ${state.saveMessage ? `<div class="save-message">${escapeHtml(state.saveMessage)}</div>` : ""}
   `;
 }
@@ -1684,37 +1688,6 @@ function bindEvents() {
     });
   });
 
-  const showProjectFormButton = document.querySelector("[data-show-project-form]");
-  if (showProjectFormButton) {
-    showProjectFormButton.addEventListener("click", () => {
-      state.isProjectFormOpen = true;
-      render();
-      window.requestAnimationFrame(() => document.querySelector("[data-project-name-input]")?.focus());
-    });
-  }
-
-  const projectNameInput = document.querySelector("[data-project-name-input]");
-  if (projectNameInput) {
-    projectNameInput.addEventListener("input", () => {
-      state.newProjectName = projectNameInput.value;
-    });
-  }
-
-  const createProjectForm = document.querySelector("[data-create-project-form]");
-  if (createProjectForm) {
-    createProjectForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const name = state.newProjectName.trim();
-      if (!name) return;
-      state.projects = createProject(name);
-      state.newProjectName = "";
-      state.isProjectFormOpen = false;
-      state.currentProjectId = state.projects[state.projects.length - 1]?.id || DEFAULT_PROJECT_ID;
-      state.isSidebarOpen = true;
-      render();
-    });
-  }
-
   document.querySelectorAll("[data-recent-query]").forEach((button) => {
     button.addEventListener("click", () => {
       scheduleSearch(button.dataset.recentQuery);
@@ -1747,14 +1720,6 @@ function bindEvents() {
     });
   });
 
-  const predictionCompareButton = document.querySelector("[data-prediction-compare]");
-  if (predictionCompareButton) {
-    predictionCompareButton.addEventListener("click", () => {
-      state.showPredictionCompare = !state.showPredictionCompare;
-      render();
-    });
-  }
-
   const variantInput = document.querySelector("[data-variant-input]");
   if (variantInput) {
     variantInput.addEventListener("input", () => {
@@ -1781,22 +1746,6 @@ function bindEvents() {
         item.classList.toggle("active", item.dataset.viewStyle === state.viewerStyle);
       });
       updateColorLegend(state.selected);
-    });
-  });
-
-  document.querySelectorAll("[data-copy-id]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const value = button.dataset.copyId;
-      if (!value) return;
-      try {
-        await navigator.clipboard.writeText(value);
-        button.textContent = "복사됨";
-        window.setTimeout(() => {
-          button.textContent = "ID 복사";
-        }, 1200);
-      } catch (error) {
-        button.textContent = value;
-      }
     });
   });
 
@@ -2178,7 +2127,6 @@ const translations = {
     loadingTitle: "RCSB PDB에서 후보를 찾고 있습니다",
     loadingText: "검색어를 PDB 실험 구조 데이터베이스에 질의하는 중입니다.",
     organism: "생물종",
-    evidenceHint: "전문 탭에서 논문 근거 확인",
     basicInfo: "기본정보",
     groupedCount: "개 구조 비교",
     otherState: "비교 후보",
@@ -2221,7 +2169,6 @@ const translations = {
     loadingTitle: "Searching RCSB PDB",
     loadingText: "Querying the experimental structure database for matching entries.",
     organism: "Organism",
-    evidenceHint: "Open the professional tab for literature evidence",
     basicInfo: "Basic info",
     groupedCount: "structures to compare",
     otherState: "Other state",

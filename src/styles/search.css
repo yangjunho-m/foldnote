@@ -158,7 +158,12 @@
   font-weight: 700;
 }
 
-.workspace-folder-list,
+.workspace-folder-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .saved-note-list {
   display: grid;
   gap: 8px;
@@ -166,13 +171,17 @@
 
 .workspace-folder-list button {
   width: 100%;
-  min-height: 58px;
-  padding: 10px;
+  min-height: 82px;
+  padding: 8px 4px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: inherit;
   background: var(--surface);
-  text-align: left;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 5px;
+  text-align: center;
 }
 
 .workspace-folder-list button.active {
@@ -185,14 +194,26 @@
   display: block;
 }
 
+.workspace-folder-list .folder-icon {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  color: #316ff6;
+  background: rgba(49, 111, 246, 0.1);
+  border-radius: 8px;
+}
+
 .workspace-folder-list strong {
-  font-size: 13px;
+  font-size: 11px;
+  line-height: 1.25;
 }
 
 .workspace-folder-list span {
-  margin-top: 5px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 10px;
+  line-height: 1.2;
 }
 
 .workspace-empty {
