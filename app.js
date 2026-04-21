@@ -532,12 +532,8 @@ function renderWorkspaceSidebar() {
   const notes = state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === currentProject.id);
 
   return `
-    <aside class="workspace-sidebar ${state.isSidebarOpen ? "open" : ""}" aria-label="GitHub 워크스페이스">
+    <aside class="workspace-sidebar ${state.isSidebarOpen ? "open" : ""}" aria-label="구조 노트">
       <div class="workspace-head">
-        <div>
-          <h2>GitHub 워크스페이스</h2>
-          <p>GitHub Pages에서 구조 노트를 정리합니다.</p>
-        </div>
         <button class="sidebar-close" type="button" data-sidebar-close aria-label="워크스페이스 닫기">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
         </button>

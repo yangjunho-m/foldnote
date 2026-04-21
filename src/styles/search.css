@@ -43,7 +43,7 @@
 
 .workspace-head {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
   gap: 12px;
   padding-bottom: 14px;
