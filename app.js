@@ -1633,19 +1633,23 @@ function showAtomTooltip(atom, event) {
   const residueNumber = atom.resi || "-";
   const chain = atom.chain || atom.chainId || "-";
   const element = atom.elem || atom.element || "원자";
+  const atomName = atom.atom || atom.name || element;
   const confidence = typeof atom.b === "number" ? Math.round(atom.b) : null;
-  const description = describeResidue(residueName, element, confidence);
+  const details = describeResidue(residueName, atomName, element, confidence);
   const pane = document.querySelector(".viewer-pane");
   const paneRect = pane.getBoundingClientRect();
   const clientX = event?.clientX ?? paneRect.left + paneRect.width / 2;
   const clientY = event?.clientY ?? paneRect.top + paneRect.height / 2;
-  const x = Math.min(Math.max(clientX - paneRect.left + 14, 12), paneRect.width - 250);
-  const y = Math.min(Math.max(clientY - paneRect.top + 14, 12), paneRect.height - 148);
+  const x = Math.min(Math.max(clientX - paneRect.left + 14, 12), paneRect.width - 286);
+  const y = Math.min(Math.max(clientY - paneRect.top + 14, 12), paneRect.height - 190);
 
   tooltip.innerHTML = `
     <strong>${escapeHtml(residueName)} ${escapeHtml(residueNumber)}</strong>
-    <span>체인 ${escapeHtml(chain)} · ${escapeHtml(element)} 원자${confidence === null ? "" : ` · 값 ${confidence}`}</span>
-    <p>${escapeHtml(description)}</p>
+    <span>체인 ${escapeHtml(chain)} · ${escapeHtml(atomName)} 원자${confidence === null ? "" : ` · 값 ${confidence}`}</span>
+    <p>${escapeHtml(details.summary)}</p>
+    <ul>
+      ${details.points.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}
+    </ul>
   `;
   tooltip.style.left = `${x}px`;
   tooltip.style.top = `${y}px`;
@@ -1657,19 +1661,66 @@ function showAtomTooltip(atom, event) {
   }, 4200);
 }
 
-function describeResidue(residueName, element, confidence) {
+function describeResidue(residueName, atomName, element, confidence) {
   const residue = residueDescriptions[residueName?.toUpperCase()] || "이 위치는 단백질을 이루는 아미노산 잔기입니다.";
-  const confidenceText =
-    confidence === null
-      ? ""
-      : confidence >= 90
-        ? " 이 값은 매우 높은 신뢰도 또는 낮은 유연성을 뜻할 수 있습니다."
-        : confidence >= 70
-          ? " 이 값은 대체로 안정적인 구간으로 볼 수 있습니다."
-          : confidence >= 50
-            ? " 이 값은 해석할 때 조심해서 봐야 하는 구간입니다."
-            : " 이 값은 유연하거나 예측 신뢰도가 낮은 구간일 수 있습니다.";
-  return `${residue} 클릭한 점은 ${element} 원자입니다.${confidenceText}`;
+  return {
+    summary: residue,
+    points: [
+      residueProfile(residueName?.toUpperCase()),
+      describeAtomRole(atomName, element),
+      describeStructureValue(confidence)
+    ].filter(Boolean)
+  };
+}
+
+function residueProfile(code) {
+  const profiles = {
+    ALA: "성질: 작고 소수성인 잔기라 내부 포장과 나선 안정화에 자주 관여합니다.",
+    ARG: "성질: 양전하를 띠어 DNA, RNA, 인산기, 산성 잔기와 결합하기 좋습니다.",
+    ASN: "성질: 극성 잔기라 표면 수소결합과 당화 위치 해석에 자주 등장합니다.",
+    ASP: "성질: 음전하를 띠어 염다리, 금속 결합, 촉매 부위에 자주 관여합니다.",
+    CYS: "성질: 황을 포함해 이황화 결합이나 금속 결합으로 구조를 고정할 수 있습니다.",
+    GLN: "성질: 극성 잔기라 긴 곁사슬로 표면 수소결합을 만들기 좋습니다.",
+    GLU: "성질: 음전하를 띠는 산성 잔기라 염다리와 촉매 부위에서 중요합니다.",
+    GLY: "성질: 가장 작은 잔기라 촘촘한 회전부, 루프, 유연한 연결부에 자주 있습니다.",
+    HIS: "성질: pH와 금속 결합에 민감해 효소 활성 부위에서 자주 보입니다.",
+    ILE: "성질: 소수성 잔기라 단백질 내부 코어를 단단히 채우는 역할을 합니다.",
+    LEU: "성질: 소수성 잔기라 나선 내부 포장과 단백질 코어 안정화에 흔합니다.",
+    LYS: "성질: 양전하를 띠어 DNA/RNA, 산성 잔기, 표면 결합 부위와 연결됩니다.",
+    MET: "성질: 황을 포함한 소수성 잔기이며 번역 시작 잔기로도 쓰입니다.",
+    PHE: "성질: 방향족 소수성 잔기라 내부 포장과 stacking 상호작용에 관여합니다.",
+    PRO: "성질: 고리 구조 때문에 사슬 방향을 꺾고 루프나 턴을 만들기 좋습니다.",
+    SER: "성질: 작은 극성 잔기라 수소결합과 인산화 조절 위치가 될 수 있습니다.",
+    THR: "성질: 극성 잔기라 수소결합, 인산화, 표면 인식에 관여할 수 있습니다.",
+    TRP: "성질: 큰 방향족 잔기라 결합 부위와 내부 코어에서 강한 포장 효과를 냅니다.",
+    TYR: "성질: 방향족이면서 극성인 잔기라 stacking, 수소결합, 인산화에 관여합니다.",
+    VAL: "성질: 소수성 잔기라 내부 코어와 베타 가닥 안정화에 자주 쓰입니다.",
+    HEM: "성질: 헴 보조인자로 철 중심을 통해 산소나 작은 분자 결합을 담당합니다.",
+    HOH: "성질: 물 분자이며 수소결합 네트워크나 결합 부위 주변 안정화에 관여할 수 있습니다."
+  };
+  return profiles[code] || "";
+}
+
+function describeAtomRole(atomName, element) {
+  const name = String(atomName || "").toUpperCase();
+  const elem = String(element || "").toUpperCase();
+  if (name === "CA") return "클릭 위치: Cα 원자라 단백질 주사슬의 잔기 위치를 대표합니다.";
+  if (name === "N") return "클릭 위치: 주사슬 질소 원자라 펩타이드 결합과 수소결합 방향을 볼 때 중요합니다.";
+  if (name === "C") return "클릭 위치: 주사슬 카보닐 탄소라 다음 잔기와 이어지는 펩타이드 결합 위치입니다.";
+  if (name === "O") return "클릭 위치: 주사슬 카보닐 산소라 수소결합을 받을 수 있는 위치입니다.";
+  if (name === "CB") return "클릭 위치: Cβ 원자라 곁사슬이 어느 방향으로 뻗는지 보여줍니다.";
+  if (elem === "FE") return "클릭 위치: 철 원자라 헴이나 금속 결합 중심일 가능성이 큽니다.";
+  if (elem === "S") return "클릭 위치: 황 원자라 이황화 결합이나 금속 결합 가능성을 확인할 수 있습니다.";
+  if (elem === "O") return "클릭 위치: 산소 원자라 수소결합 또는 전하성 상호작용 후보입니다.";
+  if (elem === "N") return "클릭 위치: 질소 원자라 수소결합 또는 양전하성 상호작용 후보입니다.";
+  if (elem === "C") return "클릭 위치: 탄소 원자라 골격 또는 소수성 접촉을 보는 지점입니다.";
+  return `클릭 위치: ${atomName || element} 원자입니다. 주변 잔기와의 거리, 결합, 표면 노출을 함께 보면 좋습니다.`;
+}
+
+function describeStructureValue(confidence) {
+  if (confidence === null) return "";
+  const label = state.selected?.source === "PDB" ? "B-factor" : "pLDDT";
+  return `${label} 값: ${confidence}. 비교할 때 같은 색상/값을 가진 주변 구간과 함께 보면 위치 차이를 더 잘 볼 수 있습니다.`;
 }
 
 function updateColorLegend(protein) {
