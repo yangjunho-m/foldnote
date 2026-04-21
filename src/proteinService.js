@@ -45,10 +45,7 @@ export async function findProteinStructures(query) {
   const pdbIds = mergeUniqueIds([...curatedPdbIds, ...apiPdbIds]).slice(0, 8);
 
   const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(query);
-  return groupRelatedStructures(
-    results.map((protein) => addSearchContextMetadata(addLocalizedMetadata(protein), query)),
-    query
-  );
+  return results.map((protein) => addSearchContextMetadata(addLocalizedMetadata(protein), query));
 }
 
 function normalize(text) {
@@ -449,73 +446,6 @@ function classifyHemoglobinState(protein, text) {
     stateReason: `같은 헤모글로빈이지만 등록된 실험 조건, 결합 분자, 해상도가 다른 구조입니다. 먼저 성인형과 비교해 무엇이 붙었는지 확인합니다. (${id || facts})`,
     stateReasonEn: `This is still hemoglobin, but its experimental condition, bound molecule, or resolution differs. Compare it against adult hemoglobin first. (${id || facts})`
   };
-}
-
-function groupRelatedStructures(results, query) {
-  const filtered = results.filter(Boolean);
-  if (filtered.length <= 1) return filtered;
-
-  const searchTerm = resolveSearchTerm(query).toLowerCase();
-  const groups = new Map();
-  filtered.forEach((protein) => {
-    const key = protein.family || inferProteinFamily(protein) || getStructureId(protein);
-    const entries = groups.get(key) || [];
-    entries.push(protein);
-    groups.set(key, entries);
-  });
-
-  return Array.from(groups.values())
-    .sort((a, b) => b.length - a.length)
-    .slice(0, 4)
-    .map((items) => {
-      const representative = chooseRepresentative(items, searchTerm);
-      const relatedStates = items
-        .filter((item) => getStructureId(item) !== getStructureId(representative))
-        .slice(0, 5)
-        .map((item) => {
-          const difference = describeDifferenceFromRepresentative(item, representative);
-          return {
-            id: getStructureId(item),
-            name: item.koreanName || item.name,
-            englishName: item.englishName || item.name,
-            stateKey: item.stateKey,
-            stateLabel: item.stateLabel || "다른 후보",
-            stateLabelEn: item.stateLabelEn || "Other candidate",
-            stateReason: difference.ko,
-            stateReasonEn: difference.en,
-            method: item.method,
-            resolution: item.resolution,
-            source: item.source,
-            protein: item
-          };
-        });
-
-      return {
-        ...representative,
-        resultCount: items.length,
-        relatedStates
-      };
-    });
-}
-
-function chooseRepresentative(items, searchTerm) {
-  return [...items].sort((a, b) => scoreRepresentative(b, searchTerm) - scoreRepresentative(a, searchTerm))[0];
-}
-
-function scoreRepresentative(protein, searchTerm) {
-  const text = `${protein.name || ""} ${protein.englishName || ""}`.toLowerCase();
-  let score = 0;
-  if (text.includes(searchTerm)) score += 5;
-  if (/adult|hemoglobin a|haemoglobin a|representative/i.test(text)) score += 4;
-  if (/transition state|inhibitor|tosyl|complex|mutant|variant|dimer/i.test(text)) score -= 2;
-  if (/refined|crystal structure|structure of/i.test(text)) score += 2;
-  if (protein.pdbId === "4HHB") score += 8;
-  if (protein.pdbId === "1HHO") score += 5;
-  if (protein.pdbId === "2HHB") score += 3;
-  if (protein.source === "PDB") score += 1;
-  const resolution = Number.parseFloat(protein.resolution);
-  if (Number.isFinite(resolution)) score += Math.max(0, 3 - resolution);
-  return score;
 }
 
 function getStructureId(protein) {

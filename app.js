@@ -386,6 +386,7 @@ function renderResults() {
           (protein, index) => `
           <article class="result-card">
             <button class="result-main" type="button" data-result="${index}">
+              <div class="state-tags result-tags">${renderStructureTags(protein)}</div>
               <div class="result-title-row">
                 <h3 class="result-title">${renderProteinTitle(protein)}</h3>
                 ${badge(protein)}
@@ -393,7 +394,7 @@ function renderResults() {
               <div class="result-meta">
                 <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
                 ${protein.organism ? `<span>${t("organism")}: ${escapeHtml(protein.organism)}</span>` : ""}
-                <span>${protein.resultCount > 1 ? formatGroupedCount(protein.resultCount) : t("evidenceHint")}</span>
+                <span>${t("evidenceHint")}</span>
               </div>
               <div class="result-summary">
                 <strong>${t("selectedStructure")}</strong>
@@ -936,19 +937,7 @@ function renderComparisonPanel(protein) {
           <strong>현재 구조</strong>
           <span>${escapeHtml(protein.source)} · ${escapeHtml(protein.method)} · ${escapeHtml(protein.resolution)}</span>
         </div>
-        ${(protein.relatedStates || []).length
-          ? protein.relatedStates
-              .slice(0, 4)
-              .map(
-                (stateItem) => `
-                  <button type="button" data-related-state="${escapeHtml(stateItem.id)}">
-                    <strong>#${escapeHtml(localizedStateLabel(stateItem))} · ${escapeHtml(getStateDisplayName(stateItem))}</strong>
-                    <span>${escapeHtml(localizedStateReason(stateItem))}</span>
-                  </button>
-                `
-              )
-              .join("")
-          : candidates.length
+        ${candidates.length
           ? candidates
               .map(
                 (candidate) => `
@@ -1274,32 +1263,6 @@ function bindEvents() {
       if (!candidate) return;
       state.selected = candidate;
       state.recentProteins = recordRecentProtein(candidate);
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-related-state]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const related = state.selected?.relatedStates?.find((item) => item.id === button.dataset.relatedState);
-      if (!related?.protein) return;
-      state.selected = {
-        ...related.protein,
-        relatedStates: [
-          {
-            id: getProteinKey(state.selected),
-            name: getDisplayName(state.selected),
-            englishName: state.selected.englishName,
-            stateKey: state.selected.stateKey,
-            stateLabel: state.selected.stateLabel || "선택 구조",
-            stateLabelEn: state.selected.stateLabelEn || "Selected structure",
-            stateReason: state.selected.stateReason || "처음 선택한 구조입니다.",
-            stateReasonEn: state.selected.stateReasonEn || "This is the originally selected structure.",
-            protein: state.selected
-          },
-          ...(state.selected.relatedStates || []).filter((item) => item.id !== related.id)
-        ]
-      };
-      state.recentProteins = recordRecentProtein(state.selected);
       render();
     });
   });

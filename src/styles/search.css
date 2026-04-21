@@ -616,6 +616,28 @@
   background: rgba(234, 242, 255, 0.42);
 }
 
+.state-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.result-tags {
+  margin-bottom: 10px;
+}
+
+.state-tag {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: #0754d6;
+  background: var(--primary-soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .english-name {
   color: var(--muted);
   font-weight: 500;
@@ -728,6 +750,7 @@
   background: rgba(31, 41, 55, 0.98);
 }
 
+.app-shell.dark .state-tag,
 .app-shell.dark .result-summary strong,
 .app-shell.dark .recommend-card span,
 .app-shell.dark .pro-modules-head span {
