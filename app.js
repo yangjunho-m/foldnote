@@ -2041,6 +2041,7 @@ function showAtomTooltip(atom, event) {
   const residueName = atom.resn || "알 수 없는 잔기";
   const residueNumber = atom.resi || "-";
   const chain = atom.chain || atom.chainId || "-";
+  const unitInfo = describeAsymmetricUnit(atom, chain);
   const element = atom.elem || atom.element || "원자";
   const atomName = atom.atom || atom.name || element;
   const confidence = typeof atom.b === "number" ? Math.round(atom.b) : null;
@@ -2053,6 +2054,11 @@ function showAtomTooltip(atom, event) {
   const y = Math.min(Math.max(clientY - paneRect.top + 14, 12), paneRect.height - 190);
 
   tooltip.innerHTML = `
+    <div class="tooltip-unit">
+      <span>Asymmetric Unit</span>
+      <strong>${escapeHtml(unitInfo.primary)}</strong>
+      ${unitInfo.secondary ? `<small>${escapeHtml(unitInfo.secondary)}</small>` : ""}
+    </div>
     <strong>${escapeHtml(residueName)} ${escapeHtml(residueNumber)}</strong>
     <span>체인 ${escapeHtml(chain)} · ${escapeHtml(atomName)} 원자${confidence === null ? "" : ` · 값 ${confidence}`}</span>
     <p>${escapeHtml(details.summary)}</p>
@@ -2068,6 +2074,22 @@ function showAtomTooltip(atom, event) {
   tooltip.hideTimer = window.setTimeout(() => {
     tooltip.classList.remove("visible");
   }, 4200);
+}
+
+function describeAsymmetricUnit(atom, chain) {
+  const model = atom.model ?? atom.modelIndex ?? atom.serialModel;
+  const sym = atom.symmet ?? atom.symmetry ?? atom.symop;
+  const assembly = atom.assembly ?? atom.assemblyId;
+  const secondary = [
+    model !== undefined ? `model ${model}` : "",
+    sym ? `symmetry ${sym}` : "",
+    assembly ? `assembly ${assembly}` : ""
+  ].filter(Boolean).join(" · ");
+
+  return {
+    primary: `Chain ${chain || "-"}`,
+    secondary
+  };
 }
 
 function describeResidue(residueName, atomName, element, confidence) {

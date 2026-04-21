@@ -173,6 +173,39 @@
   transform: translateY(0);
 }
 
+.tooltip-unit {
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(49, 111, 246, 0.16);
+  border-radius: 7px;
+  background: rgba(234, 242, 255, 0.72);
+}
+
+.tooltip-unit span,
+.tooltip-unit strong,
+.tooltip-unit small {
+  display: block;
+}
+
+.tooltip-unit span {
+  color: #0754d6;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tooltip-unit strong {
+  margin-top: 3px;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.tooltip-unit small {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+}
+
 .atom-tooltip strong,
 .atom-tooltip span {
   display: block;
