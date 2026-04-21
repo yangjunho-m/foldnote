@@ -682,13 +682,6 @@
   background: rgba(234, 242, 255, 0.48);
 }
 
-.result-summary strong {
-  display: block;
-  color: #0754d6;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
 .result-summary p {
   margin: 0;
   color: #384152;
@@ -751,7 +744,6 @@
 }
 
 .app-shell.dark .state-tag,
-.app-shell.dark .result-summary strong,
 .app-shell.dark .recommend-card span,
 .app-shell.dark .pro-modules-head span {
   color: #9fc1ff;

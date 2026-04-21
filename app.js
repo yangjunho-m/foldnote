@@ -402,8 +402,7 @@ function renderResults() {
                 <span>${t("evidenceHint")}</span>
               </div>
               <div class="result-summary">
-                <strong>${t("selectedStructure")}</strong>
-                <p>${escapeHtml(localizedQuickSummary(protein))}</p>
+                <p>${escapeHtml(getResultComparisonText(protein))}</p>
               </div>
             </button>
           </article>
@@ -551,6 +550,10 @@ function renderTips() {
       </div>
     </aside>
   `;
+}
+
+function getResultComparisonText(protein) {
+  return localizedStateReason(protein) || localizedQuickSummary(protein);
 }
 
 function getRandomRecommendations() {
@@ -1676,7 +1679,6 @@ const translations = {
     groupedCount: "개 구조 비교",
     otherState: "비교 후보",
     otherStateReason: "실험 조건이나 결합 상태가 다른 구조입니다.",
-    selectedStructure: "선택 구조",
     description: "설명",
     keyFeatures: "주요 특징",
     structureView: "실제 구조 시각화",
@@ -1720,7 +1722,6 @@ const translations = {
     groupedCount: "structures to compare",
     otherState: "Other state",
     otherStateReason: "This structure differs by experimental condition, ligand, or binding state.",
-    selectedStructure: "Selected structure",
     description: "Description",
     keyFeatures: "Key features",
     structureView: "structure viewer",
@@ -1823,7 +1824,6 @@ function localizedStateReason(item) {
 
 function stateLabelFallbackEn(label) {
   const map = {
-    "선택 구조": "Selected structure",
     "성인형": "Adult form",
     "산소 결합": "Oxygen-bound",
     "산소 결합형": "Oxygen-bound",
