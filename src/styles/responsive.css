@@ -76,6 +76,20 @@
     grid-template-columns: 1fr;
   }
 
+  .learning-screen {
+    width: min(100% - 28px, 720px);
+    padding-top: 42px;
+  }
+
+  .learning-path,
+  .learning-practice {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-practice button {
+    width: 100%;
+  }
+
   .result-tag-row {
     align-items: flex-start;
     gap: 8px;
