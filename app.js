@@ -321,18 +321,30 @@ function renderSavedNotes(notes) {
     <div class="saved-note-list">
       ${notes
         .map(
-          (note) => `
+          (note) => {
+            const chips = [
+              note.stateLabel,
+              note.literatureCount ? `논문 ${note.literatureCount}개` : "",
+              note.resolution || note.method
+            ].filter(Boolean);
+            const nextActions = (note.nextActions || []).slice(0, 2);
+            return `
             <article class="saved-note-card">
               <button type="button" data-open-note="${escapeHtml(note.id)}">
                 <strong>${escapeHtml(note.name)}</strong>
                 <span>${escapeHtml(note.structureId)} · ${escapeHtml(note.source)} · ${formatSavedDate(note.savedAt)}</span>
-                <p>${escapeHtml(note.summary?.[0] || note.description || "저장된 구조 노트입니다.")}</p>
+                ${chips.length ? `<div class="saved-note-chips">${chips.map((chip) => `<em>${escapeHtml(chip)}</em>`).join("")}</div>` : ""}
+                <p>${escapeHtml(note.noteSummary || note.summary?.[0] || note.description || "저장된 구조 노트입니다.")}</p>
+                ${nextActions.length
+                  ? `<ul class="saved-note-actions">${nextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>`
+                  : ""}
               </button>
               <button class="note-delete" type="button" data-delete-note="${escapeHtml(note.id)}" aria-label="노트 삭제">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
               </button>
             </article>
-          `
+          `;
+          }
         )
         .join("")}
     </div>
@@ -1803,10 +1815,16 @@ function getStructureTagId(item) {
 }
 
 function renderStructureTags(item) {
-  const tags = [getStructureTagName(item), getStructureTagId(item)]
+  const tags = [
+    item.isRepresentative ? (state.language === "en" ? "Representative" : "대표추천") : "",
+    getStructureTagName(item),
+    getStructureTagId(item)
+  ]
     .filter(Boolean)
     .map((value) => `#${toHashTag(value)}`);
-  return tags.map((tag) => `<span class="state-tag">${escapeHtml(tag)}</span>`).join("");
+  return tags
+    .map((tag) => `<span class="state-tag ${tag.includes("대표추천") || tag.includes("Representative") ? "representative" : ""}">${escapeHtml(tag)}</span>`)
+    .join("");
 }
 
 function toHashTag(value) {

@@ -45,7 +45,9 @@ export async function findProteinStructures(query) {
   const pdbIds = mergeUniqueIds([...curatedPdbIds, ...apiPdbIds]).slice(0, 8);
 
   const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(query);
-  return results.map((protein) => addSearchContextMetadata(addLocalizedMetadata(protein), query));
+  return markRepresentativeResult(
+    results.map((protein) => addSearchContextMetadata(addLocalizedMetadata(protein), query))
+  );
 }
 
 function normalize(text) {
@@ -148,6 +150,38 @@ async function fetchPdbDetails(pdbIds) {
   );
 
   return details;
+}
+
+function markRepresentativeResult(results) {
+  if (!results.length) return results;
+  const representativeIndex = results.reduce((bestIndex, item, index) => {
+    return scoreRepresentative(item) > scoreRepresentative(results[bestIndex]) ? index : bestIndex;
+  }, 0);
+
+  return results.map((item, index) => ({
+    ...item,
+    isRepresentative: index === representativeIndex,
+    representativeReason:
+      index === representativeIndex
+        ? "검색 결과 중 실험 구조, 해상도, 변이/단편 여부를 기준으로 가장 먼저 볼 만한 대표 후보입니다."
+        : item.representativeReason
+  }));
+}
+
+function scoreRepresentative(item) {
+  const text = `${item.name || ""} ${item.englishName || ""} ${item.stateLabel || ""} ${item.stateKey || ""}`.toLowerCase();
+  const resolution = parseFloat(item.resolution);
+  let score = 0;
+
+  if (item.source === "PDB") score += 60;
+  if (/x-ray|electron microscopy|cryo/i.test(item.method || "")) score += 12;
+  if (Number.isFinite(resolution)) score += Math.max(0, 20 - resolution * 4);
+  if (/대표|adult|refined|high-resolution|crystal/.test(text)) score += 14;
+  if (/variant|mutant|mutation|fragment|model|repeat|disrupted/.test(text)) score -= 18;
+  if (/bound|ligand|complex|co-bound|oxygen-bound/.test(text)) score -= 4;
+  if (item.pdbId) score += 3;
+
+  return score;
 }
 
 async function fetchJson(url) {

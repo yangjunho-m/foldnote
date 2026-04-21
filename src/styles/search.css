@@ -393,7 +393,7 @@
 
 .saved-note-card>button:first-child {
   width: 100%;
-  min-height: 86px;
+  min-height: 112px;
   padding: 13px 48px 13px 13px;
   color: inherit;
   background: transparent;
@@ -421,6 +421,53 @@
   color: #4f5665;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.saved-note-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.saved-note-chips em {
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: #0754d6;
+  background: var(--primary-soft);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.saved-note-actions {
+  display: grid;
+  gap: 4px;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.saved-note-actions li {
+  position: relative;
+  padding-left: 11px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.saved-note-actions li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--primary);
 }
 
 .note-delete {
@@ -652,6 +699,11 @@
   background: var(--primary-soft);
   font-size: 11px;
   font-weight: 800;
+}
+
+.state-tag.representative {
+  color: #6f3f00;
+  background: #fff0c2;
 }
 
 .english-name {

@@ -40,6 +40,7 @@ export function saveNote(protein, evidence, projectId = DEFAULT_PROJECT_ID, snap
   const notes = loadNotes();
   const now = new Date().toISOString();
   const id = getProteinKey(protein);
+  const insights = buildStructureInsights(protein, evidence);
   const nextNote = {
     id,
     projectId,
@@ -53,6 +54,12 @@ export function saveNote(protein, evidence, projectId = DEFAULT_PROJECT_ID, snap
     resolution: protein.resolution,
     description: protein.description,
     externalUrl: protein.externalUrl,
+    stateLabel: protein.stateLabel,
+    stateReason: protein.stateReason,
+    representativeReason: protein.representativeReason,
+    noteSummary: insights.noteSummary,
+    inspectionPoints: insights.inspectionPoints,
+    nextActions: insights.nextActions,
     literatureCount: evidence?.articles?.length || 0,
     summary: evidence?.summary?.slice(0, 3) || [],
     claims: evidence?.claims?.slice(0, 3) || [],
@@ -101,6 +108,28 @@ export function recordRecentProtein(protein) {
 
 export function getProteinKey(protein) {
   return protein.pdbId || protein.accession || protein.englishName || protein.name;
+}
+
+function buildStructureInsights(protein, evidence) {
+  const evidenceCount = evidence?.articles?.length || 0;
+  const claimCount = evidence?.claims?.length || 0;
+  const summary = protein.quickSummary || protein.description || `${protein.name} 구조 노트입니다.`;
+  const inspectionPoints = [
+    protein.stateReason || protein.representativeReason || "",
+    ...(protein.features || []).map((feature) => feature?.[2]).filter(Boolean)
+  ].slice(0, 4);
+  const nextActions = [
+    "구조 비교에서 대표 후보와 다른 상태를 확인",
+    evidenceCount ? `참고문헌 ${evidenceCount}개와 근거 문장 ${claimCount}개 검토` : "참고문헌 근거가 준비되면 다시 저장",
+    "필요한 변이가 있으면 변이 해석에 입력",
+    "보고서 생성으로 PDF/Markdown 초안 만들기"
+  ];
+
+  return {
+    noteSummary: summary,
+    inspectionPoints,
+    nextActions
+  };
 }
 
 export { DEFAULT_PROJECT_ID };
