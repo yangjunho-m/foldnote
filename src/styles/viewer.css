@@ -254,6 +254,33 @@
   margin: 18px 0 22px;
 }
 
+.protein-story {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 18px;
+}
+
+.protein-story article {
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.protein-story span {
+  display: block;
+  color: #0754d6;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.protein-story p {
+  margin: 6px 0 0;
+  color: #384152;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .metric {
   padding: 12px;
   border-radius: var(--radius);

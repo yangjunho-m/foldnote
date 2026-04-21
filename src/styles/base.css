@@ -272,6 +272,14 @@ button {
   color: #c9d2df;
 }
 
+.app-shell.dark .protein-story p {
+  color: #c9d2df;
+}
+
+.app-shell.dark .protein-story span {
+  color: #9fc1ff;
+}
+
 .app-shell.dark .compare-grid p {
   color: #c9d2df;
 }

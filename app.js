@@ -176,9 +176,11 @@ function renderTopbar() {
   const isKo = state.language === "ko";
   return `
     <header class="topbar">
-      <button class="icon-button menu-button" type="button" data-sidebar-toggle title="워크스페이스" aria-label="워크스페이스 열기">
-        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
-      </button>
+      ${state.selected ? "" : `
+        <button class="icon-button menu-button" type="button" data-sidebar-toggle title="워크스페이스" aria-label="워크스페이스 열기">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+        </button>
+      `}
       <button class="brand brand-button" type="button" data-home title="${t("home")}" aria-label="FoldNote ${t("home")}">
         <div class="brand-mark" aria-hidden="true">${icons.fold}</div>
         <div>
@@ -464,6 +466,53 @@ function localizedDescription(protein) {
   return protein.description || localizedQuickSummary(protein);
 }
 
+function renderProteinStory(protein) {
+  const story = getProteinStory(protein);
+  return `
+    <section class="protein-story">
+      ${story
+        .map(
+          (item) => `
+            <article>
+              <span>${escapeHtml(item.label)}</span>
+              <p>${escapeHtml(item.text)}</p>
+            </article>
+          `
+        )
+        .join("")}
+    </section>
+  `;
+}
+
+function getProteinStory(protein) {
+  const features = protein.features || [];
+  const functionText = findFeatureText(features, /기능|Function/i) || localizedQuickSummary(protein);
+  const structureText = findFeatureText(features, /구조|Structure/i) || "입체 구조를 보면 접힘, 결합 부위, 사슬 배치를 한눈에 비교할 수 있습니다.";
+  const inspectText =
+    findFeatureText(features, /관찰|포인트|비교|What to inspect/i) ||
+    stripTrailingStructureId(localizedStateReason(protein), protein) ||
+    "다른 구조 후보와 비교하면서 리간드, 변이, 체인 접촉, 해상도 차이를 확인해 보세요.";
+
+  if (state.language === "en") {
+    return [
+      { label: "What it is", text: functionText },
+      { label: "Structure clue", text: structureText },
+      { label: "Why inspect it", text: inspectText }
+    ];
+  }
+
+  return [
+    { label: "무엇인가", text: functionText },
+    { label: "구조 힌트", text: structureText },
+    { label: "왜 보는가", text: inspectText }
+  ];
+}
+
+function findFeatureText(features, pattern) {
+  const feature = features.find(([, title]) => pattern.test(title));
+  return feature?.[2] || "";
+}
+
 function localizedFeatures(protein) {
   if (state.language !== "en") return protein.features || [];
   return [
@@ -681,6 +730,7 @@ function renderInfoPanel(protein) {
           ${badge(protein)}
         </div>
         <p class="brand-subtitle">${escapeHtml(getSecondaryName(protein))}</p>
+        ${renderProteinStory(protein)}
 
         <div class="meta-grid">
           <div class="metric"><span>${protein.source === "PDB" ? "PDB ID" : "UniProt"}</span><strong>${protein.pdbId || protein.accession || "AlphaFold"}</strong></div>
