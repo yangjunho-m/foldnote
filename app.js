@@ -42,6 +42,7 @@ const state = {
   recentProteins: loadRecentProteins(),
   saveMessage: "",
   isReportOpen: false,
+  isUpgradeOpen: false,
   reportSnapshot: "",
   variantQuery: "",
   isSidebarOpen: false,
@@ -154,6 +155,7 @@ function render() {
       </main>
       <button class="help-float" type="button" data-help-open aria-label="도움말">?</button>
       ${state.isHelpOpen ? renderHelpModal() : ""}
+      ${state.isUpgradeOpen ? renderUpgradeModal() : ""}
       ${state.isReportOpen && state.selected ? renderReportModal(state.selected) : ""}
     </div>
   `;
@@ -398,43 +400,10 @@ function renderResults() {
                 <p>${escapeHtml(localizedQuickSummary(protein))}</p>
               </div>
             </button>
-            ${renderRelatedStates(protein, index)}
           </article>
         `
         )
         .join("")}
-    </div>
-  `;
-}
-
-function renderRelatedStates(protein, resultIndex) {
-  const states = protein.relatedStates || [];
-  if (!states.length) return "";
-
-  return `
-    <div class="state-comparison" aria-label="${t("otherStates")}">
-      <div class="state-comparison-head">
-        <strong>${t("stateComparison")}</strong>
-        <span>${t("stateComparisonHint")}</span>
-      </div>
-      <div class="state-grid">
-        <button class="state-card" type="button" data-result="${resultIndex}">
-          <div class="state-tags">${renderStructureTags(protein)}</div>
-          <strong>${escapeHtml(getOriginalStructureName(protein))}</strong>
-          <p>${escapeHtml(localizedStateReason(protein) || protein.confidence || localizedQuickSummary(protein))}</p>
-        </button>
-      ${states
-        .map(
-          (stateItem) => `
-            <button class="state-card" type="button" data-result-state="${resultIndex}:${escapeHtml(stateItem.id)}">
-              <div class="state-tags">${renderStructureTags(stateItem)}</div>
-              <strong>${escapeHtml(getOriginalStructureName(stateItem))}</strong>
-              <p>${escapeHtml(localizedStateReason(stateItem) || t("otherStateReason"))}</p>
-            </button>
-          `
-        )
-        .join("")}
-      </div>
     </div>
   `;
 }
@@ -495,7 +464,7 @@ function renderHelpModal() {
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
         </button>
         <h2 id="help-title">FoldNote 도움말</h2>
-        <p>검색 결과를 선택한 뒤 오른쪽 패널의 전문 탭에서 구조 판독, 논문 근거 요약, 연관 키워드, 참고문헌을 볼 수 있습니다.</p>
+        <p>검색 결과를 선택한 뒤 오른쪽 패널의 전문 탭에서 구조 판독, 연관 키워드, 참고문헌과 근거 문장을 볼 수 있습니다.</p>
 
         <div class="help-grid">
           <div>
@@ -541,8 +510,8 @@ function renderRecommendations() {
     <section class="recommend-box">
       <div class="recommend-head">
         <div>
-          <h3>오늘의 추천 단백질</h3>
-          <p>어디서부터 볼지 모르겠다면 이런 단백질부터 시작해보세요.</p>
+          <h3>${t("recommendTitle")}</h3>
+          <p>${t("recommendText")}</p>
         </div>
       </div>
       <div class="recommend-grid">
@@ -550,9 +519,9 @@ function renderRecommendations() {
           .map(
             (item) => `
               <button class="recommend-card" type="button" data-recommend-query="${escapeHtml(item.query)}">
-                <span>${escapeHtml(item.tag)}</span>
-                <strong>${escapeHtml(item.name)}</strong>
-                <p>${escapeHtml(item.note)}</p>
+                <span>${escapeHtml(localizedRecommendation(item).tag)}</span>
+                <strong>${escapeHtml(localizedRecommendation(item).name)}</strong>
+                <p>${escapeHtml(localizedRecommendation(item).note)}</p>
               </button>
             `
           )
@@ -567,11 +536,11 @@ function renderTips() {
     <aside class="tip-box">
       <div aria-hidden="true">${icons.info}</div>
       <div>
-        <h3>검색 팁</h3>
+        <h3>${t("tipsTitle")}</h3>
         <ul>
-          <li>한글 또는 영문 단백질 이름으로 검색할 수 있습니다</li>
-          <li>PDB ID(예: 1HHO)로 직접 검색도 가능합니다</li>
-          <li>전문 탭에서 관련 초록, 연관 DNA/RNA/단백질, 참고문헌을 볼 수 있습니다</li>
+          <li>${t("tipName")}</li>
+          <li>${t("tipPdb")}</li>
+          <li>${t("tipEvidence")}</li>
         </ul>
       </div>
     </aside>
@@ -582,6 +551,54 @@ function getRandomRecommendations() {
   return [...recommendedProteins]
     .sort(() => Math.random() - 0.5)
     .slice(0, 4);
+}
+
+const recommendationTranslations = {
+  헤모글로빈: {
+    name: "Hemoglobin",
+    tag: "Starter",
+    note: "A classic oxygen transport protein for learning structure and function."
+  },
+  인슐린: {
+    name: "Insulin",
+    tag: "Popular",
+    note: "Useful for connecting hormone structure to blood glucose regulation."
+  },
+  p53: {
+    name: "p53",
+    tag: "Cancer research",
+    note: "Known for DNA damage response and tumor suppressor function."
+  },
+  "스파이크 단백질": {
+    name: "Spike protein",
+    tag: "Virus",
+    note: "Shows how viral surface proteins bind to host cells."
+  },
+  GFP: {
+    name: "GFP",
+    tag: "Fluorescence",
+    note: "A widely used marker protein in life science experiments."
+  },
+  "CRISPR Cas9": {
+    name: "CRISPR Cas9",
+    tag: "Gene editing",
+    note: "Inspect how Cas9 recognizes and cuts DNA."
+  },
+  콜라겐: {
+    name: "Collagen",
+    tag: "Structural protein",
+    note: "A fibrous protein that supports skin and connective tissue strength."
+  },
+  라이소자임: {
+    name: "Lysozyme",
+    tag: "Enzyme",
+    note: "A classic enzyme structure that breaks bacterial cell walls."
+  }
+};
+
+function localizedRecommendation(item) {
+  if (state.language !== "en") return item;
+  return recommendationTranslations[item.name] || item;
 }
 
 function renderViewer(protein) {
@@ -634,33 +651,9 @@ function renderInfoPanel(protein) {
           ${renderMetric(t("mass"), protein.mass)}
         </div>
 
-        ${renderSelectedRelatedStates(protein)}
         ${renderUnifiedInfo(protein)}
       </div>
     </aside>
-  `;
-}
-
-function renderSelectedRelatedStates(protein) {
-  const states = protein.relatedStates || [];
-  if (!states.length) return "";
-
-  return `
-    <section class="section compact-section">
-      <h3>${t("otherStates")}</h3>
-      <div class="state-detail-list">
-        ${states
-          .map(
-            (stateItem) => `
-              <button type="button" data-related-state="${escapeHtml(stateItem.id)}">
-                <strong>${escapeHtml(localizedStateLabel(stateItem))} · ${escapeHtml(getStateDisplayName(stateItem))}</strong>
-                <span>${escapeHtml(localizedStateReason(stateItem))}</span>
-              </button>
-            `
-          )
-          .join("")}
-      </div>
-    </section>
   `;
 }
 
@@ -745,35 +738,10 @@ function renderLiteraturePanel(protein) {
     `;
   }
 
+  const visibleArticles = evidence.articles.slice(0, 4);
+  const hiddenArticles = evidence.articles.slice(4);
+
   return `
-    <section class="section pro-section">
-      <h3>논문 근거 요약</h3>
-      <p class="section-lead">Europe PMC 초록에서 구조, 기능, 상호작용 문장을 골라 짧게 정리합니다.</p>
-      <div class="evidence-summary">
-        ${evidence.summary
-          .map((sentence) => `<p>${escapeHtml(sentence)}</p>`)
-          .join("")}
-      </div>
-    </section>
-
-    <section class="section pro-section">
-      <h3>근거 추적</h3>
-      <div class="claim-list">
-        ${(evidence.claims || [])
-          .slice(0, 4)
-          .map(
-            (claim) => `
-              <article class="claim-card">
-                <p>${escapeHtml(claim.sentence)}</p>
-                <a href="${escapeHtml(claim.sourceUrl)}" target="_blank" rel="noreferrer">근거 논문: ${escapeHtml(claim.sourceTitle)}</a>
-                <span>${escapeHtml(claim.journal)} · ${escapeHtml(claim.year)}</span>
-              </article>
-            `
-          )
-          .join("") || "<div class=\"evidence-empty\">문장별 근거를 추출하지 못했습니다.</div>"}
-      </div>
-    </section>
-
     <section class="section pro-section">
       <h3>연관 키워드</h3>
       <div class="entity-cloud">
@@ -787,22 +755,39 @@ function renderLiteraturePanel(protein) {
 
     <section class="section pro-section">
       <h3>참고문헌</h3>
-      <p class="section-lead">제목을 누르면 DOI 또는 Europe PMC 원문 페이지로 이동합니다.</p>
+      <p class="section-lead">각 참고문헌 카드 안에 초록에서 뽑은 근거 문장을 함께 표시합니다.</p>
       <div class="reference-list">
         ${evidence.articles.length
-          ? evidence.articles.map(renderReference).join("")
+          ? visibleArticles.map((article) => renderReference(article, evidence.claims || [])).join("")
           : "<p>표시할 참고문헌이 없습니다.</p>"}
+        ${hiddenArticles.length
+          ? `
+            <details class="reference-more">
+              <summary>더보기 ${hiddenArticles.length}개</summary>
+              ${hiddenArticles.map((article) => renderReference(article, evidence.claims || [])).join("")}
+            </details>
+          `
+          : ""}
       </div>
     </section>
   `;
 }
 
-function renderReference(article) {
+function renderReference(article, claims = []) {
+  const linkedClaims = claims.filter((claim) => claim.sourceUrl === article.url).slice(0, 2);
   return `
     <article class="reference-item">
       <a href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${escapeHtml(article.title)}</a>
       <p>${escapeHtml(article.authors)}</p>
       <span>${escapeHtml(article.journal)} · ${escapeHtml(article.year)} · 인용 ${article.citedByCount}</span>
+      ${linkedClaims.length
+        ? `
+          <div class="reference-evidence">
+            <strong>근거 문장</strong>
+            ${linkedClaims.map((claim) => `<p>${escapeHtml(claim.sentence)}</p>`).join("")}
+          </div>
+        `
+        : ""}
     </article>
   `;
 }
@@ -873,6 +858,34 @@ function renderReportModal(protein) {
   `;
 }
 
+function renderUpgradeModal() {
+  return `
+    <div class="upgrade-backdrop" data-upgrade-close>
+      <section class="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+        <button class="modal-close" type="button" data-upgrade-close aria-label="닫기">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
+        </button>
+        <span class="upgrade-kicker">FoldNote Pro</span>
+        <h2 id="upgrade-title">리포트 생성은 Pro 기능입니다</h2>
+        <p>구조 요약, 기능 요약, 근거 문장, 참고문헌, 스냅샷을 한 번에 묶어 Markdown/PDF 리포트로 내보내는 기능입니다.</p>
+        <div class="upgrade-grid">
+          <div><strong>학생/연구자</strong><span>과제, 논문 조사, 발표 자료 초안</span></div>
+          <div><strong>랩/팀</strong><span>프로젝트별 구조 노트와 참고문헌 정리</span></div>
+          <div><strong>바이오 스타트업</strong><span>타깃 단백질 검토 리포트</span></div>
+        </div>
+        <div class="upgrade-price">
+          <strong>Pro 예상가</strong>
+          <span>월 9,900원부터</span>
+        </div>
+        <div class="upgrade-actions">
+          <button type="button" data-open-report-preview>무료 미리보기 열기</button>
+          <button type="button" data-upgrade-close>나중에</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
 function renderDetailedInfo(protein) {
   const structureId = protein.pdbId || protein.accession || "AlphaFold";
   const confidenceLabel = protein.source === "PDB" ? "B-factor 해석" : "pLDDT 해석";
@@ -903,7 +916,7 @@ function renderDetailedInfo(protein) {
         <span>리간드/보조인자</span>
         <span>체인 접촉면</span>
         <span>저신뢰도 루프</span>
-        <span>동종 구조 비교</span>
+        <span>변이 위치</span>
       </div>
     </section>
   `;
@@ -1131,6 +1144,11 @@ function bindEvents() {
     if (event.key === "Escape" && state.isHelpOpen) {
       state.isHelpOpen = false;
       render();
+      return;
+    }
+    if (event.key === "Escape" && state.isUpgradeOpen) {
+      state.isUpgradeOpen = false;
+      render();
     }
   };
 
@@ -1169,34 +1187,6 @@ function bindEvents() {
   document.querySelectorAll("[data-result]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selected = state.results[Number(button.dataset.result)];
-      state.recentProteins = recordRecentProtein(state.selected);
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-result-state]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const [resultIndex, stateId] = button.dataset.resultState.split(":");
-      const result = state.results[Number(resultIndex)];
-      const related = result?.relatedStates?.find((item) => item.id === stateId);
-      if (!related?.protein) return;
-      state.selected = {
-        ...related.protein,
-        relatedStates: [
-          {
-            id: getProteinKey(result),
-            name: getDisplayName(result),
-            englishName: result.englishName,
-            stateKey: result.stateKey,
-            stateLabel: result.stateLabel || "선택 구조",
-            stateLabelEn: result.stateLabelEn || "Selected structure",
-            stateReason: result.stateReason || "처음 선택한 구조입니다.",
-            stateReasonEn: result.stateReasonEn || "This is the originally selected structure.",
-            protein: result
-          },
-          ...(result.relatedStates || []).filter((item) => item.id !== stateId)
-        ]
-      };
       state.recentProteins = recordRecentProtein(state.selected);
       render();
     });
@@ -1379,6 +1369,23 @@ function bindEvents() {
   if (reportOpenButton) {
     reportOpenButton.addEventListener("click", () => {
       state.reportSnapshot = captureViewerSnapshot();
+      state.isUpgradeOpen = true;
+      render();
+    });
+  }
+
+  document.querySelectorAll("[data-upgrade-close]").forEach((element) => {
+    element.addEventListener("click", (event) => {
+      if (event.target !== element && !element.classList.contains("modal-close")) return;
+      state.isUpgradeOpen = false;
+      render();
+    });
+  });
+
+  const reportPreviewButton = document.querySelector("[data-open-report-preview]");
+  if (reportPreviewButton) {
+    reportPreviewButton.addEventListener("click", () => {
+      state.isUpgradeOpen = false;
       state.isReportOpen = true;
       render();
     });
@@ -1650,12 +1657,9 @@ const translations = {
     evidenceHint: "전문 탭에서 논문 근거 확인",
     basicInfo: "기본정보",
     groupedCount: "개 구조 비교",
-    otherStates: "다른 상태",
-    otherState: "다른 상태",
+    otherState: "비교 후보",
     otherStateReason: "실험 조건이나 결합 상태가 다른 구조입니다.",
     selectedStructure: "선택 구조",
-    stateComparison: "상태별 구조 비교",
-    stateComparisonHint: "해시태그로 구조 이름과 PDB ID를 구분해 보세요",
     description: "설명",
     keyFeatures: "주요 특징",
     structureView: "실제 구조 시각화",
@@ -1676,7 +1680,13 @@ const translations = {
     method: "방법",
     resolution: "해상도",
     size: "크기",
-    mass: "분자량"
+    mass: "분자량",
+    recommendTitle: "오늘의 추천 단백질",
+    recommendText: "어디서부터 볼지 모르겠다면 이런 단백질부터 시작해보세요.",
+    tipsTitle: "검색 팁",
+    tipName: "한글 또는 영문 단백질 이름으로 검색할 수 있습니다",
+    tipPdb: "PDB ID(예: 1HHO)로 직접 검색도 가능합니다",
+    tipEvidence: "전문 탭에서 관련 초록, 연관 DNA/RNA/단백질, 참고문헌을 볼 수 있습니다"
   },
   en: {
     home: "Home",
@@ -1691,12 +1701,9 @@ const translations = {
     evidenceHint: "Open the professional tab for literature evidence",
     basicInfo: "Basic info",
     groupedCount: "structures to compare",
-    otherStates: "Other states",
     otherState: "Other state",
     otherStateReason: "This structure differs by experimental condition, ligand, or binding state.",
     selectedStructure: "Selected structure",
-    stateComparison: "State-by-state comparison",
-    stateComparisonHint: "Use the hashtags to identify each structure name and PDB ID.",
     description: "Description",
     keyFeatures: "Key features",
     structureView: "structure viewer",
@@ -1717,7 +1724,13 @@ const translations = {
     method: "Method",
     resolution: "Resolution",
     size: "Size",
-    mass: "Mass"
+    mass: "Mass",
+    recommendTitle: "Recommended proteins",
+    recommendText: "Start with these proteins if you are not sure what to explore first.",
+    tipsTitle: "Search tips",
+    tipName: "Search by Korean or English protein names.",
+    tipPdb: "You can also search directly by PDB ID, such as 1HHO.",
+    tipEvidence: "Open the professional tab to see abstracts, related DNA/RNA/proteins, and references."
   }
 };
 

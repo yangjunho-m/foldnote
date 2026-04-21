@@ -574,6 +574,48 @@
   font-size: 12px;
 }
 
+.reference-evidence {
+  margin-top: 10px;
+  padding: 10px;
+  border-left: 3px solid var(--primary);
+  background: rgba(234, 242, 255, 0.6);
+}
+
+.reference-evidence strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0754d6;
+  font-size: 12px;
+}
+
+.reference-evidence p + p {
+  margin-top: 8px;
+}
+
+.reference-more {
+  display: grid;
+  gap: 10px;
+}
+
+.reference-more summary {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #0754d6;
+  background: var(--primary-soft);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reference-more .reference-item {
+  margin-top: 10px;
+}
+
 .app-shell.dark .evidence-status,
 .app-shell.dark .reference-item,
 .app-shell.dark .evidence-summary p {
@@ -693,6 +735,112 @@
   padding: 20px;
   background: rgba(10, 14, 23, 0.52);
   backdrop-filter: blur(8px);
+}
+
+.upgrade-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 34;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 14, 23, 0.56);
+  backdrop-filter: blur(8px);
+}
+
+.upgrade-modal {
+  position: relative;
+  width: min(620px, 100%);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: 0 24px 70px rgba(13, 19, 33, 0.32);
+}
+
+.upgrade-kicker {
+  display: inline-flex;
+  margin-bottom: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: #0754d6;
+  background: var(--primary-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.upgrade-modal h2,
+.upgrade-modal p {
+  margin: 0;
+}
+
+.upgrade-modal h2 {
+  padding-right: 42px;
+  font-size: 25px;
+  line-height: 1.28;
+}
+
+.upgrade-modal > p {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.upgrade-grid div,
+.upgrade-price {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.upgrade-grid strong,
+.upgrade-grid span,
+.upgrade-price strong,
+.upgrade-price span {
+  display: block;
+}
+
+.upgrade-grid span,
+.upgrade-price span {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.upgrade-price {
+  margin-top: 10px;
+}
+
+.upgrade-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.upgrade-actions button {
+  min-height: 40px;
+  padding: 0 13px;
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.upgrade-actions button:first-child {
+  color: #ffffff;
+  background: var(--primary);
 }
 
 .report-modal {

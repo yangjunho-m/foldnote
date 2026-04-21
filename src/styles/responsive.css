@@ -77,8 +77,7 @@
   }
 
   .recent-list,
-  .pro-module-grid,
-  .state-grid {
+  .pro-module-grid {
     grid-template-columns: 1fr;
   }
 
@@ -145,12 +144,31 @@
     align-items: end;
   }
 
+  .upgrade-backdrop {
+    padding: 12px;
+    align-items: end;
+  }
+
   .report-modal {
     max-height: calc(100vh - 24px);
     padding: 22px 18px;
   }
 
+  .upgrade-modal {
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+    padding: 22px 18px;
+  }
+
   .report-head {
     display: block;
+  }
+
+  .upgrade-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-actions {
+    display: grid;
   }
 }
