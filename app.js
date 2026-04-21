@@ -404,9 +404,9 @@ function renderResults() {
           (protein, index) => `
           <article class="result-card">
             <button class="result-main" type="button" data-result="${index}">
+              <span class="result-id-corner">${renderResultId(protein)}</span>
               <div class="result-tag-row">
                 <div class="state-tags result-tags">${renderStructureTags(protein)}</div>
-                <span class="result-id-corner">${renderResultId(protein)}</span>
               </div>
               <div class="result-title-row">
                 <div class="result-title-left">
@@ -575,7 +575,16 @@ function renderTips() {
 }
 
 function getResultComparisonText(protein) {
-  return localizedStateReason(protein) || localizedQuickSummary(protein);
+  return stripTrailingStructureId(localizedStateReason(protein) || localizedQuickSummary(protein), protein);
+}
+
+function stripTrailingStructureId(text, protein) {
+  const ids = [protein.pdbId, protein.accession, protein.alphaFoldId].filter(Boolean);
+  return ids.reduce((current, id) => current.replace(new RegExp(`\\s*\\(${escapeRegExp(id)}\\)\\s*$`, "i"), ""), text || "");
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function getRandomRecommendations() {

@@ -628,6 +628,7 @@
 }
 
 .result-card {
+  position: relative;
   width: 100%;
   padding: 0;
   border: 1px solid var(--line);
@@ -658,7 +659,9 @@
 }
 
 .result-id-corner {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 18px;
+  right: 16px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
@@ -666,6 +669,7 @@
 }
 
 .result-main {
+  position: relative;
   width: 100%;
   padding: 18px 16px;
   color: inherit;
@@ -687,8 +691,8 @@
 .result-tag-row {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 12px;
+  padding-right: 112px;
   margin-bottom: 10px;
 }
 
