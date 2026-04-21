@@ -641,7 +641,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: space-between;
 }
 
 .result-title-left {
@@ -685,8 +684,16 @@
   gap: 6px;
 }
 
-.result-tags {
+.result-tag-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 10px;
+}
+
+.result-tags {
+  min-width: 0;
 }
 
 .state-tag {

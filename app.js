@@ -404,13 +404,14 @@ function renderResults() {
           (protein, index) => `
           <article class="result-card">
             <button class="result-main" type="button" data-result="${index}">
-              <div class="state-tags result-tags">${renderStructureTags(protein)}</div>
+              <div class="result-tag-row">
+                <div class="state-tags result-tags">${renderStructureTags(protein)}</div>
+                <span class="result-id-corner">${renderResultId(protein)}</span>
+              </div>
               <div class="result-title-row">
                 <div class="result-title-left">
                   <h3 class="result-title">${renderProteinTitle(protein)}</h3>
-                  ${badge(protein)}
                 </div>
-                <span class="result-id-corner">${renderResultId(protein)}</span>
               </div>
               <div class="result-meta">
                 ${protein.organism ? `<span>${t("organism")}: ${escapeHtml(protein.organism)}</span>` : ""}

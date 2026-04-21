@@ -76,6 +76,12 @@
     grid-template-columns: 1fr;
   }
 
+  .result-tag-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .recent-list,
   .pro-module-grid {
     grid-template-columns: 1fr;
