@@ -85,8 +85,21 @@
   .learning-practice,
   .enzyme-grid,
   .mechanism-grid,
-  .concept-grid {
+  .concept-grid,
+  .lesson-grid,
+  .lesson-panel-grid,
+  .lesson-concept-grid {
     grid-template-columns: 1fr;
+  }
+
+  .learning-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .learning-tabs button {
+    flex: 0 0 auto;
   }
 
   .learning-practice button {

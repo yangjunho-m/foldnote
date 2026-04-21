@@ -50,6 +50,7 @@ const state = {
   isProjectFormOpen: false,
   newProjectName: "",
   isLearningOpen: false,
+  activeLearningTopic: "amino",
   language: window.localStorage.getItem("foldnote-language") || "ko"
 };
 
@@ -245,119 +246,258 @@ function renderSearch() {
 }
 
 function renderLearning() {
-  const enzymeComponents = [
-    {
-      title: "활성 부위 (Active Site)",
-      icon: "activity",
-      tone: "blue",
-      description: "기질이 결합하고 반응이 일어나는 3D 포켓입니다.",
-      features: ["촉매 잔기: 화학 반응을 직접 수행", "결합 잔기: 기질을 인식하고 고정", "정확한 기하학: Å 단위 정밀도", "소수성/극성 배치: 기질 특이성"],
-      examples: ["Ser-His-Asp 촉매 삼각", "Zn2+ 결합 부위", "옥시아니온 홀"]
-    },
-    {
-      title: "리간드 결합",
-      icon: "lock",
-      tone: "violet",
-      description: "기질, 생성물, 저해제가 결합하는 방식입니다.",
-      features: ["Lock-and-Key: 정확한 형태 일치", "Induced Fit: 결합 시 구조 변화", "수소결합 네트워크", "소수성 상호작용"],
-      examples: ["기질 특이성", "경쟁적 저해", "알로스테릭 조절"]
-    },
-    {
-      title: "보조인자 (Cofactor)",
-      icon: "sparkles",
-      tone: "amber",
-      description: "효소 활성에 필요한 비단백질 분자입니다.",
-      features: ["금속 이온: Fe2+, Zn2+, Mg2+, Cu2+", "보조효소: NAD+, FAD, ATP", "헴 그룹: 산소 운반과 전자 전달", "조효소: 비타민 유도체"],
-      examples: ["헴 그룹", "NAD+ 결합", "Mg2+-ATP 복합체"]
-    },
-    {
-      title: "저해제 (Inhibitor)",
-      icon: "circle",
-      tone: "red",
-      description: "효소 활성을 막는 분자들입니다.",
-      features: ["경쟁적: 활성 부위에 결합", "비경쟁적: 다른 부위에 결합", "비가역적: 공유 결합 형성", "약물 설계: 질병 치료"],
-      examples: ["페니실린", "스타틴", "프로테아제 저해제"]
-    }
-  ];
-  const mechanisms = [
-    ["세린 프로테아제", "Ser-His-Asp 촉매 삼각", "Ser이 친핵체로 작용하여 펩타이드 결합을 가수분해합니다.", "Trypsin, Chymotrypsin"],
-    ["라이소자임", "이온 안정화", "Glu와 Asp가 글리코시드 결합 전이 상태를 안정화합니다.", "Lysozyme"],
-    ["카르복시펩티다제", "금속 활성화", "Zn2+ 이온이 물 분자를 활성화하고 펩타이드를 절단합니다.", "Carboxypeptidase A"],
-    ["RNase A", "산-염기 촉매", "His12와 His119가 RNA 인산 결합을 절단합니다.", "Ribonuclease A"]
-  ];
-  const concepts = [
-    ["정밀한 배치", "촉매 잔기가 Å 단위로 정확하게 배치되어 전이 상태를 안정화합니다. 하나의 아미노산 변이도 활성을 크게 바꿀 수 있습니다."],
-    ["유도 적합", "기질이 결합하면 효소가 구조를 바꿔 최적 반응 기하학을 만듭니다. 동적 구조 변화가 촉매에 필수적입니다."],
-    ["금속 이온 역할", "금속 이온이 전자를 끌어당기거나 물을 활성화하여 반응을 가속합니다. 구조에서 배위 기하학을 관찰할 수 있습니다."],
-    ["저해제 설계", "활성 부위 구조를 기반으로 약물을 설계합니다. 수소결합과 소수성 상호작용을 최적화하여 결합력을 높입니다."]
-  ];
+  const topics = getLearningTopics();
+  const activeTopic = topics.find((topic) => topic.id === state.activeLearningTopic) || topics[0];
 
   return `
     <section class="learning-screen">
-      <div class="enzyme-intro">
-        <span>Biochemistry Classroom</span>
-        <h2>효소와 결합</h2>
-        <p><strong>활성 부위, 기질 결합, 보조인자, 저해제</strong>가 구조에서 어떤 모양으로 보이는지 학습합니다. 3D 구조가 촉매 메커니즘을 어떻게 결정하는지 이해합니다.</p>
-      </div>
-
-      <div class="enzyme-grid">
-        ${enzymeComponents
+      <div class="learning-tabs" aria-label="생화학 학습 과목">
+        ${topics
           .map(
-            (component) => `
-              <article class="enzyme-card">
-                <div class="enzyme-card-head ${component.tone}">
-                  <div class="enzyme-icon ${component.icon}" aria-hidden="true">${renderLearningIcon(component.icon)}</div>
-                  <h3>${escapeHtml(component.title)}</h3>
-                </div>
-                <div class="enzyme-card-body">
-                  <p>${escapeHtml(component.description)}</p>
-                  <div class="enzyme-feature-list">
-                    ${component.features.map((feature) => `<div><span>•</span>${escapeHtml(feature)}</div>`).join("")}
-                  </div>
-                  <div class="enzyme-examples">
-                    <p>예시:</p>
-                    <div>${component.examples.map((example) => `<em>${escapeHtml(example)}</em>`).join("")}</div>
-                  </div>
-                </div>
-              </article>
+            (topic, index) => `
+              <button class="${topic.id === activeTopic.id ? "active" : ""}" type="button" data-learning-topic="${topic.id}">
+                ${renderLearningIcon(topic.icon)}
+                <span>${index + 1}. ${escapeHtml(topic.tab)}</span>
+              </button>
             `
           )
           .join("")}
       </div>
 
-      <section class="mechanism-panel">
-        <h3>${renderLearningIcon("activity")} 촉매 메커니즘 예시</h3>
-        <div class="mechanism-grid">
-          ${mechanisms
-            .map(
-              ([name, mechanism, description, example]) => `
-                <article>
-                  <h4>${escapeHtml(name)}</h4>
-                  <strong>${escapeHtml(mechanism)}</strong>
-                  <p>${escapeHtml(description)}</p>
-                  <span>${escapeHtml(example)}</span>
-                </article>
-              `
-            )
-            .join("")}
-        </div>
-      </section>
+      <div class="lesson-intro">
+        <h2>${escapeHtml(activeTopic.title)}</h2>
+        <p>${activeTopic.intro}</p>
+      </div>
 
-      <section class="concept-panel">
-        <h3>구조-기능 관계</h3>
-        <div class="concept-grid">
-          ${concepts
-            .map(
-              ([title, description]) => `
-                <article>
-                  <h4>${escapeHtml(title)}</h4>
-                  <p>${escapeHtml(description)}</p>
-                </article>
-              `
-            )
-            .join("")}
-        </div>
-      </section>
+      <div class="lesson-grid">
+        ${activeTopic.cards.map((card) => renderLessonCard(card)).join("")}
+      </div>
+
+      ${activeTopic.featurePanel ? renderFeaturePanel(activeTopic.featurePanel) : ""}
+      ${activeTopic.conceptPanel ? renderConceptPanel(activeTopic.conceptPanel) : ""}
+    </section>
+  `;
+}
+
+function getLearningTopics() {
+  return [
+    {
+      id: "amino",
+      tab: "아미노산과 단백질",
+      icon: "network",
+      title: "아미노산과 단백질",
+      intro:
+        "20가지 아미노산의 <strong>전하, 극성, 소수성</strong> 차이가 단백질 접힘과 결합 부위를 어떻게 만드는지 배웁니다. 각 아미노산의 화학적 성질이 3D 구조와 기능을 결정합니다.",
+      cards: [
+        lessonCard("소수성 (Hydrophobic)", "droplet", "amber", "물을 피하고 단백질 내부 코어를 형성합니다.", ["Ala (A)", "Val (V)", "Leu (L)", "Ile (I)", "Met (M)", "Phe (F)", "Trp (W)", "Pro (P)"], ["소수성 코어 형성", "막 단백질 구조", "리간드 결합 포켓"]),
+        lessonCard("극성 (Polar)", "zap", "green", "수소결합을 형성하고 활성 부위에서 중요한 역할을 합니다.", ["Ser (S)", "Thr (T)", "Cys (C)", "Asn (N)", "Gln (Q)", "Tyr (Y)"], ["수소결합 네트워크", "효소 촉매", "기질 인식"]),
+        lessonCard("양전하 (Positive)", "zap", "blue", "DNA/RNA 결합과 염다리를 형성합니다.", ["Lys (K)", "Arg (R)", "His (H)"], ["DNA 결합", "염다리", "핵산 인식"]),
+        lessonCard("음전하 (Negative)", "zap", "red", "금속 이온 결합과 pH 의존적 기능을 수행합니다.", ["Asp (D)", "Glu (E)"], ["금속 이온 결합", "pH 센서", "촉매 잔기"]),
+        lessonCard("방향족 (Aromatic)", "hexagon", "violet", "π-π 상호작용과 소수성 상호작용을 합니다.", ["Phe (F)", "Tyr (Y)", "Trp (W)"], ["방향족 상호작용", "DNA 염기 적층", "단백질 안정화"]),
+        lessonCard("특수 (Special)", "link", "slate", "Gly는 유연성, Cys는 이황화 결합, Pro는 꺾임을 만듭니다.", ["Gly (G)", "Cys (C)", "Pro (P)"], ["이황화 결합", "구조적 꺾임", "루프 영역"])
+      ],
+      conceptPanel: conceptPanel("핵심 개념", "blue", "droplet", [
+        ["소수성 코어", "소수성 아미노산이 단백질 내부로 모여 안정적인 코어를 형성합니다."],
+        ["전하와 염다리", "양전하와 음전하 아미노산이 만나 염다리를 형성하고 구조를 안정화합니다."],
+        ["수소결합", "극성 아미노산이 수소결합 네트워크를 만들어 효소 활성과 기질 인식에 기여합니다."],
+        ["방향족 상호작용", "방향족 고리들이 π-π 상호작용을 하며 DNA 염기와도 상호작용합니다."]
+      ])
+    },
+    {
+      id: "structure",
+      tab: "단백질 구조",
+      icon: "layers",
+      title: "단백질 구조 단계",
+      intro:
+        "1차 구조부터 4차 구조까지 연결해서 보고, 실제 3D 구조에서 <strong>알파 나선과 베타 가닥</strong>을 찾습니다. 각 단계가 어떻게 쌓여서 최종 기능을 만드는지 이해합니다.",
+      cards: [
+        lessonCard("1차 구조", "arrow", "red", "아미노산의 선형 서열입니다. 유전 정보가 직접 코딩하는 유일한 구조 단계입니다.", ["Primary Structure"], ["서열 정보", "변이 위치", "도메인 경계"]),
+        lessonCard("2차 구조", "grid", "blue", "주쇄 수소결합으로 생기는 알파 나선과 베타 가닥입니다.", ["α-helix", "β-sheet", "turns", "loops"], ["규칙적 접힘", "수소결합", "구조 모티프"]),
+        lessonCard("3차 구조", "box", "violet", "측쇄 간 상호작용으로 만들어지는 전체 3D 접힘입니다.", ["Tertiary Structure"], ["도메인 구조", "활성 부위", "결합 포켓"]),
+        lessonCard("4차 구조", "layers", "green", "여러 서브유닛이 모여 기능적 복합체를 형성합니다.", ["Quaternary Structure"], ["헤모글로빈", "DNA 중합효소", "항체"])
+      ],
+      featurePanel: featurePanel("2차 구조 모티프", "blue", "grid", [
+        ["α-helix (알파 나선)", "오른쪽 나선 구조로 3.6개 잔기당 한 바퀴 회전합니다.", "수소결합: i → i+4", "막 관통 영역", "DNA 결합 모티프"],
+        ["β-sheet (베타 시트)", "펼쳐진 사슬들이 나란히 배열되어 판 모양을 만듭니다.", "평행/역평행", "강한 구조", "섬유상 단백질"],
+        ["β-turn", "4개 잔기로 방향을 180도 바꾸는 구조입니다.", "루프 연결", "표면 위치", "Gly, Pro 선호"],
+        ["Loop/Coil", "규칙적이지 않은 연결 영역입니다.", "유연성", "결합 부위", "진화적 가변성"]
+      ]),
+      conceptPanel: conceptPanel("도메인과 복합체", "blue", "box", [
+        ["도메인", "독립적으로 접히는 구조 단위입니다. 진화적으로 보존되며 기능 모듈을 형성합니다."],
+        ["복합체", "여러 서브유닛이 모여 기능을 수행합니다. 협동적 결합과 알로스테릭 조절이 가능합니다."],
+        ["접힘 원리", "소수성 코어가 중심에, 친수성 잔기가 표면에 배치되어 안정한 구조를 만듭니다."]
+      ])
+    },
+    {
+      id: "enzyme",
+      tab: "효소와 결합",
+      icon: "activity",
+      title: "효소와 결합",
+      intro:
+        "<strong>활성 부위, 기질 결합, 보조인자, 저해제</strong>가 구조에서 어떤 모양으로 보이는지 학습합니다. 3D 구조가 촉매 메커니즘을 어떻게 결정하는지 이해합니다.",
+      cards: [
+        lessonCard("활성 부위 (Active Site)", "activity", "blue", "기질이 결합하고 반응이 일어나는 3D 포켓입니다.", [], ["촉매 잔기: 화학 반응을 직접 수행", "결합 잔기: 기질을 인식하고 고정", "정확한 기하학: Å 단위 정밀도", "소수성/극성 배치: 기질 특이성"], ["Ser-His-Asp 촉매 삼각", "Zn²⁺ 결합 부위", "옥시아니온 홀"]),
+        lessonCard("리간드 결합", "lock", "violet", "기질, 생성물, 저해제가 결합하는 방식입니다.", [], ["Lock-and-Key: 정확한 형태 일치", "Induced Fit: 결합 시 구조 변화", "수소결합 네트워크", "소수성 상호작용"], ["기질 특이성", "경쟁적 저해", "알로스테릭 조절"]),
+        lessonCard("보조인자 (Cofactor)", "sparkles", "amber", "효소 활성에 필요한 비단백질 분자입니다.", [], ["금속 이온: Fe²⁺, Zn²⁺, Mg²⁺, Cu²⁺", "보조효소: NAD⁺, FAD, ATP", "헴 그룹: 산소 운반과 전자 전달", "조효소: 비타민 유도체"], ["헴 그룹", "NAD⁺ 결합", "Mg²⁺-ATP 복합체"]),
+        lessonCard("저해제 (Inhibitor)", "circle", "red", "효소 활성을 막는 분자들입니다.", [], ["경쟁적: 활성 부위에 결합", "비경쟁적: 다른 부위에 결합", "비가역적: 공유 결합 형성", "약물 설계: 질병 치료"], ["페니실린", "스타틴", "프로테아제 저해제"])
+      ],
+      featurePanel: featurePanel("촉매 메커니즘 예시", "blue", "activity", [
+        ["세린 프로테아제", "Ser이 친핵체로 작용하여 펩타이드 결합을 가수분해합니다.", "Ser-His-Asp 촉매 삼각", "Trypsin, Chymotrypsin"],
+        ["라이소자임", "Glu와 Asp가 글리코시드 결합 전이 상태를 안정화합니다.", "이온 안정화", "Lysozyme"],
+        ["카르복시펩티다제", "Zn²⁺ 이온이 물 분자를 활성화하고 펩타이드를 절단합니다.", "금속 활성화", "Carboxypeptidase A"],
+        ["RNase A", "His12와 His119가 RNA 인산 결합을 절단합니다.", "산-염기 촉매", "Ribonuclease A"]
+      ]),
+      conceptPanel: conceptPanel("구조-기능 관계", "orange", "activity", [
+        ["정밀한 배치", "촉매 잔기가 Å 단위로 정확하게 배치되어 전이 상태를 안정화합니다. 하나의 아미노산 변이도 활성을 크게 바꿀 수 있습니다."],
+        ["유도 적합", "기질이 결합하면 효소가 구조를 바꿔 최적 반응 기하학을 만듭니다. 동적 구조 변화가 촉매에 필수적입니다."],
+        ["금속 이온 역할", "금속 이온이 전자를 끌어당기거나 물을 활성화하여 반응을 가속합니다."],
+        ["저해제 설계", "활성 부위 구조를 기반으로 약물을 설계합니다. 수소결합과 소수성 상호작용을 최적화합니다."]
+      ])
+    },
+    {
+      id: "nucleic",
+      tab: "DNA/RNA와 단백질",
+      icon: "dna",
+      title: "DNA/RNA와 단백질",
+      intro:
+        "<strong>양전하 잔기와 핵산 골격의 상호작용</strong>, 전사인자와 Cas9 같은 단백질의 인식 원리를 배웁니다. 단백질이 어떻게 DNA/RNA를 찾고 결합하는지 구조적으로 이해합니다.",
+      cards: [
+        lessonCard("인산 골격 결합", "zap", "blue", "DNA/RNA의 음전하 인산 골격과 양전하 아미노산이 정전기적으로 결합합니다.", ["Lys (K)", "Arg (R)", "His (H)"], ["양전하 측쇄가 인산기를 중화", "염다리 형성으로 결합 안정화", "서열 비특이적 결합", "DNA 감기 및 압축"], ["히스톤", "DNA 중합효소", "RNA 결합 단백질"]),
+        lessonCard("염기 인식", "target", "violet", "특정 DNA 서열을 인식하기 위해 염기와 직접 상호작용합니다.", ["수소결합 공여체/수용체", "방향족 잔기"], ["주요 홈/부 홈 인식", "염기별 수소결합 패턴", "서열 특이적 결합", "방향족 적층 상호작용"], ["전사인자", "Zinc finger", "Helix-turn-helix"]),
+        lessonCard("가이드 RNA", "link", "green", "RNA가 단백질과 복합체를 형성하여 표적 DNA를 인식합니다.", ["RNA 결합 도메인", "PAM 인식 잔기"], ["RNA-DNA 이중가닥 형성", "단백질의 RNA 골격 결합", "PAM 서열 인식", "표적 특이성 제공"], ["CRISPR-Cas9", "Argonaute", "RISC 복합체"]),
+        lessonCard("결합 특이성", "dna", "amber", "단백질이 수백만 개 서열 중에서 특정 표적만 찾아내는 메커니즘입니다.", ["복합 인식 모티프"], ["직접 염기 판독", "간접 형태 인식", "협동적 결합", "슬라이딩과 hopping"], ["lac repressor", "p53", "TATA box binding"])
+      ],
+      featurePanel: featurePanel("주요 단백질-핵산 복합체", "blue", "dna", [
+        ["CRISPR-Cas9", "RNA 가이드를 사용하여 표적 DNA를 절단하는 유전자 편집 도구입니다.", "gRNA가 표적 서열 지정", "PAM 서열 인식", "RuvC/HNH 도메인"],
+        ["전사인자", "DNA 서열을 인식하여 유전자 발현을 조절하는 단백질입니다.", "DNA 결합 도메인", "주요 홈 인식", "이량체 형성"],
+        ["히스톤", "DNA를 감고 압축하는 염기성 단백질입니다.", "Lys/Arg 풍부", "8량체 코어", "DNA 147bp 감기"]
+      ]),
+      conceptPanel: conceptPanel("DNA 인식 메커니즘", "purple", "target", [
+        ["직접 염기 판독", "아미노산 측쇄가 주요 홈으로 들어가 염기와 수소결합을 형성합니다."],
+        ["간접 형태 인식", "DNA 서열에 따라 나선 폭, 굽힘, 유연성이 달라지고 단백질이 이를 인식합니다."],
+        ["RNA 매개 표적화", "가이드 RNA가 Watson-Crick 염기쌍으로 표적을 지정합니다."],
+        ["1차원 확산", "단백질이 DNA를 따라 sliding과 hopping을 하며 표적 서열을 빠르게 찾습니다."]
+      ])
+    },
+    {
+      id: "mutation",
+      tab: "변이와 질병",
+      icon: "alert",
+      title: "변이와 질병",
+      intro:
+        "아미노산 하나가 바뀌면 <strong>전하, 크기, 접힘, 결합 위치</strong>가 어떻게 달라지는지 구조 위에서 해석합니다. 단일 변이가 질병을 유발하는 메커니즘을 분자 수준에서 이해합니다.",
+      cards: [
+        lessonCard("Missense 변이", "alert", "amber", "하나의 아미노산이 다른 아미노산으로 치환됩니다.", ["Val → Ile: 보존적", "Glu → Val: 비보존적"], ["보존적 변이는 구조와 기능이 대부분 유지될 수 있음", "비보존적 변이는 구조 파괴와 기능 상실 가능"], ["겸상 적혈구: HbS Glu6Val", "p53 변이: 암 발생"]),
+        lessonCard("표면 전하 변화", "zap", "blue", "전하를 띤 잔기가 바뀌면 단백질 표면 특성이 달라집니다.", ["Lys → Glu", "Arg → Cys"], ["단백질-단백질 상호작용 변화", "용해도 변화", "DNA/RNA 결합 능력 변화", "pH 의존성 변화"]),
+        lessonCard("코어 불안정화", "box", "red", "소수성 코어 내부의 변이는 접힘을 방해합니다.", ["Pro → Leu", "Gly → Val"], ["단백질 언폴딩", "응집체 형성", "프로테아좀 분해", "낮은 발현량"]),
+        lessonCard("기능 변화", "target", "violet", "활성 부위나 결합 부위의 변이는 직접 기능에 영향을 줍니다.", ["Ser → Ala", "Arg → His"], ["효소 활성 감소/증가", "기질 특이성 변화", "저해제 저항성", "알로스테릭 조절 변화"])
+      ],
+      featurePanel: featurePanel("질병 관련 변이 예시", "red", "alert", [
+        ["겸상 적혈구 빈혈", "Hb β-chain Glu6Val. 소수성 Val이 표면에 노출되어 헤모글로빈이 중합되고 적혈구가 변형됩니다.", "표면 전하 → 소수성 변화", "2HBS"],
+        ["낭포성 섬유증", "CFTR ΔPhe508. 508번 Phe 결실로 단백질이 잘못 접히고 ER에서 분해됩니다.", "코어 불안정화", "2PZE"],
+        ["암 (p53 변이)", "p53 Arg248Gln, Arg273His. DNA 결합 도메인의 양전하 잔기가 바뀌어 DNA 인식이 어려워집니다.", "DNA 결합 부위 전하 손실", "1TUP"],
+        ["가족성 알츠하이머", "APP, Presenilin 변이로 아밀로이드 베타 절단 패턴이 바뀌어 응집성 펩타이드가 증가합니다.", "기질 인식/절단 위치 변화", "1IYT"]
+      ]),
+      conceptPanel: conceptPanel("변이 해석 체크리스트", "orange", "alert", [
+        ["1. 위치 확인", "표면 vs 내부, 활성 부위/결합 부위, 2차 구조 영역, 도메인 경계를 확인합니다."],
+        ["2. 화학적 성질", "전하, 크기, 극성 변화와 Cys/Pro/Gly 같은 특수 기능을 봅니다."],
+        ["3. 구조 영향", "소수성 코어 파괴, 수소결합 손실, 염다리 손실, 공간 충돌을 확인합니다."],
+        ["4. 기능 영향", "촉매 활성, 기질 결합, DNA/단백질 상호작용, 안정성/발현량 변화를 연결합니다."]
+      ])
+    },
+    {
+      id: "data",
+      tab: "구조 데이터 읽기",
+      icon: "database",
+      title: "구조 데이터 읽기",
+      intro:
+        "<strong>PDB, AlphaFold, 해상도, B-factor, pLDDT</strong>를 구분하고 어떤 결론까지 말할 수 있는지 배웁니다. 구조 데이터의 품질을 평가하고 올바르게 해석하는 방법을 이해합니다.",
+      cards: [
+        lessonCard("PDB (Protein Data Bank)", "database", "blue", "실험적으로 결정된 3D 구조 데이터베이스입니다.", ["X-ray 결정학", "NMR 분광학", "Cryo-EM"], ["실제 실험 데이터", "리간드 결합 구조", "복합체 구조", "동적 상태 포착 가능"], ["해상도와 R-factor 확인", "B-factor로 유연성 확인"]),
+        lessonCard("AlphaFold", "sparkles", "violet", "AI로 예측한 단백질 구조 데이터베이스입니다.", ["딥러닝 예측", "서열 정보 기반"], ["거의 모든 단백질", "빠른 예측", "무료 접근", "전체 프로테옴 커버"], ["pLDDT 색상 확인", "PAE로 도메인 구분"])
+      ],
+      featurePanel: featurePanel("품질 지표 해석", "blue", "chart", [
+        ["해상도 (Resolution)", "X-ray/Cryo-EM 구조의 세밀함을 나타냅니다.", "< 2.0 Å: 매우 높음", "2.0-3.0 Å: 높음", "> 4.0 Å: 전체 모양 중심"],
+        ["R-factor / R-free", "실험 데이터와 모델의 일치도입니다.", "R-factor < 0.20: 좋은 모델", "R-free < 0.25: 좋은 모델", "차이가 작을수록 과적합 적음"],
+        ["B-factor", "각 원자의 열적 움직임/무질서도입니다.", "낮음: 고정된 구조", "높음: 유연한 루프", "활성 부위는 보통 낮음"],
+        ["pLDDT", "AlphaFold 예측의 신뢰도 점수입니다.", "> 90: 매우 높은 신뢰도", "70-90: 높은 신뢰도", "< 50: 매우 낮은 신뢰도"]
+      ]),
+      conceptPanel: conceptPanel("구조 해석 가이드라인", "blue", "eye", [
+        ["구조가 신뢰할 만한가?", "PDB는 Resolution < 3.0 Å, R-free < 0.25를 확인하고 AlphaFold는 pLDDT > 70 영역을 우선 봅니다."],
+        ["활성 부위를 믿을 수 있는가?", "리간드 결합과 촉매 해석은 가능하면 PDB 실험 구조를 우선 사용합니다."],
+        ["루프/표면 영역은?", "B-factor가 높거나 pLDDT가 낮을 수 있어 하나의 구조로 단정하지 않습니다."],
+        ["여러 구조 비교", "같은 단백질의 다양한 구조를 비교해 보존된 영역과 유연한 영역을 구분합니다."]
+      ])
+    }
+  ];
+}
+
+function lessonCard(title, icon, tone, description, chips = [], features = [], examples = []) {
+  return { title, icon, tone, description, chips, features, examples };
+}
+
+function featurePanel(title, tone, icon, rows) {
+  return { title, tone, icon, rows };
+}
+
+function conceptPanel(title, tone, icon, rows) {
+  return { title, tone, icon, rows };
+}
+
+function renderLessonCard(card) {
+  return `
+    <article class="lesson-card">
+      <div class="lesson-card-head ${card.tone}">
+        <div class="lesson-icon" aria-hidden="true">${renderLearningIcon(card.icon)}</div>
+        <h3>${escapeHtml(card.title)}</h3>
+      </div>
+      <div class="lesson-card-body">
+        ${card.chips?.length ? `<div class="lesson-chip-row">${card.chips.map((chip) => `<em>${escapeHtml(chip)}</em>`).join("")}</div>` : ""}
+        <p>${escapeHtml(card.description)}</p>
+        ${card.features?.length ? `<div class="lesson-feature-list">${card.features.map((feature) => `<div><span>•</span>${escapeHtml(feature)}</div>`).join("")}</div>` : ""}
+        ${card.examples?.length ? `<div class="lesson-examples"><p>예시:</p><div>${card.examples.map((example) => `<em>${escapeHtml(example)}</em>`).join("")}</div></div>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function renderFeaturePanel(panel) {
+  return `
+    <section class="lesson-panel ${panel.tone}">
+      <h3>${renderLearningIcon(panel.icon)} ${escapeHtml(panel.title)}</h3>
+      <div class="lesson-panel-grid">
+        ${panel.rows
+          .map(
+            ([title, description, ...items]) => `
+              <article>
+                <h4>${escapeHtml(title)}</h4>
+                <p>${escapeHtml(description)}</p>
+                ${items.length ? `<div>${items.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>` : ""}
+              </article>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderConceptPanel(panel) {
+  return `
+    <section class="lesson-concept ${panel.tone}">
+      <h3>${renderLearningIcon(panel.icon)} ${escapeHtml(panel.title)}</h3>
+      <div class="lesson-concept-grid">
+        ${panel.rows
+          .map(
+            ([title, description]) => `
+              <article>
+                <h4>${escapeHtml(title)}</h4>
+                <p>${escapeHtml(description)}</p>
+              </article>
+            `
+          )
+          .join("")}
+      </div>
     </section>
   `;
 }
@@ -365,9 +505,24 @@ function renderLearning() {
 function renderLearningIcon(name) {
   const icons = {
     activity: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg>',
+    alert: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>',
+    box: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-7"/></svg>',
+    circle: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>',
+    database: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
+    dna: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3c6 3 6 15 12 18"/><path d="M18 3C12 6 12 18 6 21"/><path d="M8 7h8"/><path d="M9 12h6"/><path d="M8 17h8"/></svg>',
+    droplet: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11Z"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+    hexagon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5Z"/></svg>',
+    layers: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>',
+    link: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>',
     lock: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    network: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 3 8"/><path d="m16 7-3 8"/><path d="M8 6h8"/></svg>',
     sparkles: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9Z"/></svg>',
-    circle: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>'
+    target: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/></svg>',
+    zap: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h8l-1 8 11-13h-8l1-7Z"/></svg>'
   };
   return icons[name] || icons.circle;
 }
@@ -1397,6 +1552,13 @@ function bindEvents() {
       render();
     });
   }
+
+  document.querySelectorAll("[data-learning-topic]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeLearningTopic = button.dataset.learningTopic;
+      render();
+    });
+  });
 
   const themeButton = document.querySelector("[data-theme-toggle]");
   if (themeButton) {
