@@ -980,6 +980,7 @@ function renderComparisonPanel(protein) {
         <div>
           <strong>현재 구조</strong>
           <span>${escapeHtml(protein.source)} · ${escapeHtml(protein.method)} · ${escapeHtml(protein.resolution)}</span>
+          <p>${escapeHtml(getCurrentComparisonHint(protein))}</p>
         </div>
         ${candidates.length
           ? candidates
@@ -988,6 +989,8 @@ function renderComparisonPanel(protein) {
                   <button type="button" data-compare-key="${escapeHtml(getProteinKey(candidate))}">
                     <strong>${escapeHtml(getDisplayName(candidate))}</strong>
                     <span>${escapeHtml(candidate.source)} · ${escapeHtml(candidate.method)} · ${escapeHtml(candidate.resolution)}</span>
+                    <p>${escapeHtml(getCandidateComparisonHint(candidate, protein))}</p>
+                    <em>${escapeHtml(getComparisonDelta(candidate, protein))}</em>
                   </button>
                 `
               )
@@ -996,6 +999,50 @@ function renderComparisonPanel(protein) {
       </div>
     </section>
   `;
+}
+
+function getCurrentComparisonHint(protein) {
+  return stripTrailingStructureId(localizedStateReason(protein) || localizedQuickSummary(protein), protein);
+}
+
+function getCandidateComparisonHint(candidate, current) {
+  const reason = stripTrailingStructureId(localizedStateReason(candidate) || localizedQuickSummary(candidate), candidate);
+  if (reason) return reason;
+  return `${getDisplayName(current)}와 같은 단백질 계열의 다른 구조 후보입니다. 결합 분자, 해상도, 사슬 조립 상태를 비교해 보세요.`;
+}
+
+function getComparisonDelta(candidate, current) {
+  const differences = [];
+  const candidateState = localizedStateLabel(candidate);
+  const currentState = localizedStateLabel(current);
+  const candidateResolution = parseResolutionValue(candidate.resolution);
+  const currentResolution = parseResolutionValue(current.resolution);
+
+  if (candidateState && currentState && normalizeForCompare(candidateState) !== normalizeForCompare(currentState)) {
+    differences.push(`상태: ${currentState} → ${candidateState}`);
+  }
+
+  if (candidate.source && current.source && candidate.source !== current.source) {
+    differences.push(`출처: ${current.source} → ${candidate.source}`);
+  }
+
+  if (Number.isFinite(candidateResolution) && Number.isFinite(currentResolution)) {
+    const delta = candidateResolution - currentResolution;
+    if (Math.abs(delta) >= 0.05) {
+      differences.push(`해상도: ${delta > 0 ? "더 낮음" : "더 높음"} (${candidate.resolution})`);
+    }
+  } else if (candidate.resolution && candidate.resolution !== current.resolution) {
+    differences.push(`해상도: ${candidate.resolution}`);
+  }
+
+  return differences.length
+    ? differences.slice(0, 2).join(" · ")
+    : "비슷해 보이면 리간드, 체인 수, 결합 부위 주변 잔기 배치를 비교하세요.";
+}
+
+function parseResolutionValue(value) {
+  const match = String(value || "").match(/\d+(?:\.\d+)?/);
+  return match ? Number.parseFloat(match[0]) : Number.NaN;
 }
 
 function buildPredictionComparison(protein) {

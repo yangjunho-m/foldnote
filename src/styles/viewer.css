@@ -498,7 +498,7 @@
 
 .compare-grid > div,
 .compare-grid button {
-  min-height: 62px;
+  min-height: 104px;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -508,7 +508,9 @@
 }
 
 .compare-grid strong,
-.compare-grid span {
+.compare-grid span,
+.compare-grid p,
+.compare-grid em {
   display: block;
 }
 
@@ -516,6 +518,25 @@
   margin-top: 5px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.compare-grid p {
+  margin: 8px 0 0;
+  color: #374151;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.compare-grid em {
+  margin-top: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  color: #0754d6;
+  background: var(--primary-soft);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .variant-box {
