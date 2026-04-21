@@ -183,6 +183,11 @@ button {
   background: var(--primary-soft);
 }
 
+.icon-button.active {
+  color: #0754d6;
+  background: var(--primary-soft);
+}
+
 .icon-button,
 .plain-button {
   display: inline-grid;

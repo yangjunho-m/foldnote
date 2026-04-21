@@ -49,6 +49,7 @@ const state = {
   isSidebarOpen: false,
   isProjectFormOpen: false,
   newProjectName: "",
+  isLearningOpen: false,
   language: window.localStorage.getItem("foldnote-language") || "ko"
 };
 
@@ -156,7 +157,7 @@ function render() {
     <div class="app-shell ${state.theme === "dark" ? "dark" : ""}">
       ${renderTopbar()}
       <main class="main">
-        ${state.selected ? renderViewer(state.selected) : renderSearch()}
+        ${state.isLearningOpen ? renderLearning() : state.selected ? renderViewer(state.selected) : renderSearch()}
       </main>
       <button class="help-float" type="button" data-help-open aria-label="도움말">?</button>
       ${state.isHelpOpen ? renderHelpModal() : ""}
@@ -189,6 +190,9 @@ function renderTopbar() {
         </div>
       </button>
       <div class="topbar-actions">
+        <button class="icon-button ${state.isLearningOpen ? "active" : ""}" type="button" data-learning-open title="생화학 학습" aria-label="생화학 학습">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/><path d="M8 7h8"/><path d="M8 11h6"/></svg>
+        </button>
         <div class="language-toggle" aria-label="${t("language")}">
           <button class="${state.language === "ko" ? "active" : ""}" type="button" data-language="ko">한국어</button>
           <button class="${state.language === "en" ? "active" : ""}" type="button" data-language="en">EN</button>
@@ -236,6 +240,85 @@ function renderSearch() {
           ${showHomeContent ? `${renderProModules()}${renderRecommendations()}${renderTips()}` : ""}
         </div>
       </div>
+    </section>
+  `;
+}
+
+function renderLearning() {
+  const modules = [
+    {
+      tag: "1",
+      title: "아미노산과 단백질",
+      text: "20가지 아미노산의 전하, 극성, 소수성 차이가 단백질 접힘과 결합 부위를 어떻게 만드는지 배웁니다.",
+      items: ["소수성 코어", "전하와 염다리", "수소결합", "방향족 상호작용"]
+    },
+    {
+      tag: "2",
+      title: "단백질 구조 단계",
+      text: "1차 구조부터 4차 구조까지 연결해서 보고, 실제 3D 구조에서 알파 나선과 베타 가닥을 찾습니다.",
+      items: ["1차 서열", "2차 구조", "도메인", "복합체"]
+    },
+    {
+      tag: "3",
+      title: "효소와 결합",
+      text: "활성 부위, 기질 결합, 보조인자, 저해제가 구조에서 어떤 모양으로 보이는지 학습합니다.",
+      items: ["활성 부위", "리간드", "금속 이온", "저해제"]
+    },
+    {
+      tag: "4",
+      title: "DNA/RNA와 단백질",
+      text: "양전하 잔기와 핵산 골격의 상호작용, 전사인자와 Cas9 같은 단백질의 인식 원리를 배웁니다.",
+      items: ["인산 골격", "염기 인식", "가이드 RNA", "결합 특이성"]
+    },
+    {
+      tag: "5",
+      title: "변이와 질병",
+      text: "아미노산 하나가 바뀌면 전하, 크기, 접힘, 결합 위치가 어떻게 달라지는지 구조 위에서 해석합니다.",
+      items: ["missense 변이", "표면 전하", "코어 불안정화", "기능 변화"]
+    },
+    {
+      tag: "6",
+      title: "구조 데이터 읽기",
+      text: "PDB, AlphaFold, 해상도, B-factor, pLDDT를 구분하고 어떤 결론까지 말할 수 있는지 배웁니다.",
+      items: ["PDB", "AlphaFold", "해상도", "신뢰도 색상"]
+    }
+  ];
+
+  return `
+    <section class="learning-screen">
+      <div class="learning-hero">
+        <span>Biochemistry Classroom</span>
+        <h2>생화학을 구조로 배우기</h2>
+        <p>분자 구조를 보면서 아미노산, 단백질 접힘, 효소, 핵산 결합, 변이를 단계별로 학습합니다.</p>
+      </div>
+
+      <div class="learning-path">
+        ${modules
+          .map(
+            (module) => `
+              <article class="learning-card">
+                <div class="learning-card-head">
+                  <span>${module.tag}</span>
+                  <h3>${escapeHtml(module.title)}</h3>
+                </div>
+                <p>${escapeHtml(module.text)}</p>
+                <div class="learning-tags">
+                  ${module.items.map((item) => `<em>${escapeHtml(item)}</em>`).join("")}
+                </div>
+              </article>
+            `
+          )
+          .join("")}
+      </div>
+
+      <section class="learning-practice">
+        <div>
+          <span>오늘의 학습 방법</span>
+          <h3>검색한 단백질을 교재처럼 사용하세요</h3>
+          <p>예를 들어 Cas9을 검색하면 단백질-RNA-DNA 결합을, 헤모글로빈을 검색하면 산소 결합과 4차 구조 변화를, 인슐린을 검색하면 작은 호르몬 단백질의 이황화 결합을 학습할 수 있습니다.</p>
+        </div>
+        <button type="button" data-home>단백질 검색으로 돌아가기</button>
+      </section>
     </section>
   `;
 }
@@ -1250,9 +1333,21 @@ function bindEvents() {
       state.isLoading = false;
       state.selected = null;
       state.viewer = null;
+      state.isLearningOpen = false;
       render();
     });
   });
+
+  const learningOpenButton = document.querySelector("[data-learning-open]");
+  if (learningOpenButton) {
+    learningOpenButton.addEventListener("click", () => {
+      state.selected = null;
+      state.viewer = null;
+      state.isSidebarOpen = false;
+      state.isLearningOpen = true;
+      render();
+    });
+  }
 
   const themeButton = document.querySelector("[data-theme-toggle]");
   if (themeButton) {
@@ -1352,6 +1447,7 @@ function bindEvents() {
 
   document.querySelectorAll("[data-result]").forEach((button) => {
     button.addEventListener("click", () => {
+      state.isLearningOpen = false;
       state.selected = state.results[Number(button.dataset.result)];
       state.recentProteins = recordRecentProtein(state.selected);
       render();
