@@ -45,6 +45,7 @@ const state = {
   isUpgradeOpen: false,
   reportSnapshot: "",
   variantQuery: "",
+  showPredictionCompare: false,
   isSidebarOpen: false,
   isProjectFormOpen: false,
   newProjectName: "",
@@ -138,6 +139,10 @@ function getProteinKey(protein) {
   return getStoredProteinKey(protein);
 }
 
+function isSearchHome() {
+  return !state.query.trim() && !state.results.length && !state.isLoading && !state.error && !state.notice;
+}
+
 function badge(protein) {
   const isPdb = protein.source === "PDB";
   return `<span class="badge ${isPdb ? "pdb" : "alpha"}">
@@ -197,6 +202,8 @@ function renderTopbar() {
 }
 
 function renderSearch() {
+  const showHomeContent = isSearchHome();
+
   return `
     <section class="search-screen">
       ${renderWorkspaceSidebar()}
@@ -223,9 +230,7 @@ function renderSearch() {
 
           ${renderRecentProteins()}
           ${renderSearchState()}
-          ${renderProModules()}
-          ${renderRecommendations()}
-          ${renderTips()}
+          ${showHomeContent ? `${renderProModules()}${renderRecommendations()}${renderTips()}` : ""}
         </div>
       </div>
     </section>
@@ -927,11 +932,16 @@ function renderComparisonPanel(protein) {
   const candidates = state.results
     .filter((candidate) => getProteinKey(candidate) !== getProteinKey(protein))
     .slice(0, 3);
+  const predictionCompare = buildPredictionComparison(protein);
 
   return `
     <section class="section pro-section">
       <h3>구조 비교</h3>
       <p class="section-lead">검색된 상태별 구조를 나란히 보면서 결합 상태와 기능 차이를 비교합니다.</p>
+      <button class="prediction-toggle" type="button" data-prediction-compare>
+        ${state.showPredictionCompare ? "PDB/AlphaFold 비교 접기" : "PDB 실험 구조와 AlphaFold 예측 비교"}
+      </button>
+      ${state.showPredictionCompare ? renderPredictionComparison(predictionCompare) : ""}
       <div class="compare-grid">
         <div>
           <strong>현재 구조</strong>
@@ -951,6 +961,42 @@ function renderComparisonPanel(protein) {
           : "<p>검색 결과가 더 있으면 비교 후보가 여기에 표시됩니다.</p>"}
       </div>
     </section>
+  `;
+}
+
+function buildPredictionComparison(protein) {
+  const pdbCandidate = protein.source === "PDB" ? protein : state.results.find((item) => item.source === "PDB");
+  const alphaCandidate = protein.source === "AlphaFold" ? protein : state.results.find((item) => item.source === "AlphaFold");
+  const alphaUrl = protein.accession
+    ? protein.externalUrl
+    : `https://alphafold.ebi.ac.uk/search/text/${encodeURIComponent(protein.englishName || protein.name)}`;
+
+  return {
+    pdb: pdbCandidate,
+    alpha: alphaCandidate,
+    alphaUrl
+  };
+}
+
+function renderPredictionComparison(compare) {
+  return `
+    <div class="prediction-compare">
+      <article>
+        <strong>PDB 실험 구조</strong>
+        <span>${compare.pdb ? escapeHtml(compare.pdb.pdbId || compare.pdb.name) : "현재 검색 결과에 PDB 구조가 없습니다."}</span>
+        <p>실험 조건에서 관찰된 구조입니다. 해상도, 결합 분자, 누락 잔기, 결정 조건을 함께 봐야 합니다.</p>
+      </article>
+      <article>
+        <strong>AlphaFold 예측 구조</strong>
+        <span>${compare.alpha ? escapeHtml(compare.alpha.accession || compare.alpha.alphaFoldId || compare.alpha.name) : "AlphaFold 검색으로 예측 모델을 확인할 수 있습니다."}</span>
+        <p>단일 사슬의 접힘과 도메인 윤곽을 빠르게 볼 수 있지만, 복합체나 결합 상태는 별도 근거가 필요합니다.</p>
+        ${compare.alpha ? "" : `<a href="${escapeHtml(compare.alphaUrl)}" target="_blank" rel="noreferrer">AlphaFold에서 검색</a>`}
+      </article>
+      <div class="prediction-note">
+        <strong>해석 팁</strong>
+        <p>PDB는 실제 관찰 조건에 강하고, AlphaFold는 전체 접힘 예측에 강합니다. 둘이 다르면 유연한 루프, 결합 상태, 복합체 형성 여부를 먼저 의심해보세요.</p>
+      </div>
+    </div>
   `;
 }
 
@@ -1266,6 +1312,14 @@ function bindEvents() {
       render();
     });
   });
+
+  const predictionCompareButton = document.querySelector("[data-prediction-compare]");
+  if (predictionCompareButton) {
+    predictionCompareButton.addEventListener("click", () => {
+      state.showPredictionCompare = !state.showPredictionCompare;
+      render();
+    });
+  }
 
   const variantInput = document.querySelector("[data-variant-input]");
   if (variantInput) {
