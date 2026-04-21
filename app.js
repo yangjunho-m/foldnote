@@ -235,7 +235,7 @@ function renderSearch() {
             />
           </form>
 
-          ${renderRecentProteins()}
+          ${showHomeContent ? renderRecentProteins() : ""}
           ${renderSearchState()}
           ${showHomeContent ? `${renderProModules()}${renderRecommendations()}${renderTips()}` : ""}
         </div>
@@ -245,65 +245,79 @@ function renderSearch() {
 }
 
 function renderLearning() {
-  const modules = [
+  const enzymeComponents = [
     {
-      tag: "1",
-      title: "아미노산과 단백질",
-      text: "20가지 아미노산의 전하, 극성, 소수성 차이가 단백질 접힘과 결합 부위를 어떻게 만드는지 배웁니다.",
-      items: ["소수성 코어", "전하와 염다리", "수소결합", "방향족 상호작용"]
+      title: "활성 부위 (Active Site)",
+      icon: "activity",
+      tone: "blue",
+      description: "기질이 결합하고 반응이 일어나는 3D 포켓입니다.",
+      features: ["촉매 잔기: 화학 반응을 직접 수행", "결합 잔기: 기질을 인식하고 고정", "정확한 기하학: Å 단위 정밀도", "소수성/극성 배치: 기질 특이성"],
+      examples: ["Ser-His-Asp 촉매 삼각", "Zn2+ 결합 부위", "옥시아니온 홀"]
     },
     {
-      tag: "2",
-      title: "단백질 구조 단계",
-      text: "1차 구조부터 4차 구조까지 연결해서 보고, 실제 3D 구조에서 알파 나선과 베타 가닥을 찾습니다.",
-      items: ["1차 서열", "2차 구조", "도메인", "복합체"]
+      title: "리간드 결합",
+      icon: "lock",
+      tone: "violet",
+      description: "기질, 생성물, 저해제가 결합하는 방식입니다.",
+      features: ["Lock-and-Key: 정확한 형태 일치", "Induced Fit: 결합 시 구조 변화", "수소결합 네트워크", "소수성 상호작용"],
+      examples: ["기질 특이성", "경쟁적 저해", "알로스테릭 조절"]
     },
     {
-      tag: "3",
-      title: "효소와 결합",
-      text: "활성 부위, 기질 결합, 보조인자, 저해제가 구조에서 어떤 모양으로 보이는지 학습합니다.",
-      items: ["활성 부위", "리간드", "금속 이온", "저해제"]
+      title: "보조인자 (Cofactor)",
+      icon: "sparkles",
+      tone: "amber",
+      description: "효소 활성에 필요한 비단백질 분자입니다.",
+      features: ["금속 이온: Fe2+, Zn2+, Mg2+, Cu2+", "보조효소: NAD+, FAD, ATP", "헴 그룹: 산소 운반과 전자 전달", "조효소: 비타민 유도체"],
+      examples: ["헴 그룹", "NAD+ 결합", "Mg2+-ATP 복합체"]
     },
     {
-      tag: "4",
-      title: "DNA/RNA와 단백질",
-      text: "양전하 잔기와 핵산 골격의 상호작용, 전사인자와 Cas9 같은 단백질의 인식 원리를 배웁니다.",
-      items: ["인산 골격", "염기 인식", "가이드 RNA", "결합 특이성"]
-    },
-    {
-      tag: "5",
-      title: "변이와 질병",
-      text: "아미노산 하나가 바뀌면 전하, 크기, 접힘, 결합 위치가 어떻게 달라지는지 구조 위에서 해석합니다.",
-      items: ["missense 변이", "표면 전하", "코어 불안정화", "기능 변화"]
-    },
-    {
-      tag: "6",
-      title: "구조 데이터 읽기",
-      text: "PDB, AlphaFold, 해상도, B-factor, pLDDT를 구분하고 어떤 결론까지 말할 수 있는지 배웁니다.",
-      items: ["PDB", "AlphaFold", "해상도", "신뢰도 색상"]
+      title: "저해제 (Inhibitor)",
+      icon: "circle",
+      tone: "red",
+      description: "효소 활성을 막는 분자들입니다.",
+      features: ["경쟁적: 활성 부위에 결합", "비경쟁적: 다른 부위에 결합", "비가역적: 공유 결합 형성", "약물 설계: 질병 치료"],
+      examples: ["페니실린", "스타틴", "프로테아제 저해제"]
     }
+  ];
+  const mechanisms = [
+    ["세린 프로테아제", "Ser-His-Asp 촉매 삼각", "Ser이 친핵체로 작용하여 펩타이드 결합을 가수분해합니다.", "Trypsin, Chymotrypsin"],
+    ["라이소자임", "이온 안정화", "Glu와 Asp가 글리코시드 결합 전이 상태를 안정화합니다.", "Lysozyme"],
+    ["카르복시펩티다제", "금속 활성화", "Zn2+ 이온이 물 분자를 활성화하고 펩타이드를 절단합니다.", "Carboxypeptidase A"],
+    ["RNase A", "산-염기 촉매", "His12와 His119가 RNA 인산 결합을 절단합니다.", "Ribonuclease A"]
+  ];
+  const concepts = [
+    ["정밀한 배치", "촉매 잔기가 Å 단위로 정확하게 배치되어 전이 상태를 안정화합니다. 하나의 아미노산 변이도 활성을 크게 바꿀 수 있습니다."],
+    ["유도 적합", "기질이 결합하면 효소가 구조를 바꿔 최적 반응 기하학을 만듭니다. 동적 구조 변화가 촉매에 필수적입니다."],
+    ["금속 이온 역할", "금속 이온이 전자를 끌어당기거나 물을 활성화하여 반응을 가속합니다. 구조에서 배위 기하학을 관찰할 수 있습니다."],
+    ["저해제 설계", "활성 부위 구조를 기반으로 약물을 설계합니다. 수소결합과 소수성 상호작용을 최적화하여 결합력을 높입니다."]
   ];
 
   return `
     <section class="learning-screen">
-      <div class="learning-hero">
+      <div class="enzyme-intro">
         <span>Biochemistry Classroom</span>
-        <h2>생화학을 구조로 배우기</h2>
-        <p>분자 구조를 보면서 아미노산, 단백질 접힘, 효소, 핵산 결합, 변이를 단계별로 학습합니다.</p>
+        <h2>효소와 결합</h2>
+        <p><strong>활성 부위, 기질 결합, 보조인자, 저해제</strong>가 구조에서 어떤 모양으로 보이는지 학습합니다. 3D 구조가 촉매 메커니즘을 어떻게 결정하는지 이해합니다.</p>
       </div>
 
-      <div class="learning-path">
-        ${modules
+      <div class="enzyme-grid">
+        ${enzymeComponents
           .map(
-            (module) => `
-              <article class="learning-card">
-                <div class="learning-card-head">
-                  <span>${module.tag}</span>
-                  <h3>${escapeHtml(module.title)}</h3>
+            (component) => `
+              <article class="enzyme-card">
+                <div class="enzyme-card-head ${component.tone}">
+                  <div class="enzyme-icon ${component.icon}" aria-hidden="true">${renderLearningIcon(component.icon)}</div>
+                  <h3>${escapeHtml(component.title)}</h3>
                 </div>
-                <p>${escapeHtml(module.text)}</p>
-                <div class="learning-tags">
-                  ${module.items.map((item) => `<em>${escapeHtml(item)}</em>`).join("")}
+                <div class="enzyme-card-body">
+                  <p>${escapeHtml(component.description)}</p>
+                  <div class="enzyme-feature-list">
+                    ${component.features.map((feature) => `<div><span>•</span>${escapeHtml(feature)}</div>`).join("")}
+                  </div>
+                  <div class="enzyme-examples">
+                    <p>예시:</p>
+                    <div>${component.examples.map((example) => `<em>${escapeHtml(example)}</em>`).join("")}</div>
+                  </div>
                 </div>
               </article>
             `
@@ -311,16 +325,51 @@ function renderLearning() {
           .join("")}
       </div>
 
-      <section class="learning-practice">
-        <div>
-          <span>오늘의 학습 방법</span>
-          <h3>검색한 단백질을 교재처럼 사용하세요</h3>
-          <p>예를 들어 Cas9을 검색하면 단백질-RNA-DNA 결합을, 헤모글로빈을 검색하면 산소 결합과 4차 구조 변화를, 인슐린을 검색하면 작은 호르몬 단백질의 이황화 결합을 학습할 수 있습니다.</p>
+      <section class="mechanism-panel">
+        <h3>${renderLearningIcon("activity")} 촉매 메커니즘 예시</h3>
+        <div class="mechanism-grid">
+          ${mechanisms
+            .map(
+              ([name, mechanism, description, example]) => `
+                <article>
+                  <h4>${escapeHtml(name)}</h4>
+                  <strong>${escapeHtml(mechanism)}</strong>
+                  <p>${escapeHtml(description)}</p>
+                  <span>${escapeHtml(example)}</span>
+                </article>
+              `
+            )
+            .join("")}
         </div>
-        <button type="button" data-home>단백질 검색으로 돌아가기</button>
+      </section>
+
+      <section class="concept-panel">
+        <h3>구조-기능 관계</h3>
+        <div class="concept-grid">
+          ${concepts
+            .map(
+              ([title, description]) => `
+                <article>
+                  <h4>${escapeHtml(title)}</h4>
+                  <p>${escapeHtml(description)}</p>
+                </article>
+              `
+            )
+            .join("")}
+        </div>
       </section>
     </section>
   `;
+}
+
+function renderLearningIcon(name) {
+  const icons = {
+    activity: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    sparkles: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9Z"/></svg>',
+    circle: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>'
+  };
+  return icons[name] || icons.circle;
 }
 
 function renderWorkspaceSidebar() {
@@ -2070,14 +2119,14 @@ function getStructureTagId(item) {
 
 function renderStructureTags(item) {
   const tags = [
-    item.isRepresentative ? (state.language === "en" ? "Representative" : "대표추천") : "",
+    item.isRepresentative ? (state.language === "en" ? "Recommended" : "추천") : "",
     getStructureTagName(item),
     getStructureTagId(item)
   ]
     .filter(Boolean)
     .map((value) => `#${toHashTag(value)}`);
   return tags
-    .map((tag) => `<span class="state-tag ${tag.includes("대표추천") || tag.includes("Representative") ? "representative" : ""}">${escapeHtml(tag)}</span>`)
+    .map((tag) => `<span class="state-tag ${tag === "#추천" || tag === "#Recommended" ? "representative" : ""}">${escapeHtml(tag)}</span>`)
     .join("");
 }
 

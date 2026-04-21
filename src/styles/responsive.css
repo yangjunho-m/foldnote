@@ -82,7 +82,10 @@
   }
 
   .learning-path,
-  .learning-practice {
+  .learning-practice,
+  .enzyme-grid,
+  .mechanism-grid,
+  .concept-grid {
     grid-template-columns: 1fr;
   }
 
