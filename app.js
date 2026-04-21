@@ -202,7 +202,8 @@ function renderTopbar() {
 }
 
 function renderSearch() {
-  const showHomeContent = isSearchHome();
+  const showHomeContent =
+    !state.query.trim() && !state.isLoading && !state.results.length && !state.error && !state.notice;
 
   return `
     <section class="search-screen">
@@ -393,11 +394,13 @@ function renderResults() {
             <button class="result-main" type="button" data-result="${index}">
               <div class="state-tags result-tags">${renderStructureTags(protein)}</div>
               <div class="result-title-row">
-                <h3 class="result-title">${renderProteinTitle(protein)}</h3>
-                ${badge(protein)}
+                <div class="result-title-left">
+                  <h3 class="result-title">${renderProteinTitle(protein)}</h3>
+                  ${badge(protein)}
+                </div>
+                <span class="result-id-corner">${renderResultId(protein)}</span>
               </div>
               <div class="result-meta">
-                <span>${protein.pdbId ? `PDB ID: <span class="code-pill">${protein.pdbId}</span>` : `UniProt: <span class="code-pill">${protein.accession || "-"}</span>`}</span>
                 ${protein.organism ? `<span>${t("organism")}: ${escapeHtml(protein.organism)}</span>` : ""}
                 <span>${t("evidenceHint")}</span>
               </div>
@@ -411,6 +414,12 @@ function renderResults() {
         .join("")}
     </div>
   `;
+}
+
+function renderResultId(protein) {
+  const label = protein.pdbId ? "PDB ID" : "UniProt";
+  const value = protein.pdbId || protein.accession || protein.alphaFoldId || "-";
+  return `${label}: <span class="code-pill">${escapeHtml(value)}</span>`;
 }
 
 function createQuickSummary(protein) {

@@ -594,6 +594,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: space-between;
+}
+
+.result-title-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -601,6 +609,14 @@
   margin: 0;
   font-size: 18px;
   font-weight: 500;
+}
+
+.result-id-corner {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .result-main {

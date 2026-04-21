@@ -661,6 +661,10 @@
   font-weight: 800;
 }
 
+.reference-more[open] summary {
+  display: none;
+}
+
 .reference-more .reference-item {
   margin-top: 10px;
 }
