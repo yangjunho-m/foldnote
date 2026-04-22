@@ -2,7 +2,7 @@
   height: calc(100vh - 82px);
   min-height: 620px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(410px, 34vw, 600px);
+  grid-template-columns: minmax(0, 1fr) clamp(410px, 32vw, 500px);
   overflow: hidden;
 }
 

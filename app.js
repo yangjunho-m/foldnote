@@ -320,7 +320,7 @@ function renderLearningGlossary() {
   return `
     <section class="learning-glossary">
       <div class="learning-glossary-head">
-        <h3>${state.language === "en" ? "Beginner Glossary" : "처음 보는 사람을 위한 용어 정리"}</h3>
+        <h3>${state.language === "en" ? "0. Start Here: Glossary" : "0. 시작하기: 용어 정리"}</h3>
         <p>${state.language === "en" ? "Short definitions for words that appear often in protein structure lessons." : "단백질 구조를 처음 보는 사람도 따라올 수 있도록 자주 나오는 말을 짧게 풀었습니다."}</p>
       </div>
       <div class="glossary-grid">
@@ -1727,20 +1727,20 @@ function renderResearchTools(protein) {
 
   return `
     <section class="section compact-section">
-      <h3>연구자 도구</h3>
+      <h3>${t("sourceLinks")}</h3>
       <div class="tool-grid">
         ${pdbUrl
-          ? `<a class="secondary-button link-button" href="${escapeHtml(pdbUrl)}" target="_blank" rel="noreferrer">PDB에서 보기</a>`
-          : `<a class="secondary-button link-button disabled-link" aria-disabled="true">PDB 후보 없음</a>`}
-        <a class="secondary-button link-button" href="${escapeHtml(alphaFoldUrl)}" target="_blank" rel="noreferrer">AlphaFold 보기</a>
-        <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF 파일 저장</a>
-        <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">논문 검색</a>
+          ? `<a class="secondary-button link-button" href="${escapeHtml(pdbUrl)}" target="_blank" rel="noreferrer">${t("viewPdb")}</a>`
+          : `<a class="secondary-button link-button disabled-link" aria-disabled="true">${t("noPdbCandidate")}</a>`}
+        <a class="secondary-button link-button" href="${escapeHtml(alphaFoldUrl)}" target="_blank" rel="noreferrer">${t("viewAlphaFold")}</a>
+        <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">${t("searchLiterature")}</a>
+        <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">${t("saveMmcif")}</a>
       </div>
     </section>
 
     <div class="viewer-action-stack">
-      <button class="report-button note-save-button" type="button" data-save-note>${saved ? "노트 저장됨" : "노트 저장"}</button>
-      <button class="report-button" type="button" data-open-report>Pro 리포트 생성</button>
+      <button class="report-button note-save-button" type="button" data-save-note>${saved ? t("noteSaved") : t("saveNote")}</button>
+      <button class="report-button" type="button" data-open-report>${t("createProReport")}</button>
     </div>
     ${state.saveMessage ? `<div class="save-message">${escapeHtml(state.saveMessage)}</div>` : ""}
   `;
@@ -2123,7 +2123,9 @@ function bindEvents() {
       });
       state.reportSnapshot = captureViewerSnapshot();
       state.notes = saveNote(state.selected, evidence, state.currentProjectId, state.reportSnapshot);
-      state.saveMessage = "Protein Note에 저장했습니다. 홈 화면에서 다시 열 수 있습니다.";
+      state.saveMessage = state.language === "en"
+        ? "Saved to Protein Note. You can reopen it from the home screen."
+        : "Protein Note에 저장했습니다. 홈 화면에서 다시 열 수 있습니다.";
       render();
       window.setTimeout(() => {
         state.saveMessage = "";
@@ -2517,6 +2519,15 @@ const translations = {
     confidenceView: "B-factor 또는 pLDDT 색상 보기",
     researchMode: "연구 모드",
     classroomMode: "교육 모드",
+    sourceLinks: "자료 링크",
+    viewPdb: "PDB 보기",
+    viewAlphaFold: "AlphaFold 보기",
+    noPdbCandidate: "PDB 후보 없음",
+    searchLiterature: "논문 검색",
+    saveMmcif: "mmCIF 저장",
+    saveNote: "노트 저장",
+    noteSaved: "노트 저장됨",
+    createProReport: "Pro 리포트 생성",
     basic: "기본",
     professional: "전문",
     method: "방법",
@@ -2559,6 +2570,15 @@ const translations = {
     confidenceView: "B-factor or pLDDT color view",
     researchMode: "Research",
     classroomMode: "Classroom",
+    sourceLinks: "Source Links",
+    viewPdb: "View PDB",
+    viewAlphaFold: "View AlphaFold",
+    noPdbCandidate: "No PDB candidate",
+    searchLiterature: "Search Papers",
+    saveMmcif: "Save mmCIF",
+    saveNote: "Save Note",
+    noteSaved: "Note Saved",
+    createProReport: "Create Pro Report",
     basic: "Basic",
     professional: "Professional",
     method: "Method",
