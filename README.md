@@ -95,7 +95,13 @@ npm start
 
 - `docs/supabase-ai-setup.md`
 
-Supabase URL과 anon key가 설정되지 않으면 이벤트는 브라우저 로컬 큐에만 저장되고, 앱 기능은 그대로 동작합니다.
+빠른 설정:
+
+1. Supabase SQL Editor에서 `docs/supabase-ai-setup.md`의 `foldnote_events` 테이블과 RLS 정책을 실행합니다.
+2. `config.js`에 Supabase `Project URL`과 `anon public key`를 입력합니다.
+3. GitHub Pages에 다시 배포하면 방문자 로그가 `foldnote_events` 테이블에 쌓입니다.
+
+Supabase URL과 anon key가 설정되지 않으면 이벤트는 브라우저 로컬 큐에만 저장되고, 앱 기능은 그대로 동작합니다. `config.js`에는 Supabase service role key를 절대 넣지 말고, 공개 가능한 anon public key만 넣으세요.
 
 ## AI 학습 확장
 

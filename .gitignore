@@ -12,5 +12,8 @@ node_modules/
 dist/
 build/
 
+# Local public runtime config
+config.local.js
+
 # Screenshots or temporary exports
 prototype-*.png

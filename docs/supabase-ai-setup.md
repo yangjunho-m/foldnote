@@ -47,13 +47,63 @@ with check (event_type in (
 
 배포 페이지에서 아래 값을 주입하면 Supabase로 전송됩니다. 값이 없으면 브라우저 로컬 큐에만 쌓이고 사이트는 그대로 동작합니다.
 
-```html
-<script>
-  window.FOLDNOTE_SUPABASE = {
-    url: "https://YOUR_PROJECT.supabase.co",
-    anonKey: "YOUR_SUPABASE_ANON_KEY"
-  };
-</script>
+GitHub Pages 같은 정적 호스팅에서 바로 쓰려면 `config.js`의 빈 값을 Supabase 값으로 채우세요. 브라우저에 공개되는 파일이므로 **service role key는 절대 넣지 말고 anon public key만** 넣어야 합니다. 로컬에서만 테스트하고 싶으면 아래 `localStorage` 방식도 사용할 수 있습니다.
+
+```js
+window.FOLDNOTE_SUPABASE = {
+  url: "https://YOUR_PROJECT_ID.supabase.co",
+  anonKey: "YOUR_SUPABASE_ANON_KEY"
+};
+```
+
+브라우저 개발자 도구 콘솔에서 임시로 테스트하려면 아래처럼 넣은 뒤 새로고침해도 됩니다.
+
+```js
+localStorage.setItem("foldnote.supabaseUrl", "https://YOUR_PROJECT_ID.supabase.co");
+localStorage.setItem("foldnote.supabaseAnonKey", "YOUR_SUPABASE_ANON_KEY");
+location.reload();
+```
+
+## 로그 확인 쿼리
+
+Supabase SQL Editor에서 아래 쿼리로 바로 확인할 수 있습니다.
+
+```sql
+-- 최근 이벤트
+select
+  created_at,
+  event_type,
+  payload->>'query' as query,
+  payload->>'proteinName' as protein_name,
+  payload->>'selectedId' as selected_id,
+  payload->>'projectId' as project_id
+from public.foldnote_events
+order by created_at desc
+limit 100;
+
+-- 검색어 순위
+select
+  payload->>'query' as query,
+  count(*) as count
+from public.foldnote_events
+where event_type = 'search_input'
+group by query
+order by count desc
+limit 30;
+
+-- 버튼/기능 사용량
+select
+  event_type,
+  count(*) as count
+from public.foldnote_events
+group by event_type
+order by count desc;
+
+-- 평균 세션 시간
+select
+  round(avg((payload->>'durationMs')::numeric) / 1000, 1) as avg_seconds
+from public.foldnote_events
+where event_type = 'session_time';
 ```
 
 ## 무료 AI 학습 확장
