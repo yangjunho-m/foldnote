@@ -157,6 +157,10 @@ button {
   flex: 0 0 auto;
 }
 
+.back-button {
+  flex: 0 0 auto;
+}
+
 .language-toggle {
   display: inline-grid;
   grid-template-columns: 1fr 1fr;

@@ -202,8 +202,14 @@ function render() {
 
 function renderTopbar() {
   const isKo = state.language === "ko";
+  const showBack = state.selected || state.isLearningOpen;
   return `
     <header class="topbar">
+      ${showBack ? `
+        <button class="icon-button back-button" type="button" data-back title="${isKo ? "뒤로가기" : "Back"}" aria-label="${isKo ? "뒤로가기" : "Back"}">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </button>
+      ` : ""}
       ${state.selected ? "" : `
         <button class="icon-button menu-button" type="button" data-sidebar-toggle title="워크스페이스" aria-label="워크스페이스 열기">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
@@ -308,14 +314,15 @@ function renderLearning() {
 }
 
 function renderLearningAiPanel(topic) {
+  const isKo = state.language === "ko";
   return `
     <section class="learning-ai-panel">
       <div>
-        <strong>AI 학습 확장</strong>
-        <p>현재 과목을 바탕으로 추가 개념, 관찰 포인트, 짧은 퀴즈를 만들어 학습 범위를 넓힙니다.</p>
+        <strong>${isKo ? "AI 학습 확장" : "AI Learning Expansion"}</strong>
+        <p>${isKo ? "현재 과목을 바탕으로 추가 개념, 관찰 포인트, 짧은 퀴즈를 만들어 학습 범위를 넓힙니다." : "Generate extra concepts, viewer checkpoints, and short quizzes from the current lesson."}</p>
       </div>
       <button type="button" data-learning-ai="${escapeHtml(topic.id)}" ${state.learningAi.loading ? "disabled" : ""}>
-        ${state.learningAi.loading ? "생성 중" : "AI로 넓히기"}
+        ${state.learningAi.loading ? (isKo ? "생성 중" : "Generating") : (isKo ? "AI로 넓히기" : "Expand with AI")}
       </button>
       ${state.learningAi.error ? `<p class="learning-ai-error">${escapeHtml(state.learningAi.error)}</p>` : ""}
       ${state.learningAi.content ? `<pre>${escapeHtml(state.learningAi.content)}</pre>` : ""}
@@ -324,6 +331,7 @@ function renderLearningAiPanel(topic) {
 }
 
 function getLearningTopics() {
+  if (state.language === "en") return getEnglishLearningTopics();
   return [
     {
       id: "amino",
@@ -478,6 +486,138 @@ function getLearningTopics() {
 
 function lessonCard(title, icon, tone, description, chips = [], features = [], examples = []) {
   return { title, icon, tone, description, chips, features, examples };
+}
+
+function getEnglishLearningTopics() {
+  return [
+    {
+      id: "amino",
+      tab: "Amino Acids",
+      icon: "network",
+      title: "Amino Acids and Proteins",
+      intro:
+        "Learn how <strong>charge, polarity, and hydrophobicity</strong> shape protein folding and binding sites. Amino-acid chemistry is the bridge between sequence, 3D structure, and function.",
+      cards: [
+        lessonCard("Hydrophobic", "droplet", "amber", "These residues avoid water and often form the buried core of a protein.", ["Ala", "Val", "Leu", "Ile", "Met", "Phe", "Trp", "Pro"], ["Hydrophobic core", "Membrane proteins", "Ligand pockets"]),
+        lessonCard("Polar", "zap", "green", "Polar residues form hydrogen bonds and frequently participate in recognition or catalysis.", ["Ser", "Thr", "Cys", "Asn", "Gln", "Tyr"], ["Hydrogen-bond networks", "Active sites", "Substrate recognition"]),
+        lessonCard("Positive", "zap", "blue", "Basic residues interact strongly with negatively charged DNA, RNA, and acidic protein surfaces.", ["Lys", "Arg", "His"], ["DNA binding", "Salt bridges", "Nucleic-acid recognition"]),
+        lessonCard("Negative", "zap", "red", "Acidic residues often bind metal ions, tune pH-sensitive behavior, and stabilize catalytic states.", ["Asp", "Glu"], ["Metal binding", "pH sensing", "Catalytic residues"]),
+        lessonCard("Aromatic", "hexagon", "violet", "Aromatic rings support stacking interactions and can stabilize hydrophobic pockets.", ["Phe", "Tyr", "Trp"], ["Pi stacking", "DNA base stacking", "Protein stability"]),
+        lessonCard("Special", "link", "slate", "Gly adds flexibility, Cys can form disulfide bonds, and Pro creates structural bends.", ["Gly", "Cys", "Pro"], ["Disulfide bonds", "Turns", "Loop regions"])
+      ],
+      conceptPanel: conceptPanel("Core Concepts", "blue", "droplet", [
+        ["Hydrophobic core", "Nonpolar residues cluster inside the protein to reduce contact with water."],
+        ["Salt bridges", "Opposite charges can pair and stabilize a folded structure or interface."],
+        ["Hydrogen bonds", "Polar residues create specific contacts used in folding, binding, and catalysis."],
+        ["Aromatic interactions", "Flat ring systems can stack with other rings, including DNA bases."]
+      ])
+    },
+    {
+      id: "structure",
+      tab: "Protein Structure",
+      icon: "layers",
+      title: "Levels of Protein Structure",
+      intro:
+        "Connect primary sequence to secondary motifs, tertiary folding, and quaternary assemblies. The goal is to read what a 3D structure is telling you.",
+      cards: [
+        lessonCard("Primary Structure", "arrow", "red", "The linear amino-acid sequence encoded by genetic information.", ["Sequence"], ["Mutation positions", "Domain boundaries", "Conserved motifs"]),
+        lessonCard("Secondary Structure", "grid", "blue", "Local backbone patterns such as alpha helices, beta sheets, turns, and loops.", ["Alpha helix", "Beta sheet", "Loop"], ["Backbone hydrogen bonds", "Motifs"]),
+        lessonCard("Tertiary Structure", "box", "violet", "The full 3D fold created by side-chain interactions and domain packing.", ["Fold"], ["Active sites", "Binding pockets", "Domains"]),
+        lessonCard("Quaternary Structure", "layers", "green", "Multiple protein chains assembled into a functional complex.", ["Assembly"], ["Hemoglobin", "Antibodies", "Polymerases"])
+      ],
+      featurePanel: featurePanel("Secondary Motifs", "blue", "grid", [
+        ["Alpha helix", "A compact spiral often used in membrane spans and DNA-binding motifs."],
+        ["Beta sheet", "Extended strands packed into stable sheets."],
+        ["Turn", "A short segment that changes chain direction."],
+        ["Loop", "A flexible region that often contributes to recognition."]
+      ]),
+      conceptPanel: conceptPanel("Domains and Folding", "blue", "box", [
+        ["Domain", "A structural unit that can often fold and function semi-independently."],
+        ["Complex", "A functional assembly made from multiple chains or subunits."],
+        ["Folding principle", "Hydrophobic groups tend inward while polar groups tend outward."]
+      ])
+    },
+    {
+      id: "enzyme",
+      tab: "Enzymes",
+      icon: "activity",
+      title: "Enzymes and Binding",
+      intro:
+        "Study active sites, ligands, cofactors, and inhibitors as structural features. Enzymes work because atoms are positioned with remarkable precision.",
+      cards: [
+        lessonCard("Active Site", "activity", "blue", "A 3D pocket where substrate binding and chemical reaction occur.", ["Catalytic residues", "Binding residues"], ["Ser-His-Asp triad", "Oxyanion hole"]),
+        lessonCard("Ligand Binding", "lock", "violet", "Substrates, products, and inhibitors bind through shape and chemistry.", ["Induced fit", "Hydrogen bonds"], ["Specificity", "Competitive inhibition"]),
+        lessonCard("Cofactor", "sparkles", "amber", "A non-protein molecule or ion required for activity.", ["Zn2+", "Mg2+", "NAD+", "FAD"], ["Metal activation", "Electron transfer"]),
+        lessonCard("Inhibitor", "circle", "red", "A molecule that blocks or changes enzyme activity.", ["Competitive", "Noncompetitive"], ["Drug design", "Resistance"])
+      ],
+      conceptPanel: conceptPanel("Structure-Function Relationship", "red", "activity", [
+        ["Precise placement", "Catalytic residues must be positioned at angstrom-scale distances."],
+        ["Induced fit", "Binding can shift the enzyme into a more reactive geometry."],
+        ["Metal ions", "Metals can polarize bonds, stabilize charges, or activate water."],
+        ["Drug design", "Active-site structure guides inhibitor optimization."]
+      ])
+    },
+    {
+      id: "nucleic",
+      tab: "DNA/RNA",
+      icon: "dna",
+      title: "DNA/RNA and Proteins",
+      intro:
+        "Learn how proteins recognize nucleic acids through charge, shape, base reading, and guide RNA systems such as CRISPR.",
+      cards: [
+        lessonCard("Phosphate Backbone", "zap", "blue", "Positive residues bind the negatively charged DNA/RNA backbone.", ["Lys", "Arg", "His"], ["Histones", "Polymerases"]),
+        lessonCard("Base Recognition", "target", "violet", "Side chains read base-specific hydrogen-bond patterns in DNA grooves.", ["Major groove", "Minor groove"], ["Transcription factors", "Zinc fingers"]),
+        lessonCard("Guide RNA", "link", "green", "RNA can guide proteins to a target nucleic-acid sequence.", ["gRNA", "PAM"], ["Cas9", "Argonaute"]),
+        lessonCard("Specificity", "dna", "amber", "Proteins find rare target sequences using direct and indirect recognition.", ["Shape readout", "Sliding"], ["p53", "lac repressor"])
+      ],
+      conceptPanel: conceptPanel("Recognition Mechanisms", "purple", "dna", [
+        ["Direct readout", "Amino-acid side chains contact bases directly."],
+        ["Indirect readout", "A protein recognizes sequence-dependent DNA shape."],
+        ["RNA-guided targeting", "Guide RNA supplies base-pairing specificity."],
+        ["1D diffusion", "Proteins can slide or hop along DNA while searching."]
+      ])
+    },
+    {
+      id: "mutation",
+      tab: "Mutation",
+      icon: "alert",
+      title: "Mutations and Disease",
+      intro:
+        "Interpret how one amino-acid change can alter charge, size, folding, binding, and function. This section is for education and research exploration, not diagnosis.",
+      cards: [
+        lessonCard("Missense", "alert", "amber", "One residue is replaced by another, sometimes preserving chemistry and sometimes disrupting it.", ["Conservative", "Nonconservative"], ["Glu to Val", "Arg to His"]),
+        lessonCard("Surface Charge", "zap", "blue", "Changing surface charge can alter solubility and molecular recognition.", ["Protein interfaces", "DNA binding"], ["Lys to Glu", "Arg to Cys"]),
+        lessonCard("Core Instability", "box", "red", "Buried mutations can destabilize folding or create steric clashes.", ["Hydrophobic core", "Unfolding"], ["Gly to Val", "Pro changes"]),
+        lessonCard("Functional Site", "target", "violet", "Mutations near active or binding sites can directly change activity.", ["Catalysis", "Affinity"], ["Active-site Ser to Ala"])
+      ],
+      conceptPanel: conceptPanel("Mutation Checklist", "red", "alert", [
+        ["Location", "Is it buried, exposed, in a domain, or near a binding site?"],
+        ["Chemistry", "Did charge, polarity, size, or flexibility change?"],
+        ["Structure", "Could it break contacts or create clashes?"],
+        ["Function", "Could it affect catalysis, binding, or stability?"]
+      ])
+    },
+    {
+      id: "data",
+      tab: "Data Quality",
+      icon: "database",
+      title: "Reading Structure Data",
+      intro:
+        "Compare PDB and AlphaFold data, then learn how resolution, B-factor, and pLDDT limit what you can safely conclude.",
+      cards: [
+        lessonCard("PDB", "database", "blue", "Experimental structures from X-ray crystallography, NMR, and cryo-EM.", ["Experimental"], ["Ligands", "Complexes", "Resolution"]),
+        lessonCard("AlphaFold", "sparkles", "violet", "Predicted structures generated from sequence information.", ["Prediction"], ["pLDDT", "Proteome coverage"]),
+        lessonCard("Resolution", "chart", "green", "How much detail an experimental structure can support.", ["Angstrom"], ["Side-chain confidence", "Model quality"]),
+        lessonCard("B-factor / pLDDT", "eye", "amber", "Indicators of flexibility, disorder, or prediction confidence.", ["B-factor", "pLDDT"], ["Loops", "Domain confidence"])
+      ],
+      conceptPanel: conceptPanel("Interpretation Rules", "blue", "eye", [
+        ["Use PDB first", "Prefer experimental structures for ligands, complexes, and active-site geometry."],
+        ["Use AlphaFold carefully", "Predictions are excellent for hypotheses, but not all details are experimental facts."],
+        ["Compare structures", "Multiple states reveal flexible regions and binding-induced changes."],
+        ["Check metrics", "Quality values should shape how strongly you interpret a structure."]
+      ])
+    }
+  ];
 }
 
 function featurePanel(title, tone, icon, rows) {
@@ -1652,7 +1792,9 @@ function bindEvents() {
         state.learningAi = {
           loading: false,
           content: "",
-          error: "AI 학습 확장을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요."
+          error: state.language === "ko"
+            ? "AI 학습 확장을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요."
+            : "Could not generate the AI learning expansion. Please try again later."
         };
       }
       render();
@@ -1840,6 +1982,8 @@ function bindEvents() {
     back.addEventListener("click", () => {
       state.selected = null;
       state.viewer = null;
+      state.isLearningOpen = false;
+      state.isSidebarOpen = false;
       render();
     });
   }
