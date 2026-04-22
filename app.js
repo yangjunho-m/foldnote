@@ -290,7 +290,7 @@ function renderLearning() {
             (topic, index) => `
               <button class="${topic.id === activeTopic.id ? "active" : ""}" type="button" data-learning-topic="${topic.id}">
                 ${renderLearningIcon(topic.icon)}
-                <span>${topic.orderLabel || `${index + 1}.`} ${escapeHtml(topic.tab)}</span>
+                <span>${topic.orderLabel || `${index}.`} ${escapeHtml(topic.tab)}</span>
               </button>
             `
           )
@@ -327,10 +327,14 @@ function renderLearningGlossary(topic) {
       <div class="glossary-grid">
         ${terms
           .map(
-            ([term, definition]) => `
+            ([term, definition, detail]) => `
               <article>
-                <strong>${escapeHtml(term)}</strong>
+                <div class="glossary-term-head">
+                  <strong>${escapeHtml(term)}</strong>
+                  <button type="button" aria-label="${escapeHtml(term)} 자세히 보기">+</button>
+                </div>
                 <span>${escapeHtml(definition)}</span>
+                <p>${escapeHtml(detail || definition)}</p>
               </article>
             `
           )
@@ -359,35 +363,53 @@ function renderLearningAiPanel(topic) {
 
 function getKoreanGlossaryTerms() {
   return [
-    ["단백질", "아미노산이 길게 연결되어 접힌 분자입니다. 세포 안에서 구조 유지, 반응 촉진, 신호 전달 같은 일을 합니다."],
-    ["아미노산", "단백질을 만드는 작은 부품입니다. 20종류가 있고 전하, 크기, 물을 좋아하는 정도가 다릅니다."],
-    ["잔기", "단백질 사슬 안에 들어간 아미노산 하나를 부르는 말입니다. 예: ALA 41은 41번 알라닌 잔기입니다."],
-    ["접힘", "긴 단백질 사슬이 특정 3D 모양으로 말리고 접히는 과정입니다. 모양이 기능을 크게 좌우합니다."],
-    ["도메인", "단백질 안에서 비교적 독립적으로 접히고 특정 기능을 맡는 큰 구조 단위입니다."],
-    ["리간드", "단백질에 붙는 작은 분자입니다. 약물, 금속 이온, 기질, 생성물 등이 될 수 있습니다."],
-    ["활성 부위", "효소가 실제 화학 반응을 일으키는 자리입니다. 주변 아미노산 배치가 매우 중요합니다."],
-    ["해상도", "실험 구조가 얼마나 세밀한지 나타내는 값입니다. 보통 숫자가 작을수록 원자 위치를 더 자세히 볼 수 있습니다."],
-    ["B-factor", "PDB 실험 구조에서 원자가 얼마나 흔들리거나 불확실한지 보여주는 값입니다."],
-    ["pLDDT", "AlphaFold 예측 구조에서 잔기별 예측 신뢰도를 나타내는 점수입니다."],
-    ["PDB", "실험으로 밝혀진 단백질 3D 구조를 모아 둔 공개 데이터베이스입니다."],
-    ["AlphaFold", "아미노산 서열을 바탕으로 단백질 3D 구조를 예측하는 AI 구조 데이터베이스입니다."]
+    ["DNA", "유전 정보를 담고 있는 긴 분자입니다.", "DNA에는 단백질을 만드는 설계 정보가 들어 있습니다. 단백질은 DNA 서열을 읽거나 자르거나 복제하는 과정에 자주 관여합니다."],
+    ["RNA", "DNA 정보를 옮기거나 조절하는 분자입니다.", "RNA는 단백질 합성의 중간 전달자 역할을 하기도 하고, Cas9처럼 단백질을 표적 위치로 안내하는 가이드 역할을 하기도 합니다."],
+    ["단백질", "아미노산이 길게 연결되어 접힌 분자입니다.", "세포 안에서 구조 유지, 반응 촉진, 신호 전달, 물질 운반 같은 일을 합니다. 구조가 달라지면 기능도 달라질 수 있습니다."],
+    ["기능", "분자가 실제로 하는 일입니다.", "단백질 기능은 산소 운반, DNA 결합, 반응 촉진, 신호 전달처럼 다양합니다. 구조를 보면 그 기능이 어떻게 가능한지 추측할 수 있습니다."],
+    ["아미노산", "단백질을 만드는 작은 부품입니다.", "20종류가 있고 전하, 크기, 물을 좋아하는 정도가 다릅니다. 이 차이가 단백질 접힘과 결합 부위를 만듭니다."],
+    ["잔기", "단백질 사슬 안의 아미노산 하나입니다.", "예를 들어 ALA 41은 41번 위치의 알라닌 잔기를 뜻합니다. 뷰어에서 클릭하는 단위가 보통 잔기입니다."],
+    ["접힘", "단백질 사슬이 3D 모양으로 접히는 과정입니다.", "단백질은 실처럼 길게만 있지 않고 특정 모양으로 접힙니다. 이 모양이 결합 부위와 기능을 결정합니다."],
+    ["도메인", "단백질 안의 비교적 독립적인 구조 단위입니다.", "큰 단백질은 여러 도메인으로 나뉘기도 합니다. 각 도메인은 DNA 결합, 효소 반응, 다른 단백질 결합 같은 역할을 맡을 수 있습니다."],
+    ["리간드", "단백질에 붙는 작은 분자입니다.", "약물, 금속 이온, 기질, 생성물 등이 리간드가 될 수 있습니다. 리간드가 붙으면 단백질 구조나 기능이 바뀔 수 있습니다."],
+    ["효소", "화학 반응을 빠르게 해주는 단백질입니다.", "효소는 활성 부위에서 기질을 붙잡고 반응을 돕습니다. 작은 구조 변화도 효소 활성에 큰 영향을 줄 수 있습니다."],
+    ["기질", "효소가 반응시키는 대상 분자입니다.", "효소는 특정 기질을 알아보고 결합합니다. 구조에서는 기질이 들어갈 수 있는 홈이나 포켓을 확인할 수 있습니다."],
+    ["활성 부위", "효소 반응이 일어나는 자리입니다.", "활성 부위 주변 아미노산들은 기질을 붙잡거나 화학 반응을 직접 돕습니다. 원자 배치가 매우 중요합니다."],
+    ["결합 부위", "단백질이 다른 분자와 만나는 위치입니다.", "DNA, RNA, 단백질, 약물, 금속 이온 등이 결합할 수 있습니다. 표면의 홈이나 전하 분포가 단서가 됩니다."],
+    ["체인", "구조 파일 안의 단백질 사슬 하나입니다.", "하나의 PDB 구조에는 A, B, C처럼 여러 체인이 있을 수 있습니다. 여러 체인이 모여 복합체를 만들기도 합니다."],
+    ["복합체", "여러 분자가 모여 기능하는 구조입니다.", "단백질-단백질, 단백질-DNA, 단백질-RNA 복합체가 있습니다. 실제 기능은 단독 단백질보다 복합체에서 더 잘 보일 때가 많습니다."],
+    ["변이", "서열 일부가 바뀐 상태입니다.", "아미노산 하나가 바뀌어도 접힘, 안정성, 결합, 기능이 달라질 수 있습니다. 다만 이 앱의 변이 설명은 교육용 해석입니다."],
+    ["해상도", "실험 구조가 얼마나 세밀한지 나타내는 값입니다.", "보통 Å 단위로 표시합니다. 숫자가 작을수록 원자 위치를 더 자세히 볼 수 있지만, 모든 해석은 구조 품질과 함께 봐야 합니다."],
+    ["B-factor", "실험 구조에서 원자 위치의 흔들림/불확실성을 나타냅니다.", "값이 높으면 유연하거나 덜 고정된 영역일 수 있습니다. 단독으로 나쁘다는 뜻은 아니고 움직임의 단서로 봅니다."],
+    ["pLDDT", "AlphaFold 예측 구조의 잔기별 신뢰도 점수입니다.", "점수가 높으면 그 부위의 국소 구조 예측을 더 신뢰할 수 있습니다. 낮은 영역은 유연하거나 예측이 어려운 부위일 수 있습니다."],
+    ["PDB", "실험으로 밝혀진 3D 구조 데이터베이스입니다.", "X-ray, NMR, Cryo-EM 같은 실험으로 얻은 구조가 들어 있습니다. 결합 분자나 복합체 상태를 볼 때 특히 중요합니다."],
+    ["AlphaFold", "AI로 예측한 단백질 구조 데이터베이스입니다.", "서열만으로 전체 접힘을 빠르게 볼 수 있습니다. 하지만 결합 상태, 복합체, 리간드는 별도 근거가 필요할 수 있습니다."]
   ];
 }
 
 function getEnglishGlossaryTerms() {
   return [
-    ["Protein", "A folded molecule made from a chain of amino acids. Proteins support structure, signaling, transport, and chemical reactions."],
-    ["Amino acid", "A small building block of proteins. Different amino acids vary in charge, size, shape, and water preference."],
-    ["Residue", "One amino acid as it appears inside a protein chain. For example, ALA 41 means alanine at position 41."],
-    ["Fold", "The 3D shape a protein chain adopts. The fold strongly affects what the protein can do."],
-    ["Domain", "A larger region of a protein that can often fold and function as a semi-independent unit."],
-    ["Ligand", "A molecule bound to a protein, such as a drug, metal ion, substrate, or reaction product."],
-    ["Active site", "The part of an enzyme where the chemical reaction happens."],
-    ["Resolution", "A measure of detail in an experimental structure. Smaller values usually mean finer atomic detail."],
-    ["B-factor", "A PDB value related to atomic motion, disorder, or uncertainty."],
-    ["pLDDT", "An AlphaFold confidence score for each residue in a predicted structure."],
-    ["PDB", "A public database of experimentally determined 3D biomolecular structures."],
-    ["AlphaFold", "An AI-based database of predicted protein structures built from amino-acid sequences."]
+    ["DNA", "A long molecule that stores genetic information.", "DNA contains instructions for making proteins. Many proteins read, bind, cut, copy, or repair DNA."],
+    ["RNA", "A molecule that carries or regulates genetic information.", "RNA can deliver instructions for protein synthesis or guide proteins such as Cas9 to a target sequence."],
+    ["Protein", "A folded molecule made from amino acids.", "Proteins support structure, signaling, transport, and chemical reactions. Their shape strongly affects their function."],
+    ["Function", "What a molecule does in a biological system.", "Protein functions include oxygen transport, DNA binding, catalysis, signaling, and molecular recognition."],
+    ["Amino acid", "A small building block of proteins.", "Amino acids differ in charge, size, shape, and water preference. These differences drive folding and binding."],
+    ["Residue", "One amino acid inside a protein chain.", "For example, ALA 41 means alanine at position 41. Viewer clicks often identify residues."],
+    ["Fold", "The 3D shape of a protein chain.", "A protein is not just a string. It folds into a shape that creates surfaces, pockets, and interaction sites."],
+    ["Domain", "A semi-independent structural unit in a protein.", "Large proteins often contain multiple domains, each with a specific job such as DNA binding or catalysis."],
+    ["Ligand", "A molecule bound to a protein.", "Ligands can be drugs, metal ions, substrates, or products. Binding can change protein structure or activity."],
+    ["Enzyme", "A protein that speeds up a chemical reaction.", "Enzymes hold substrates in active sites and position atoms so reactions can happen faster."],
+    ["Substrate", "The molecule an enzyme acts on.", "A substrate fits into a binding pocket or active site before being converted into product."],
+    ["Active site", "The location where an enzyme reaction occurs.", "Active-site residues bind the substrate and directly help the chemical reaction."],
+    ["Binding site", "A location where another molecule contacts a protein.", "DNA, RNA, proteins, drugs, or metal ions can bind here. Shape and charge are important clues."],
+    ["Chain", "One protein strand in a structure file.", "PDB structures may contain chain A, B, C, and so on. Multiple chains can form an assembly."],
+    ["Complex", "A structure made from multiple molecules.", "Protein-protein, protein-DNA, and protein-RNA complexes often show how function happens in real cells."],
+    ["Mutation", "A change in sequence.", "A single amino-acid change can affect folding, stability, binding, or function. In this app, mutation interpretation is educational."],
+    ["Resolution", "A measure of detail in an experimental structure.", "Usually shown in angstroms. Smaller values often support finer atomic interpretation."],
+    ["B-factor", "A measure related to atomic motion or uncertainty in PDB structures.", "Higher values can indicate flexible or less ordered regions. It is a clue, not automatically a flaw."],
+    ["pLDDT", "AlphaFold's residue-level confidence score.", "Higher scores mean the local predicted structure is more reliable. Low scores may indicate flexible or uncertain regions."],
+    ["PDB", "A database of experimentally determined 3D structures.", "PDB entries come from methods such as X-ray crystallography, NMR, and Cryo-EM."],
+    ["AlphaFold", "An AI database of predicted protein structures.", "It is useful for seeing likely folds, but bound states, complexes, and ligands may require separate evidence."]
   ];
 }
 

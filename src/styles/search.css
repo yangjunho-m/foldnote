@@ -359,6 +359,35 @@
   background: var(--surface-soft);
 }
 
+.glossary-term-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.glossary-term-head button {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(100, 116, 139, 0.24);
+  border-radius: 50%;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.08);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.glossary-term-head button:hover {
+  color: #334155;
+  background: rgba(100, 116, 139, 0.14);
+}
+
+.glossary-grid article:focus-within .glossary-term-head button {
+  transform: rotate(45deg);
+}
+
 .glossary-grid strong,
 .glossary-grid span {
   display: block;
@@ -374,6 +403,20 @@
   color: #475569;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.glossary-grid article p {
+  display: none;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(100, 116, 139, 0.18);
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.glossary-grid article:focus-within p {
+  display: block;
 }
 
 .lesson-intro h2,
@@ -1659,6 +1702,7 @@
 .app-shell.dark .learning-ai-panel p,
 .app-shell.dark .learning-glossary-head p,
 .app-shell.dark .glossary-grid span,
+.app-shell.dark .glossary-grid article p,
 .app-shell.dark .lesson-card-body p,
 .app-shell.dark .lesson-feature-list div,
 .app-shell.dark .lesson-panel-grid p,
