@@ -85,7 +85,7 @@ export function isSaved(protein, notes = loadNotes()) {
 export function loadRecentProteins() {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(RECENT_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.slice(0, 5) : [];
   } catch {
     return [];
   }
@@ -101,7 +101,7 @@ export function recordRecentProtein(protein) {
     source: protein.source,
     viewedAt: new Date().toISOString()
   };
-  const nextRecent = [item, ...loadRecentProteins().filter((recent) => recent.id !== id)].slice(0, 8);
+  const nextRecent = [item, ...loadRecentProteins().filter((recent) => recent.id !== id)].slice(0, 5);
   window.localStorage.setItem(RECENT_KEY, JSON.stringify(nextRecent));
   return nextRecent;
 }

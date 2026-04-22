@@ -3,6 +3,7 @@ import {
   recommendedProteins,
   residueDescriptions
 } from "./src/catalog.js";
+import { generateLearningExpansion } from "./src/learningAiService.js";
 import { fetchLiteratureEvidence } from "./src/literatureService.js";
 import {
   DEFAULT_PROJECT_ID,
@@ -15,13 +16,16 @@ import {
   saveNote
 } from "./src/noteStore.js";
 import { findProteinStructures } from "./src/proteinService.js";
+import { initAnalytics, trackAnalyticsEvent, trackSearchInput } from "./src/analyticsService.js";
 
 const fixedProjects = [
-  { id: DEFAULT_PROJECT_ID, name: "구조 노트", icon: "folder" },
-  { id: "recent-analysis", name: "최근 분석", icon: "activity" },
-  { id: "report-drafts", name: "리포트", icon: "report" },
-  { id: "classroom", name: "수업 자료", icon: "book" }
+  { id: DEFAULT_PROJECT_ID, name: "노트", icon: "folder" },
+  { id: "note-2", name: "노트", icon: "activity" },
+  { id: "note-3", name: "노트", icon: "report" },
+  { id: "note-4", name: "노트", icon: "book" }
 ];
+
+const PROJECT_NAME_KEY = "foldnote.projectNames.v1";
 
 const state = {
   query: "",
@@ -42,6 +46,8 @@ const state = {
   theme: "light",
   isHelpOpen: false,
   notes: loadNotes(),
+  projectNames: loadProjectNames(),
+  projectRenameTimer: null,
   currentProjectId: DEFAULT_PROJECT_ID,
   recentProteins: loadRecentProteins(),
   saveMessage: "",
@@ -51,9 +57,22 @@ const state = {
   variantQuery: "",
   isSidebarOpen: false,
   isLearningOpen: false,
+  learningAi: {
+    loading: false,
+    content: "",
+    error: ""
+  },
   activeLearningTopic: "amino",
   language: window.localStorage.getItem("foldnote-language") || "ko"
 };
+
+initAnalytics(() => ({
+  language: state.language,
+  query: state.query,
+  selectedId: state.selected ? getProteinKey(state.selected) : "",
+  selectedName: state.selected ? getDisplayName(state.selected) : "",
+  projectId: state.currentProjectId
+}));
 
 
 
@@ -108,6 +127,8 @@ function scheduleSearch(query) {
     return;
   }
 
+  trackSearchInput(query);
+
   const token = state.searchToken + 1;
   state.searchToken = token;
   state.error = "";
@@ -120,6 +141,10 @@ function scheduleSearch(query) {
 async function ensureLiterature(protein) {
   const key = getProteinKey(protein);
   if (state.literature[key] || state.literatureLoading[key]) return;
+  trackAnalyticsEvent("literature_tab_open", {
+    proteinId: key,
+    proteinName: getDisplayName(protein)
+  });
 
   state.literatureLoading[key] = true;
   state.literatureErrors[key] = "";
@@ -270,12 +295,30 @@ function renderLearning() {
         <p>${activeTopic.intro}</p>
       </div>
 
+      ${renderLearningAiPanel(activeTopic)}
+
       <div class="lesson-grid">
         ${activeTopic.cards.map((card) => renderLessonCard(card)).join("")}
       </div>
 
       ${activeTopic.featurePanel ? renderFeaturePanel(activeTopic.featurePanel) : ""}
       ${activeTopic.conceptPanel ? renderConceptPanel(activeTopic.conceptPanel) : ""}
+    </section>
+  `;
+}
+
+function renderLearningAiPanel(topic) {
+  return `
+    <section class="learning-ai-panel">
+      <div>
+        <strong>AI 학습 확장</strong>
+        <p>현재 과목을 바탕으로 추가 개념, 관찰 포인트, 짧은 퀴즈를 만들어 학습 범위를 넓힙니다.</p>
+      </div>
+      <button type="button" data-learning-ai="${escapeHtml(topic.id)}" ${state.learningAi.loading ? "disabled" : ""}>
+        ${state.learningAi.loading ? "생성 중" : "AI로 넓히기"}
+      </button>
+      ${state.learningAi.error ? `<p class="learning-ai-error">${escapeHtml(state.learningAi.error)}</p>` : ""}
+      ${state.learningAi.content ? `<pre>${escapeHtml(state.learningAi.content)}</pre>` : ""}
     </section>
   `;
 }
@@ -544,9 +587,9 @@ function renderWorkspaceSidebar() {
           ${fixedProjects
             .map(
               (project) => `
-                <button class="${project.id === state.currentProjectId ? "active" : ""}" type="button" data-project-id="${escapeHtml(project.id)}">
+                <button class="${project.id === state.currentProjectId ? "active" : ""}" type="button" data-project-id="${escapeHtml(project.id)}" data-project-rename="${escapeHtml(project.id)}" title="두 번 터치, 길게 누르기, 우클릭으로 이름 변경">
                   <span class="folder-icon" aria-hidden="true">${renderFolderIcon(project.icon)}</span>
-                  <strong>${escapeHtml(project.name)}</strong>
+                  <strong>${escapeHtml(getProjectName(project))}</strong>
                   <span>${state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === project.id).length}개 노트</span>
                 </button>
               `
@@ -557,7 +600,7 @@ function renderWorkspaceSidebar() {
 
       <div class="workspace-section">
         <div class="workspace-section-head">
-          <h3>${escapeHtml(currentProject.name)}</h3>
+        <h3>${escapeHtml(getProjectName(currentProject))}</h3>
           <span>${notes.length}개</span>
         </div>
         ${renderSavedNotes(notes)}
@@ -636,6 +679,35 @@ function renderFolderIcon(icon) {
     book: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/></svg>'
   };
   return map[icon] || map.folder;
+}
+
+function loadProjectNames() {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(PROJECT_NAME_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function getProjectName(project) {
+  return state.projectNames[project.id] || project.name;
+}
+
+function renameProject(projectId) {
+  const project = fixedProjects.find((item) => item.id === projectId);
+  if (!project) return;
+  const currentName = getProjectName(project);
+  const nextName = window.prompt("노트 이름을 입력하세요.", currentName);
+  if (nextName === null) return;
+  const trimmed = nextName.trim().slice(0, 24);
+  if (!trimmed) return;
+  state.projectNames = {
+    ...state.projectNames,
+    [projectId]: trimmed
+  };
+  window.localStorage.setItem(PROJECT_NAME_KEY, JSON.stringify(state.projectNames));
+  render();
 }
 
 function renderRecentProteins() {
@@ -1556,9 +1628,36 @@ function bindEvents() {
   document.querySelectorAll("[data-learning-topic]").forEach((button) => {
     button.addEventListener("click", () => {
       state.activeLearningTopic = button.dataset.learningTopic;
+      state.learningAi = { loading: false, content: "", error: "" };
       render();
     });
   });
+
+  const learningAiButton = document.querySelector("[data-learning-ai]");
+  if (learningAiButton) {
+    learningAiButton.addEventListener("click", async () => {
+      const topics = getLearningTopics();
+      const topic = topics.find((item) => item.id === state.activeLearningTopic) || topics[0];
+      state.learningAi = { loading: true, content: "", error: "" };
+      trackAnalyticsEvent("learning_ai_expand_click", {
+        topicId: topic.id,
+        topicTitle: topic.title
+      });
+      render();
+
+      try {
+        const content = await generateLearningExpansion(topic);
+        state.learningAi = { loading: false, content, error: "" };
+      } catch {
+        state.learningAi = {
+          loading: false,
+          content: "",
+          error: "AI 학습 확장을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요."
+        };
+      }
+      render();
+    });
+  }
 
   const themeButton = document.querySelector("[data-theme-toggle]");
   if (themeButton) {
@@ -1660,6 +1759,13 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.isLearningOpen = false;
       state.selected = state.results[Number(button.dataset.result)];
+      trackAnalyticsEvent("search_result_click", {
+        query: state.query,
+        resultIndex: Number(button.dataset.result),
+        proteinId: getProteinKey(state.selected),
+        proteinName: getDisplayName(state.selected),
+        source: state.selected.source
+      });
       state.recentProteins = recordRecentProtein(state.selected);
       render();
     });
@@ -1681,7 +1787,35 @@ function bindEvents() {
   });
 
   document.querySelectorAll("[data-project-id]").forEach((button) => {
+    let longPressTriggered = false;
+
+    button.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      renameProject(button.dataset.projectRename);
+    });
+
+    button.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      renameProject(button.dataset.projectRename);
+    });
+
+    button.addEventListener("pointerdown", () => {
+      longPressTriggered = false;
+      window.clearTimeout(state.projectRenameTimer);
+      state.projectRenameTimer = window.setTimeout(() => {
+        longPressTriggered = true;
+        renameProject(button.dataset.projectRename);
+      }, 650);
+    });
+
+    ["pointerup", "pointerleave", "pointercancel"].forEach((eventName) => {
+      button.addEventListener(eventName, () => {
+        window.clearTimeout(state.projectRenameTimer);
+      });
+    });
+
     button.addEventListener("click", () => {
+      if (longPressTriggered) return;
       state.currentProjectId = button.dataset.projectId;
       state.isSidebarOpen = false;
       render();
@@ -1754,6 +1888,11 @@ function bindEvents() {
     saveNoteButton.addEventListener("click", () => {
       const key = getProteinKey(state.selected);
       const evidence = state.literature[key];
+      trackAnalyticsEvent("save_note_click", {
+        proteinId: key,
+        proteinName: getDisplayName(state.selected),
+        projectId: state.currentProjectId
+      });
       state.reportSnapshot = captureViewerSnapshot();
       state.notes = saveNote(state.selected, evidence, state.currentProjectId, state.reportSnapshot);
       state.saveMessage = "Protein Note에 저장했습니다. 홈 화면에서 다시 열 수 있습니다.";
@@ -1769,6 +1908,10 @@ function bindEvents() {
   if (reportOpenButton) {
     reportOpenButton.addEventListener("click", () => {
       state.reportSnapshot = captureViewerSnapshot();
+      trackAnalyticsEvent("report_create_click", {
+        proteinId: state.selected ? getProteinKey(state.selected) : "",
+        proteinName: state.selected ? getDisplayName(state.selected) : ""
+      });
       state.isUpgradeOpen = true;
       render();
     });

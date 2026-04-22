@@ -18,3 +18,15 @@ its user interface, product name, or original written materials.
 
 Commercial release should include a production Terms of Service, Privacy Policy,
 and a fuller third-party attribution page.
+
+## Product and privacy notes
+
+- Analytics events may include search terms, selected protein IDs, project IDs,
+  page URLs, user agent strings, and session duration. A production release
+  should disclose this in a Privacy Policy and avoid collecting special-category
+  or personally identifying research data without explicit consent.
+- AI learning expansion is for education and study support only. Do not present
+  it as medical, diagnostic, treatment, or clinical decision support.
+- Do not store or redistribute full publisher abstracts or paywalled full text
+  as product content. Prefer short summaries, links, citations, and source
+  attribution.

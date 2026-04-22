@@ -102,6 +102,14 @@
     flex: 0 0 auto;
   }
 
+  .learning-ai-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-ai-panel button {
+    width: 100%;
+  }
+
   .learning-practice button {
     width: 100%;
   }
