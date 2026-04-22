@@ -191,7 +191,7 @@ function createProteinFromRcsb(pdbId, entry, entity) {
     method,
     resolution: resolutionValue ? `${resolutionValue} A` : "",
     size: sequenceLength ? `${sequenceLength} aa` : "",
-    mass: formulaWeight ? `~${Math.round(formulaWeight / 1000)} kDa` : "",
+    mass: formatMolecularMass(formulaWeight),
     externalUrl: `https://www.rcsb.org/structure/${pdbId}`,
     structureUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.cif`,
     pdbDownloadUrl: `${RCSB_STRUCTURE_FILE_URL}/${pdbId}.pdb`,
@@ -206,6 +206,14 @@ function createProteinFromRcsb(pdbId, entry, entity) {
       ["amber", "해석 주의", "한 구조는 특정 실험 조건의 모습이므로 실제 세포 안에서는 다른 상태도 존재할 수 있습니다."]
     ]
   });
+}
+
+function formatMolecularMass(value) {
+  const weight = Number(value);
+  if (!Number.isFinite(weight) || weight <= 0) return "";
+  const kDa = weight >= 1000 ? weight / 1000 : weight;
+  const rounded = kDa >= 100 ? Math.round(kDa) : Math.round(kDa * 10) / 10;
+  return `~${rounded} kDa`;
 }
 
 function createMinimalPdbProtein(pdbId) {

@@ -320,6 +320,62 @@
   color: #b42318;
 }
 
+.learning-glossary {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.learning-glossary-head h3,
+.learning-glossary-head p {
+  margin: 0;
+}
+
+.learning-glossary-head h3 {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.learning-glossary-head p {
+  margin-top: 6px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.glossary-grid article {
+  padding: 12px;
+  border: 1px solid rgba(49, 111, 246, 0.14);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.glossary-grid strong,
+.glossary-grid span {
+  display: block;
+}
+
+.glossary-grid strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.glossary-grid span {
+  margin-top: 5px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .lesson-intro h2,
 .lesson-intro p {
   margin: 0;
@@ -1558,6 +1614,8 @@
 .app-shell.dark .lesson-intro,
 .app-shell.dark .learning-ai-panel,
 .app-shell.dark .learning-ai-panel pre,
+.app-shell.dark .learning-glossary,
+.app-shell.dark .glossary-grid article,
 .app-shell.dark .lesson-card,
 .app-shell.dark .lesson-panel,
 .app-shell.dark .lesson-concept,
@@ -1599,6 +1657,8 @@
 .app-shell.dark .concept-grid p,
 .app-shell.dark .lesson-intro p,
 .app-shell.dark .learning-ai-panel p,
+.app-shell.dark .learning-glossary-head p,
+.app-shell.dark .glossary-grid span,
 .app-shell.dark .lesson-card-body p,
 .app-shell.dark .lesson-feature-list div,
 .app-shell.dark .lesson-panel-grid p,

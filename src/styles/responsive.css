@@ -110,6 +110,10 @@
     width: 100%;
   }
 
+  .glossary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .learning-practice button {
     width: 100%;
   }

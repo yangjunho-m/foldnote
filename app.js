@@ -303,6 +303,7 @@ function renderLearning() {
       </div>
 
       ${renderLearningAiPanel(activeTopic)}
+      ${renderLearningGlossary()}
 
       <div class="lesson-grid">
         ${activeTopic.cards.map((card) => renderLessonCard(card)).join("")}
@@ -310,6 +311,30 @@ function renderLearning() {
 
       ${activeTopic.featurePanel ? renderFeaturePanel(activeTopic.featurePanel) : ""}
       ${activeTopic.conceptPanel ? renderConceptPanel(activeTopic.conceptPanel) : ""}
+    </section>
+  `;
+}
+
+function renderLearningGlossary() {
+  const terms = state.language === "en" ? getEnglishGlossaryTerms() : getKoreanGlossaryTerms();
+  return `
+    <section class="learning-glossary">
+      <div class="learning-glossary-head">
+        <h3>${state.language === "en" ? "Beginner Glossary" : "처음 보는 사람을 위한 용어 정리"}</h3>
+        <p>${state.language === "en" ? "Short definitions for words that appear often in protein structure lessons." : "단백질 구조를 처음 보는 사람도 따라올 수 있도록 자주 나오는 말을 짧게 풀었습니다."}</p>
+      </div>
+      <div class="glossary-grid">
+        ${terms
+          .map(
+            ([term, definition]) => `
+              <article>
+                <strong>${escapeHtml(term)}</strong>
+                <span>${escapeHtml(definition)}</span>
+              </article>
+            `
+          )
+          .join("")}
+      </div>
     </section>
   `;
 }
@@ -329,6 +354,40 @@ function renderLearningAiPanel(topic) {
       ${state.learningAi.content ? `<pre>${escapeHtml(state.learningAi.content)}</pre>` : ""}
     </section>
   `;
+}
+
+function getKoreanGlossaryTerms() {
+  return [
+    ["단백질", "아미노산이 길게 연결되어 접힌 분자입니다. 세포 안에서 구조 유지, 반응 촉진, 신호 전달 같은 일을 합니다."],
+    ["아미노산", "단백질을 만드는 작은 부품입니다. 20종류가 있고 전하, 크기, 물을 좋아하는 정도가 다릅니다."],
+    ["잔기", "단백질 사슬 안에 들어간 아미노산 하나를 부르는 말입니다. 예: ALA 41은 41번 알라닌 잔기입니다."],
+    ["접힘", "긴 단백질 사슬이 특정 3D 모양으로 말리고 접히는 과정입니다. 모양이 기능을 크게 좌우합니다."],
+    ["도메인", "단백질 안에서 비교적 독립적으로 접히고 특정 기능을 맡는 큰 구조 단위입니다."],
+    ["리간드", "단백질에 붙는 작은 분자입니다. 약물, 금속 이온, 기질, 생성물 등이 될 수 있습니다."],
+    ["활성 부위", "효소가 실제 화학 반응을 일으키는 자리입니다. 주변 아미노산 배치가 매우 중요합니다."],
+    ["해상도", "실험 구조가 얼마나 세밀한지 나타내는 값입니다. 보통 숫자가 작을수록 원자 위치를 더 자세히 볼 수 있습니다."],
+    ["B-factor", "PDB 실험 구조에서 원자가 얼마나 흔들리거나 불확실한지 보여주는 값입니다."],
+    ["pLDDT", "AlphaFold 예측 구조에서 잔기별 예측 신뢰도를 나타내는 점수입니다."],
+    ["PDB", "실험으로 밝혀진 단백질 3D 구조를 모아 둔 공개 데이터베이스입니다."],
+    ["AlphaFold", "아미노산 서열을 바탕으로 단백질 3D 구조를 예측하는 AI 구조 데이터베이스입니다."]
+  ];
+}
+
+function getEnglishGlossaryTerms() {
+  return [
+    ["Protein", "A folded molecule made from a chain of amino acids. Proteins support structure, signaling, transport, and chemical reactions."],
+    ["Amino acid", "A small building block of proteins. Different amino acids vary in charge, size, shape, and water preference."],
+    ["Residue", "One amino acid as it appears inside a protein chain. For example, ALA 41 means alanine at position 41."],
+    ["Fold", "The 3D shape a protein chain adopts. The fold strongly affects what the protein can do."],
+    ["Domain", "A larger region of a protein that can often fold and function as a semi-independent unit."],
+    ["Ligand", "A molecule bound to a protein, such as a drug, metal ion, substrate, or reaction product."],
+    ["Active site", "The part of an enzyme where the chemical reaction happens."],
+    ["Resolution", "A measure of detail in an experimental structure. Smaller values usually mean finer atomic detail."],
+    ["B-factor", "A PDB value related to atomic motion, disorder, or uncertainty."],
+    ["pLDDT", "An AlphaFold confidence score for each residue in a predicted structure."],
+    ["PDB", "A public database of experimentally determined 3D biomolecular structures."],
+    ["AlphaFold", "An AI-based database of predicted protein structures built from amino-acid sequences."]
+  ];
 }
 
 function getLearningTopics() {
