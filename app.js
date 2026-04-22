@@ -40,6 +40,7 @@ const state = {
   debounceTimer: null,
   viewer: null,
   viewerStyle: "cartoon",
+  structureFacts: {},
   literature: {},
   literatureErrors: {},
   literatureLoading: {},
@@ -1068,6 +1069,248 @@ function localizedDescription(protein) {
   return protein.description || localizedQuickSummary(protein);
 }
 
+function renderStructureGuide(protein) {
+  const guide = buildStructureGuide(protein);
+  return `
+    <section class="structure-guide" data-structure-guide>
+      <div class="guide-head">
+        <span>${escapeHtml(guide.kicker)}</span>
+        <h3>${escapeHtml(guide.title)}</h3>
+        <p>${escapeHtml(guide.summary)}</p>
+      </div>
+      <div class="guide-grid">
+        <article>
+          <strong>${escapeHtml(guide.chainLabel)}</strong>
+          <p>${escapeHtml(guide.chain)}</p>
+        </article>
+        <article>
+          <strong>${escapeHtml(guide.siteLabel)}</strong>
+          <p>${escapeHtml(guide.site)}</p>
+        </article>
+      </div>
+      <div class="first-look">
+        <strong>${escapeHtml(guide.firstLookLabel)}</strong>
+        <ol>
+          ${guide.firstLook.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+        </ol>
+      </div>
+      <div class="structure-story">
+        <strong>${escapeHtml(guide.storyLabel)}</strong>
+        <p>${escapeHtml(guide.story)}</p>
+      </div>
+    </section>
+  `;
+}
+
+function buildStructureGuide(protein) {
+  const isEn = state.language === "en";
+  const facts = state.structureFacts[getProteinKey(protein)] || {};
+  const context = getProteinContext(protein);
+  const name = getDisplayName(protein);
+  const factsReady = Array.isArray(facts.chains) && facts.chains.length;
+  const chainText = describeChainGuide(protein, facts, context, isEn);
+  const siteText = describeSiteGuide(protein, facts, context, isEn);
+  const firstLook = describeFirstLook(protein, facts, context, isEn);
+  const story = describeFunctionStory(protein, facts, context, isEn);
+
+  if (isEn) {
+    return {
+      kicker: factsReady ? "Auto structure guide" : "Auto guide",
+      title: "Read this structure in this order",
+      summary: `${name} is easier to understand when you connect the whole fold, chain assembly, and binding-site region instead of reading the 3D view as a static picture.`,
+      chainLabel: "Chains and subunits",
+      chain: chainText,
+      siteLabel: "Ligand or active site",
+      site: siteText,
+      firstLookLabel: "3 things to inspect first",
+      firstLook,
+      storyLabel: "Structure-function story",
+      story
+    };
+  }
+
+  return {
+    kicker: factsReady ? "자동 구조 가이드" : "자동 가이드",
+    title: "이 구조를 이렇게 읽어보세요",
+    summary: `${name}는 전체 접힘, 체인 조립, 결합 부위를 한 번에 연결해서 보면 훨씬 이해하기 쉽습니다. 3D 그림을 그냥 보는 것이 아니라 기능을 설명하는 지도처럼 읽어보세요.`,
+    chainLabel: "체인/서브유닛",
+    chain: chainText,
+    siteLabel: "리간드/활성 부위",
+    site: siteText,
+    firstLookLabel: "먼저 볼 3가지",
+    firstLook,
+    storyLabel: "구조와 기능을 연결하면",
+    story
+  };
+}
+
+function getProteinContext(protein) {
+  const text = [
+    protein.name,
+    protein.englishName,
+    protein.koreanName,
+    protein.family,
+    protein.description,
+    protein.quickSummary,
+    protein.stateLabel,
+    protein.stateReason,
+    protein.method,
+    ...(protein.features || []).flat()
+  ].join(" ");
+
+  return {
+    text,
+    lower: text.toLowerCase(),
+    isHemoglobin: /h[ae]moglobin|heme|haem|hb\b|헴|헤모글로빈/i.test(text),
+    isEnzyme: /enzyme|ase\b|kinase|protease|polymerase|nuclease|ribonuclease|lysozyme|catalase|효소|분해|촉매/i.test(text),
+    isNucleicAcid: /dna|rna|nuclease|cas9|crispr|transcription|polymerase|nucleic|핵산|전사/i.test(text),
+    isLigandBound: /ligand|bound|substrate|inhibitor|cofactor|metal|heme|zinc|calcium|atp|nad|fad|결합|기질|억제제|보조인자|금속|헴/i.test(text),
+    isOligomer: /dimer|trimer|tetramer|oligomer|multimer|assembly|complex|subunit|사슬|복합체|올리고머|서브유닛/i.test(text),
+    isPrediction: protein.source === "AlphaFold"
+  };
+}
+
+function describeChainGuide(protein, facts, context, isEn) {
+  const chains = Array.isArray(facts.chains) ? facts.chains : [];
+  const chainList = chains.length ? chains.slice(0, 6).join(", ") : "";
+  const chainSuffix = chains.length > 6 ? (isEn ? ` and ${chains.length - 6} more` : ` 외 ${chains.length - 6}개`) : "";
+
+  if (context.isHemoglobin) {
+    return isEn
+      ? `Hemoglobin is usually read as a four-subunit machine: two alpha-like and two beta-like chains move together, and the heme groups explain oxygen binding. ${chainList ? `This file shows chain labels ${chainList}${chainSuffix}.` : "Check whether the visible chains form the expected tetramer."}`
+      : `헤모글로빈은 보통 4개의 서브유닛이 함께 움직이는 산소 운반 장치로 읽습니다. 알파형/베타형 사슬과 헴 위치를 같이 보면 산소 결합 원리가 보입니다. ${chainList ? `이 구조 파일에서는 체인 ${chainList}${chainSuffix}가 보입니다.` : "보이는 체인이 4량체 조립을 이루는지 먼저 확인하세요."}`;
+  }
+
+  if (context.isPrediction) {
+    return isEn
+      ? "AlphaFold entries usually show one predicted chain. Read chain A as the main fold, then use confidence coloring to separate rigid domains from flexible linkers."
+      : "AlphaFold 구조는 보통 하나의 예측 사슬을 보여줍니다. 체인 A를 중심 접힘으로 보고, 신뢰도 색상으로 단단한 도메인과 유연한 연결부를 나눠 보세요.";
+  }
+
+  if (chains.length) {
+    return isEn
+      ? `This asymmetric unit contains chain labels ${chainList}${chainSuffix}. Similar chains may be repeated subunits; different chains often mark partners in a complex. Compare the interfaces where chains touch.`
+      : `이 asymmetric unit에는 체인 ${chainList}${chainSuffix}가 들어 있습니다. 같은 모양의 체인은 반복 서브유닛일 수 있고, 다른 체인은 복합체 파트너일 수 있습니다. 체인끼리 맞닿는 접촉면을 먼저 비교하세요.`;
+  }
+
+  if (context.isOligomer) {
+    return isEn
+      ? "The title suggests a multichain assembly. Use ribbon coloring to separate chains and focus on the interface where subunits stabilize or regulate each other."
+      : "이 구조는 여러 사슬이 함께 작동하는 조립체일 가능성이 큽니다. 리본 색으로 체인을 나누고, 서브유닛이 서로 맞닿는 접촉면을 중심으로 보세요.";
+  }
+
+  return isEn
+    ? "Start from the chain labels in the viewer. One chain usually represents one polypeptide; multiple chains can mean repeated subunits, binding partners, or a crystallographic assembly."
+    : "뷰어의 체인 라벨부터 시작하세요. 보통 체인 하나는 폴리펩타이드 하나이고, 여러 체인은 반복 서브유닛, 결합 파트너, 결정 내 조립 상태를 의미할 수 있습니다.";
+}
+
+function describeSiteGuide(protein, facts, context, isEn) {
+  const ligands = Array.isArray(facts.ligands) ? facts.ligands.filter((item) => item !== "HOH").slice(0, 5) : [];
+  const ligandText = ligands.length ? ligands.join(", ") : "";
+
+  if (context.isHemoglobin || ligands.includes("HEM")) {
+    return isEn
+      ? `${ligandText ? `Detected ligand candidates include ${ligandText}. ` : ""}Focus on heme: the iron center is the functional hotspot where oxygen or related small molecules bind.`
+      : `${ligandText ? `감지된 리간드 후보는 ${ligandText}입니다. ` : ""}헴을 먼저 보세요. 철 중심이 산소나 작은 분자가 붙는 기능의 핵심 지점입니다.`;
+  }
+
+  if (ligandText) {
+    return isEn
+      ? `Detected ligand candidates include ${ligandText}. Switch to stick view and inspect the pocket around these small molecules, metals, or cofactors.`
+      : `감지된 리간드 후보는 ${ligandText}입니다. 스틱 보기로 바꾼 뒤 작은 분자, 금속, 보조인자 주변 포켓을 확인하세요.`;
+  }
+
+  if (context.isNucleicAcid) {
+    return isEn
+      ? "Look for positively charged grooves and bound DNA/RNA. These interfaces explain sequence recognition, cutting, copying, or regulation."
+      : "양전하가 모인 홈과 DNA/RNA가 닿는 면을 찾으세요. 그 접촉면이 서열 인식, 절단, 복제, 조절 기능을 설명합니다.";
+  }
+
+  if (context.isEnzyme) {
+    return isEn
+      ? "For enzymes, the active site is usually a pocket where conserved residues, metals, or substrates gather. Surface or stick view makes that pocket easier to read."
+      : "효소라면 활성 부위는 보존 잔기, 금속, 기질이 모이는 포켓인 경우가 많습니다. 표면 보기나 스틱 보기로 홈 주변을 좁혀보세요.";
+  }
+
+  if (context.isLigandBound) {
+    return isEn
+      ? "The description suggests a bound state. Look for non-protein atoms or surface pockets because those often mark functional regulation sites."
+      : "설명상 결합형 구조일 가능성이 있습니다. 단백질이 아닌 원자나 표면의 홈을 찾으면 기능 조절 위치를 파악하기 쉽습니다.";
+  }
+
+  return isEn
+    ? "No obvious ligand is guaranteed from the title alone, so use surface view to find grooves, exposed charged patches, and conserved-looking pockets."
+    : "제목만으로 뚜렷한 리간드를 단정할 수 없으므로 표면 보기에서 홈, 노출된 전하성 패치, 보존되어 보이는 포켓을 찾아보세요.";
+}
+
+function describeFirstLook(protein, facts, context, isEn) {
+  if (context.isHemoglobin) {
+    return isEn
+      ? [
+          "Check whether the four subunits form the expected tetramer.",
+          "Find heme groups and the iron center that bind oxygen.",
+          "Compare this state with T/R or ligand-bound hemoglobin when related structures are listed."
+        ]
+      : [
+          "4개의 서브유닛이 어떤 모양으로 모여 있는지 확인하기",
+          "헴과 철 중심을 찾아 산소 결합 위치 보기",
+          "관련 구조가 있으면 T 상태/R 상태 또는 결합형 차이 비교하기"
+        ];
+  }
+
+  const quality = protein.source === "AlphaFold"
+    ? isEn
+      ? "Use confidence coloring to avoid over-reading uncertain loops."
+      : "신뢰도 색상으로 불확실한 루프를 과해석하지 않기"
+    : isEn
+      ? "Check resolution and B-factor before trusting fine atomic details."
+      : "세밀한 원자 배치를 믿기 전에 해상도와 B-factor 확인하기";
+
+  return isEn
+    ? [
+        "Read the overall fold and domain boundaries in ribbon view.",
+        context.isNucleicAcid ? "Find where DNA/RNA or charged grooves touch the protein." : "Find pockets, ligands, metals, or exposed interfaces.",
+        quality
+      ]
+    : [
+        "리본 보기에서 전체 접힘과 도메인 경계 읽기",
+        context.isNucleicAcid ? "DNA/RNA 또는 전하성 홈이 단백질과 닿는 위치 찾기" : "포켓, 리간드, 금속, 노출된 접촉면 찾기",
+        quality
+      ];
+}
+
+function describeFunctionStory(protein, facts, context, isEn) {
+  const stateHint = stripTrailingStructureId(localizedStateReason(protein), protein);
+
+  if (context.isHemoglobin) {
+    return isEn
+      ? "Hemoglobin turns structure into function through coordinated chain movement: heme binds oxygen, and the T-to-R shift explains cooperative oxygen transport."
+      : "헤모글로빈은 사슬들이 함께 움직이면서 기능이 생깁니다. 헴이 산소를 붙잡고, T 상태에서 R 상태로 바뀌는 구조 변화가 산소 운반의 협동성을 설명합니다.";
+  }
+
+  if (context.isNucleicAcid) {
+    return isEn
+      ? "The fold positions charged and sequence-reading surfaces so the protein can recognize, copy, cut, or regulate DNA/RNA."
+      : "이 접힘은 전하성 표면과 서열을 읽는 면을 특정 위치에 배치합니다. 그래서 단백질이 DNA/RNA를 인식하거나 복제, 절단, 조절할 수 있습니다.";
+  }
+
+  if (context.isEnzyme) {
+    return isEn
+      ? "The fold brings catalytic residues into the same pocket, so a chemical reaction can happen faster and more selectively than it would in solution."
+      : "효소 구조에서는 촉매 잔기들이 같은 포켓에 모입니다. 그래서 용액 속에서보다 반응이 더 빠르고 선택적으로 일어날 수 있습니다.";
+  }
+
+  if (context.isOligomer) {
+    return isEn
+      ? "The assembly matters because each chain can stabilize, activate, or regulate the others; interfaces are part of the functional story."
+      : "여러 사슬의 조립 자체가 기능의 일부입니다. 각 체인은 다른 체인을 안정화하거나 활성화하고, 접촉면이 조절 위치가 될 수 있습니다.";
+  }
+
+  return stateHint || (isEn
+    ? "Connect the visible fold to function by asking: what surface is exposed, what pocket could bind something, and which region looks stable enough to trust?"
+    : "보이는 접힘을 기능과 연결하려면 세 가지를 물어보면 됩니다. 어떤 표면이 노출되어 있는지, 무엇이 붙을 만한 포켓이 있는지, 어느 영역이 안정적으로 믿을 만한지입니다.");
+}
+
 function renderProteinStory(protein) {
   const story = getProteinStory(protein);
   return `
@@ -1341,6 +1584,7 @@ function renderInfoPanel(protein) {
           ${badge(protein)}
         </div>
         <p class="brand-subtitle">${escapeHtml(getSecondaryName(protein))}</p>
+        ${renderStructureGuide(protein)}
         ${renderProteinStory(protein)}
 
         <div class="meta-grid">
@@ -2422,6 +2666,8 @@ async function initProteinViewer(protein) {
     });
 
     state.viewer.addModel(structureText, "cif");
+    state.structureFacts[getProteinKey(protein)] = parseStructureFacts(structureText);
+    refreshStructureGuide(protein);
     applyViewerStyle();
     registerAtomClickHandler();
     state.viewer.zoomTo();
@@ -2436,6 +2682,47 @@ async function fetchText(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`구조 파일 요청 실패 (${response.status})`);
   return response.text();
+}
+
+function parseStructureFacts(structureText) {
+  const chains = new Map();
+  const ligands = new Set();
+  const ligandSkip = new Set(["HOH", "WAT", "DOD"]);
+  const lines = String(structureText || "").split(/\r?\n/);
+
+  for (const line of lines) {
+    if (!/^(ATOM|HETATM)\s/.test(line)) continue;
+    const parts = line.trim().split(/\s+/);
+    const group = parts[0];
+    const component = (parts[5] || "").replace(/['"]/g, "").toUpperCase();
+    const chain = (parts[6] || "").replace(/['"]/g, "");
+    if (chain && chain !== ".") {
+      const current = chains.get(chain) || { residues: new Set(), atoms: 0 };
+      current.atoms += 1;
+      const residueId = parts[8] || parts[15] || parts[1];
+      if (residueId && residueId !== ".") current.residues.add(residueId);
+      chains.set(chain, current);
+    }
+    if (group === "HETATM" && component && !ligandSkip.has(component)) {
+      ligands.add(component);
+    }
+  }
+
+  return {
+    chains: [...chains.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).slice(0, 16),
+    chainStats: [...chains.entries()].map(([id, stats]) => ({
+      id,
+      residues: stats.residues.size,
+      atoms: stats.atoms
+    })),
+    ligands: [...ligands].sort().slice(0, 12)
+  };
+}
+
+function refreshStructureGuide(protein) {
+  const guide = document.querySelector("[data-structure-guide]");
+  if (!guide || !state.selected || getProteinKey(state.selected) !== getProteinKey(protein)) return;
+  guide.outerHTML = renderStructureGuide(protein);
 }
 
 function applyViewerStyle() {
@@ -2472,7 +2759,27 @@ function applyViewerStyle() {
     state.viewer.setStyle({ hetflag: true }, { stick: { radius: 0.24, colorscheme: "greenCarbon" } });
   }
 
+  highlightFunctionalHotspots();
   state.viewer.render();
+}
+
+function highlightFunctionalHotspots() {
+  if (!state.viewer) return;
+  const cofactors = ["HEM", "HEC", "NAD", "NAP", "FAD", "FMN", "ATP", "ADP", "GTP", "GDP", "SAM", "SAH"];
+  const metals = [
+    ["FE", "#d97706"],
+    ["ZN", "#64748b"],
+    ["MG", "#22c55e"],
+    ["CA", "#38bdf8"],
+    ["MN", "#a855f7"]
+  ];
+
+  cofactors.forEach((resn) => {
+    state.viewer.setStyle({ resn }, { stick: { radius: 0.34, colorscheme: "greenCarbon" } });
+  });
+  metals.forEach(([elem, color]) => {
+    state.viewer.setStyle({ elem }, { sphere: { scale: 0.46, color } });
+  });
 }
 
 function registerAtomClickHandler() {
@@ -2494,6 +2801,7 @@ function showAtomTooltip(atom, event) {
   const atomName = atom.atom || atom.name || element;
   const confidence = typeof atom.b === "number" ? Math.round(atom.b) : null;
   const details = describeResidue(residueName, atomName, element, confidence);
+  const chainRole = describeClickedChainRole(state.selected, chain);
   const pane = document.querySelector(".viewer-pane");
   const paneRect = pane.getBoundingClientRect();
   const clientX = event?.clientX ?? paneRect.left + paneRect.width / 2;
@@ -2511,6 +2819,7 @@ function showAtomTooltip(atom, event) {
     <span>체인 ${escapeHtml(chain)} · ${escapeHtml(atomName)} 원자${confidence === null ? "" : ` · 값 ${confidence}`}</span>
     <p>${escapeHtml(details.summary)}</p>
     <ul>
+      ${chainRole ? `<li>${escapeHtml(chainRole)}</li>` : ""}
       ${details.points.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}
     </ul>
   `;
@@ -2550,6 +2859,28 @@ function describeResidue(residueName, atomName, element, confidence) {
       describeStructureValue(confidence)
     ].filter(Boolean)
   };
+}
+
+function describeClickedChainRole(protein, chain) {
+  if (!protein || !chain || chain === "-") return "";
+  const context = getProteinContext(protein);
+  const facts = state.structureFacts[getProteinKey(protein)] || {};
+  const stats = (facts.chainStats || []).find((item) => item.id === chain);
+  const residueCount = stats?.residues ? `, 약 ${stats.residues}개 잔기` : "";
+
+  if (context.isHemoglobin) {
+    return `체인 해석: ${chain} 체인은 헤모글로빈 4량체를 이루는 서브유닛 중 하나입니다. 헴 주변과 다른 체인 접촉면을 함께 보면 산소 결합 상태를 이해하기 쉽습니다.`;
+  }
+
+  if (context.isPrediction) {
+    return `체인 해석: ${chain} 체인은 예측 모델의 주 사슬입니다${residueCount}. 신뢰도 색상과 함께 도메인 경계인지 확인해 보세요.`;
+  }
+
+  if ((facts.chains || []).length > 1) {
+    return `체인 해석: ${chain} 체인은 이 asymmetric unit 안의 독립 사슬 중 하나입니다${residueCount}. 다른 체인과 맞닿는 면이면 복합체 기능과 관련될 수 있습니다.`;
+  }
+
+  return `체인 해석: ${chain} 체인의 한 위치입니다${residueCount}. 주변 표면 노출과 결합 후보 원자를 함께 보면 기능적 의미를 잡기 좋습니다.`;
 }
 
 function residueProfile(code) {
