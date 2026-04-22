@@ -290,38 +290,39 @@ function renderLearning() {
             (topic, index) => `
               <button class="${topic.id === activeTopic.id ? "active" : ""}" type="button" data-learning-topic="${topic.id}">
                 ${renderLearningIcon(topic.icon)}
-                <span>${index + 1}. ${escapeHtml(topic.tab)}</span>
+                <span>${topic.orderLabel || `${index + 1}.`} ${escapeHtml(topic.tab)}</span>
               </button>
             `
           )
           .join("")}
       </div>
 
-      <div class="lesson-intro">
-        <h2>${escapeHtml(activeTopic.title)}</h2>
-        <p>${activeTopic.intro}</p>
-      </div>
+      ${activeTopic.type === "glossary" ? renderLearningGlossary(activeTopic) : `
+        <div class="lesson-intro">
+          <h2>${escapeHtml(activeTopic.title)}</h2>
+          <p>${activeTopic.intro}</p>
+        </div>
 
-      ${renderLearningAiPanel(activeTopic)}
-      ${renderLearningGlossary()}
+        ${renderLearningAiPanel(activeTopic)}
 
-      <div class="lesson-grid">
-        ${activeTopic.cards.map((card) => renderLessonCard(card)).join("")}
-      </div>
+        <div class="lesson-grid">
+          ${activeTopic.cards.map((card) => renderLessonCard(card)).join("")}
+        </div>
 
-      ${activeTopic.featurePanel ? renderFeaturePanel(activeTopic.featurePanel) : ""}
-      ${activeTopic.conceptPanel ? renderConceptPanel(activeTopic.conceptPanel) : ""}
+        ${activeTopic.featurePanel ? renderFeaturePanel(activeTopic.featurePanel) : ""}
+        ${activeTopic.conceptPanel ? renderConceptPanel(activeTopic.conceptPanel) : ""}
+      `}
     </section>
   `;
 }
 
-function renderLearningGlossary() {
+function renderLearningGlossary(topic) {
   const terms = state.language === "en" ? getEnglishGlossaryTerms() : getKoreanGlossaryTerms();
   return `
     <section class="learning-glossary">
       <div class="learning-glossary-head">
-        <h3>${state.language === "en" ? "0. Start Here: Glossary" : "0. 시작하기: 용어 정리"}</h3>
-        <p>${state.language === "en" ? "Short definitions for words that appear often in protein structure lessons." : "단백질 구조를 처음 보는 사람도 따라올 수 있도록 자주 나오는 말을 짧게 풀었습니다."}</p>
+        <h2>${escapeHtml(topic.title)}</h2>
+        <p>${topic.intro}</p>
       </div>
       <div class="glossary-grid">
         ${terms
@@ -393,6 +394,16 @@ function getEnglishGlossaryTerms() {
 function getLearningTopics() {
   if (state.language === "en") return getEnglishLearningTopics();
   return [
+    {
+      id: "start",
+      tab: "시작하기",
+      orderLabel: "0.",
+      icon: "book",
+      type: "glossary",
+      title: "용어 정리",
+      intro:
+        "단백질 구조를 처음 보는 사람도 따라올 수 있도록 자주 나오는 말을 짧게 풀었습니다."
+    },
     {
       id: "amino",
       tab: "아미노산과 단백질",
@@ -550,6 +561,16 @@ function lessonCard(title, icon, tone, description, chips = [], features = [], e
 
 function getEnglishLearningTopics() {
   return [
+    {
+      id: "start",
+      tab: "Start Here",
+      orderLabel: "0.",
+      icon: "book",
+      type: "glossary",
+      title: "Glossary",
+      intro:
+        "Short definitions for words that appear often in protein structure lessons."
+    },
     {
       id: "amino",
       tab: "Amino Acids",
@@ -1509,7 +1530,7 @@ function renderReportModal(protein) {
         <div class="report-actions">
           <button type="button" data-copy-report>Markdown 복사</button>
           <button type="button" data-download-report>Markdown 저장</button>
-          <button type="button" data-print-report>PDF 인쇄</button>
+          <button type="button" data-export-pdf>PDF 변환</button>
         </div>
       </section>
     </div>
@@ -2187,9 +2208,11 @@ function bindEvents() {
     });
   }
 
-  const printReportButton = document.querySelector("[data-print-report]");
-  if (printReportButton) {
-    printReportButton.addEventListener("click", () => window.print());
+  const exportPdfButton = document.querySelector("[data-export-pdf]");
+  if (exportPdfButton && state.selected) {
+    exportPdfButton.addEventListener("click", () => {
+      exportReportPdf(state.selected, state.literature[getProteinKey(state.selected)]);
+    });
   }
 }
 
@@ -2230,6 +2253,87 @@ function captureViewerSnapshot() {
   } catch {
     return "";
   }
+}
+
+function exportReportPdf(protein, evidence) {
+  const printWindow = window.open("", "_blank", "width=920,height=900");
+  if (!printWindow) {
+    window.alert("팝업이 차단되어 PDF 변환 창을 열 수 없습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.");
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(buildReportPrintHtml(protein, evidence));
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.setTimeout(() => {
+    printWindow.print();
+  }, 350);
+}
+
+function buildReportPrintHtml(protein, evidence) {
+  const claims = (evidence?.claims || []).slice(0, 4);
+  const articles = (evidence?.articles || []).slice(0, 6);
+  const features = localizedFeatures(protein);
+  const title = `${getDisplayName(protein)} FoldNote Report`;
+
+  return `<!doctype html>
+<html lang="${state.language === "en" ? "en" : "ko"}">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #172033; font-family: Arial, sans-serif; line-height: 1.55; }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    h2 { margin: 24px 0 10px; font-size: 17px; }
+    p, li { font-size: 12.5px; }
+    .meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 16px 0; }
+    .meta div, section { border: 1px solid #d8e1ed; border-radius: 8px; padding: 12px; }
+    .meta span { display: block; color: #64748b; font-size: 10px; text-transform: uppercase; }
+    .meta strong { display: block; margin-top: 3px; font-size: 13px; }
+    img { width: 100%; max-height: 260px; object-fit: contain; border-radius: 8px; background: #111827; }
+    section { margin-top: 12px; break-inside: avoid; background: #f8fafc; }
+    a { color: #174ea6; }
+    .claim { margin-top: 8px; padding: 8px; border-left: 3px solid #316ff6; background: #ffffff; }
+    .notice { color: #64748b; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <p class="notice">${state.language === "en" ? "Automatically generated educational summary. Verify before research or professional use." : "자동 생성된 교육용 요약입니다. 연구나 전문적 사용 전에는 반드시 확인하세요."}</p>
+  ${state.reportSnapshot ? `<img src="${state.reportSnapshot}" alt="Structure snapshot" />` : ""}
+  <div class="meta">
+    <div><span>Source</span><strong>${escapeHtml(protein.source || "-")}</strong></div>
+    <div><span>ID</span><strong>${escapeHtml(protein.pdbId || protein.accession || "AlphaFold")}</strong></div>
+    <div><span>Organism</span><strong>${escapeHtml(protein.organism || "-")}</strong></div>
+    <div><span>Method</span><strong>${escapeHtml(protein.method || "-")}</strong></div>
+    <div><span>Resolution</span><strong>${escapeHtml(protein.resolution || "-")}</strong></div>
+    <div><span>Mass</span><strong>${escapeHtml(protein.mass || "-")}</strong></div>
+  </div>
+  <section>
+    <h2>${state.language === "en" ? "Structure Overview" : "구조 개요"}</h2>
+    <p>${escapeHtml(localizedDescription(protein))}</p>
+  </section>
+  <section>
+    <h2>${state.language === "en" ? "Function Summary" : "기능 요약"}</h2>
+    <ul>${features.map(([, label, text]) => `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(text)}</li>`).join("")}</ul>
+  </section>
+  <section>
+    <h2>${state.language === "en" ? "Evidence Sentences" : "근거 문장"}</h2>
+    ${claims.length
+      ? claims.map((claim) => `<div class="claim"><p>${escapeHtml(claim.sentence)}</p><p><a href="${escapeHtml(claim.sourceUrl)}">${escapeHtml(claim.sourceTitle)}</a> · ${escapeHtml(claim.journal)} · ${escapeHtml(claim.year)}</p></div>`).join("")
+      : `<p>${state.language === "en" ? "No literature evidence has loaded yet." : "아직 불러온 논문 근거가 없습니다."}</p>`}
+  </section>
+  <section>
+    <h2>${state.language === "en" ? "References" : "참고문헌"}</h2>
+    <ol>${articles.length
+      ? articles.map((article) => `<li>${escapeHtml(article.title)} (${escapeHtml(article.year)}) ${article.url ? `<a href="${escapeHtml(article.url)}">${escapeHtml(article.url)}</a>` : ""}</li>`).join("")
+      : `<li>${state.language === "en" ? "No references available." : "표시할 참고문헌이 없습니다."}</li>`}</ol>
+  </section>
+</body>
+</html>`;
 }
 
 function buildReportMarkdown(protein, evidence) {
