@@ -1673,8 +1673,8 @@ function renderResearchTools(protein) {
         ${pdbUrl
           ? `<a class="secondary-button link-button" href="${escapeHtml(pdbUrl)}" target="_blank" rel="noreferrer">PDB에서 보기</a>`
           : `<a class="secondary-button link-button disabled-link" aria-disabled="true">PDB 후보 없음</a>`}
-        <a class="secondary-button link-button" href="${escapeHtml(alphaFoldUrl)}" target="_blank" rel="noreferrer">AlphaFold에서 보기</a>
-        <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF</a>
+        <a class="secondary-button link-button" href="${escapeHtml(alphaFoldUrl)}" target="_blank" rel="noreferrer">AlphaFold 보기</a>
+        <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF 파일 저장</a>
         <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">논문 검색</a>
       </div>
     </section>
