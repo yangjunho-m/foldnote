@@ -106,6 +106,12 @@ export function recordRecentProtein(protein) {
   return nextRecent;
 }
 
+export function deleteRecentProtein(id) {
+  const nextRecent = loadRecentProteins().filter((recent) => recent.id !== id);
+  window.localStorage.setItem(RECENT_KEY, JSON.stringify(nextRecent));
+  return nextRecent;
+}
+
 export function getProteinKey(protein) {
   return protein.pdbId || protein.accession || protein.englishName || protein.name;
 }

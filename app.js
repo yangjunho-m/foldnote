@@ -7,6 +7,7 @@ import { generateLearningExpansion } from "./src/learningAiService.js";
 import { fetchLiteratureEvidence } from "./src/literatureService.js";
 import {
   DEFAULT_PROJECT_ID,
+  deleteRecentProtein,
   deleteNote,
   getProteinKey as getStoredProteinKey,
   isSaved,
@@ -863,10 +864,13 @@ function renderRecentProteins() {
         ${state.recentProteins
           .map(
             (protein) => `
-              <button type="button" data-recent-query="${escapeHtml(protein.structureId || protein.englishName || protein.name)}">
-                <strong>${escapeHtml(protein.name)}</strong>
-                <span>${escapeHtml(protein.structureId)} · ${escapeHtml(protein.source)}</span>
-              </button>
+              <div class="recent-item">
+                <button type="button" data-recent-query="${escapeHtml(protein.structureId || protein.englishName || protein.name)}">
+                  <strong>${escapeHtml(protein.name)}</strong>
+                  <span>${escapeHtml(protein.structureId)} · ${escapeHtml(protein.source)}</span>
+                </button>
+                <button class="recent-remove" type="button" data-recent-delete="${escapeHtml(protein.id)}" aria-label="${escapeHtml(protein.name)} 삭제">×</button>
+              </div>
             `
           )
           .join("")}
@@ -1659,13 +1663,17 @@ function renderVariantPanel(protein) {
 function renderResearchTools(protein) {
   const literatureUrl = buildLiteratureSearchUrl(protein);
   const saved = isSaved(protein, state.notes);
-  const sourceLabel = protein.source === "PDB" ? "PDB에서 보기" : "AlphaFold에서 보기";
+  const pdbUrl = protein.pdbId ? `https://www.rcsb.org/structure/${encodeURIComponent(protein.pdbId)}` : "";
+  const alphaFoldUrl = buildAlphaFoldExternalUrl(protein);
 
   return `
     <section class="section compact-section">
       <h3>연구자 도구</h3>
       <div class="tool-grid">
-        <a class="secondary-button link-button" href="${escapeHtml(protein.externalUrl)}" target="_blank" rel="noreferrer">${sourceLabel}</a>
+        ${pdbUrl
+          ? `<a class="secondary-button link-button" href="${escapeHtml(pdbUrl)}" target="_blank" rel="noreferrer">PDB에서 보기</a>`
+          : `<a class="secondary-button link-button disabled-link" aria-disabled="true">PDB 후보 없음</a>`}
+        <a class="secondary-button link-button" href="${escapeHtml(alphaFoldUrl)}" target="_blank" rel="noreferrer">AlphaFold에서 보기</a>
         <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">mmCIF</a>
         <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">논문 검색</a>
       </div>
@@ -1677,6 +1685,12 @@ function renderResearchTools(protein) {
     </div>
     ${state.saveMessage ? `<div class="save-message">${escapeHtml(state.saveMessage)}</div>` : ""}
   `;
+}
+
+function buildAlphaFoldExternalUrl(protein) {
+  if (protein.accession) return `https://alphafold.ebi.ac.uk/entry/${encodeURIComponent(protein.accession)}`;
+  const query = protein.englishName || protein.name || protein.pdbId || "";
+  return `https://alphafold.ebi.ac.uk/search/text/${encodeURIComponent(query)}`;
 }
 
 function buildLiteratureSearchUrl(protein) {
@@ -1760,7 +1774,10 @@ function bindEvents() {
       state.selected = null;
       state.viewer = null;
       state.isSidebarOpen = false;
-      state.isLearningOpen = true;
+      state.isLearningOpen = !state.isLearningOpen;
+      if (!state.isLearningOpen) {
+        state.learningAi = { loading: false, content: "", error: "" };
+      }
       render();
     });
   }
@@ -1967,6 +1984,14 @@ function bindEvents() {
   document.querySelectorAll("[data-recent-query]").forEach((button) => {
     button.addEventListener("click", () => {
       scheduleSearch(button.dataset.recentQuery);
+    });
+  });
+
+  document.querySelectorAll("[data-recent-delete]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.recentProteins = deleteRecentProtein(button.dataset.recentDelete);
+      render();
     });
   });
 

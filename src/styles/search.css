@@ -1019,7 +1019,14 @@
   gap: 8px;
 }
 
-.recent-list button {
+.recent-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.recent-list button:not(.recent-remove) {
   min-height: 64px;
   padding: 10px;
   border: 1px solid var(--line);
@@ -1027,6 +1034,17 @@
   background: #ffffff;
   color: inherit;
   text-align: left;
+}
+
+.recent-remove {
+  width: 34px;
+  min-height: 64px;
+  border: 1px solid rgba(220, 38, 38, 0.16);
+  border-radius: var(--radius);
+  color: #b42318;
+  background: #fff5f5;
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .recent-list strong,
