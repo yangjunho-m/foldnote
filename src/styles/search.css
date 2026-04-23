@@ -384,10 +384,6 @@
   background: rgba(100, 116, 139, 0.14);
 }
 
-.glossary-grid article:focus-within .glossary-term-head button {
-  transform: rotate(45deg);
-}
-
 .glossary-grid strong,
 .glossary-grid span {
   display: block;
@@ -415,8 +411,18 @@
   line-height: 1.6;
 }
 
-.glossary-grid article:focus-within p {
+.glossary-grid article.open p {
   display: block;
+}
+
+.glossary-grid article.open .glossary-term-head button {
+  font-size: 0;
+}
+
+.glossary-grid article.open .glossary-term-head button::before {
+  content: "×";
+  font-size: 16px;
+  line-height: 1;
 }
 
 .lesson-intro h2,

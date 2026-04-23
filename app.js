@@ -21,9 +21,9 @@ import { initAnalytics, trackAnalyticsEvent, trackSearchInput } from "./src/anal
 
 const fixedProjects = [
   { id: DEFAULT_PROJECT_ID, name: "노트", icon: "folder" },
-  { id: "note-2", name: "노트", icon: "activity" },
-  { id: "note-3", name: "노트", icon: "report" },
-  { id: "note-4", name: "노트", icon: "book" }
+  { id: "note-2", name: "노트", icon: "folder" },
+  { id: "note-3", name: "노트", icon: "folder" },
+  { id: "note-4", name: "노트", icon: "folder" }
 ];
 
 const PROJECT_NAME_KEY = "foldnote.projectNames.v1";
@@ -59,6 +59,7 @@ const state = {
   variantQuery: "",
   isSidebarOpen: false,
   isLearningOpen: false,
+  learningGlossaryOpen: {},
   learningAi: {
     loading: false,
     content: "",
@@ -234,8 +235,8 @@ function renderTopbar() {
         </div>
         <button class="icon-button" type="button" data-theme-toggle title="테마 전환" aria-label="테마 전환">
           ${state.theme === "dark"
-            ? '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
-            : '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6.8 6.8 0 0 0 8.7 8.7A8.5 8.5 0 1 1 12 3Z"/></svg>'}
+      ? '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6.8 6.8 0 0 0 8.7 8.7A8.5 8.5 0 1 1 12 3Z"/></svg>'}
         </button>
       </div>
     </header>
@@ -287,15 +288,15 @@ function renderLearning() {
     <section class="learning-screen">
       <div class="learning-tabs" aria-label="생화학 학습 과목">
         ${topics
-          .map(
-            (topic, index) => `
+      .map(
+        (topic, index) => `
               <button class="${topic.id === activeTopic.id ? "active" : ""}" type="button" data-learning-topic="${topic.id}">
                 ${renderLearningIcon(topic.icon)}
                 <span>${topic.orderLabel || `${index}.`} ${escapeHtml(topic.tab)}</span>
               </button>
             `
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
 
       ${activeTopic.type === "glossary" ? renderLearningGlossary(activeTopic) : `
@@ -327,9 +328,12 @@ function renderLearningGlossary(topic) {
       </div>
       <div class="glossary-grid">
         ${terms
-          .map(
-            ([term, definition, detail]) => `
-              <article>
+      .map(
+        ([term, definition, detail]) => {
+          const key = getGlossaryTermKey(term);
+          const isOpen = Boolean(state.learningGlossaryOpen[key]);
+          return `
+              <article class="${isOpen ? "open" : ""}">
                 <div class="glossary-term-head">
                   <strong>${escapeHtml(term)}</strong>
                   <button type="button" aria-label="${escapeHtml(term)} 자세히 보기">+</button>
@@ -337,12 +341,17 @@ function renderLearningGlossary(topic) {
                 <span>${escapeHtml(definition)}</span>
                 <p>${escapeHtml(detail || definition)}</p>
               </article>
-            `
-          )
-          .join("")}
+            `;
+        }
+      )
+      .join("")}
       </div>
     </section>
   `;
+}
+
+function getGlossaryTermKey(term) {
+  return `${state.language}:${String(term || "").trim().toLowerCase()}`;
 }
 
 function renderLearningAiPanel(topic) {
@@ -755,16 +764,16 @@ function renderFeaturePanel(panel) {
       <h3>${renderLearningIcon(panel.icon)} ${escapeHtml(panel.title)}</h3>
       <div class="lesson-panel-grid">
         ${panel.rows
-          .map(
-            ([title, description, ...items]) => `
+      .map(
+        ([title, description, ...items]) => `
               <article>
                 <h4>${escapeHtml(title)}</h4>
                 <p>${escapeHtml(description)}</p>
                 ${items.length ? `<div>${items.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>` : ""}
               </article>
             `
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
     </section>
   `;
@@ -776,15 +785,15 @@ function renderConceptPanel(panel) {
       <h3>${renderLearningIcon(panel.icon)} ${escapeHtml(panel.title)}</h3>
       <div class="lesson-concept-grid">
         ${panel.rows
-          .map(
-            ([title, description]) => `
+      .map(
+        ([title, description]) => `
               <article>
                 <h4>${escapeHtml(title)}</h4>
                 <p>${escapeHtml(description)}</p>
               </article>
             `
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
     </section>
   `;
@@ -829,16 +838,16 @@ function renderWorkspaceSidebar() {
       <div class="workspace-section">
         <div class="workspace-folder-list">
           ${fixedProjects
-            .map(
-              (project) => `
+      .map(
+        (project) => `
                 <button class="${project.id === state.currentProjectId ? "active" : ""}" type="button" data-project-id="${escapeHtml(project.id)}" data-project-rename="${escapeHtml(project.id)}" title="두 번 터치, 길게 누르기, 우클릭으로 이름 변경">
                   <span class="folder-icon" aria-hidden="true">${renderFolderIcon(project.icon)}</span>
                   <strong>${escapeHtml(getProjectName(project))}</strong>
                   <span>${state.notes.filter((note) => (note.projectId || DEFAULT_PROJECT_ID) === project.id).length}개 노트</span>
                 </button>
               `
-            )
-            .join("")}
+      )
+      .join("")}
         </div>
       </div>
 
@@ -884,15 +893,15 @@ function renderSavedNotes(notes) {
   return `
     <div class="saved-note-list">
       ${notes
-        .map(
-          (note) => {
-            const chips = [
-              note.stateLabel,
-              note.literatureCount ? `논문 ${note.literatureCount}개` : "",
-              note.resolution || note.method
-            ].filter(Boolean);
-            const nextActions = (note.nextActions || []).slice(0, 2);
-            return `
+      .map(
+        (note) => {
+          const chips = [
+            note.stateLabel,
+            note.literatureCount ? `논문 ${note.literatureCount}개` : "",
+            note.resolution || note.method
+          ].filter(Boolean);
+          const nextActions = (note.nextActions || []).slice(0, 2);
+          return `
             <article class="saved-note-card">
               <button type="button" data-open-note="${escapeHtml(note.id)}">
                 <strong>${escapeHtml(note.name)}</strong>
@@ -900,17 +909,17 @@ function renderSavedNotes(notes) {
                 ${chips.length ? `<div class="saved-note-chips">${chips.map((chip) => `<em>${escapeHtml(chip)}</em>`).join("")}</div>` : ""}
                 <p>${escapeHtml(note.noteSummary || note.summary?.[0] || note.description || "저장된 구조 노트입니다.")}</p>
                 ${nextActions.length
-                  ? `<ul class="saved-note-actions">${nextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>`
-                  : ""}
+              ? `<ul class="saved-note-actions">${nextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>`
+              : ""}
               </button>
               <button class="note-delete" type="button" data-delete-note="${escapeHtml(note.id)}" aria-label="노트 삭제">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
               </button>
             </article>
           `;
-          }
-        )
-        .join("")}
+        }
+      )
+      .join("")}
     </div>
   `;
 }
@@ -965,8 +974,8 @@ function renderRecentProteins() {
       </div>
       <div class="recent-list">
         ${state.recentProteins
-          .map(
-            (protein) => `
+      .map(
+        (protein) => `
               <div class="recent-item">
                 <button type="button" data-recent-query="${escapeHtml(protein.structureId || protein.englishName || protein.name)}">
                   <strong>${escapeHtml(protein.name)}</strong>
@@ -975,8 +984,8 @@ function renderRecentProteins() {
                 <button class="recent-remove" type="button" data-recent-delete="${escapeHtml(protein.id)}" aria-label="${escapeHtml(protein.name)} 삭제">×</button>
               </div>
             `
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
     </section>
   `;
@@ -1006,8 +1015,8 @@ function renderResults() {
   return `
     <div class="results">
       ${state.results
-        .map(
-          (protein, index) => `
+      .map(
+        (protein, index) => `
           <article class="result-card">
             <button class="result-main" type="button" data-result="${index}">
               <span class="result-id-corner">${renderResultId(protein)}</span>
@@ -1028,8 +1037,8 @@ function renderResults() {
             </button>
           </article>
         `
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -1247,15 +1256,15 @@ function describeFirstLook(protein, facts, context, isEn) {
   if (context.isHemoglobin) {
     return isEn
       ? [
-          "Check whether the four subunits form the expected tetramer.",
-          "Find heme groups and the iron center that bind oxygen.",
-          "Compare this state with T/R or ligand-bound hemoglobin when related structures are listed."
-        ]
+        "Check whether the four subunits form the expected tetramer.",
+        "Find heme groups and the iron center that bind oxygen.",
+        "Compare this state with T/R or ligand-bound hemoglobin when related structures are listed."
+      ]
       : [
-          "4개의 서브유닛이 어떤 모양으로 모여 있는지 확인하기",
-          "헴과 철 중심을 찾아 산소 결합 위치 보기",
-          "관련 구조가 있으면 T 상태/R 상태 또는 결합형 차이 비교하기"
-        ];
+        "4개의 서브유닛이 어떤 모양으로 모여 있는지 확인하기",
+        "헴과 철 중심을 찾아 산소 결합 위치 보기",
+        "관련 구조가 있으면 T 상태/R 상태 또는 결합형 차이 비교하기"
+      ];
   }
 
   const quality = protein.source === "AlphaFold"
@@ -1268,15 +1277,15 @@ function describeFirstLook(protein, facts, context, isEn) {
 
   return isEn
     ? [
-        "Read the overall fold and domain boundaries in ribbon view.",
-        context.isNucleicAcid ? "Find where DNA/RNA or charged grooves touch the protein." : "Find pockets, ligands, metals, or exposed interfaces.",
-        quality
-      ]
+      "Read the overall fold and domain boundaries in ribbon view.",
+      context.isNucleicAcid ? "Find where DNA/RNA or charged grooves touch the protein." : "Find pockets, ligands, metals, or exposed interfaces.",
+      quality
+    ]
     : [
-        "리본 보기에서 전체 접힘과 도메인 경계 읽기",
-        context.isNucleicAcid ? "DNA/RNA 또는 전하성 홈이 단백질과 닿는 위치 찾기" : "포켓, 리간드, 금속, 노출된 접촉면 찾기",
-        quality
-      ];
+      "리본 보기에서 전체 접힘과 도메인 경계 읽기",
+      context.isNucleicAcid ? "DNA/RNA 또는 전하성 홈이 단백질과 닿는 위치 찾기" : "포켓, 리간드, 금속, 노출된 접촉면 찾기",
+      quality
+    ];
 }
 
 function describeFunctionStory(protein, facts, context, isEn) {
@@ -1316,15 +1325,15 @@ function renderProteinStory(protein) {
   return `
     <section class="protein-story">
       ${story
-        .map(
-          (item) => `
+      .map(
+        (item) => `
             <article>
               <span>${escapeHtml(item.label)}</span>
               <p>${escapeHtml(item.text)}</p>
             </article>
           `
-        )
-        .join("")}
+      )
+      .join("")}
     </section>
   `;
 }
@@ -1446,16 +1455,16 @@ function renderRecommendations() {
       </div>
       <div class="recommend-grid">
         ${items
-          .map(
-            (item) => `
+      .map(
+        (item) => `
               <button class="recommend-card" type="button" data-recommend-query="${escapeHtml(item.query)}">
                 <span>${escapeHtml(localizedRecommendation(item).tag)}</span>
                 <strong>${escapeHtml(localizedRecommendation(item).name)}</strong>
                 <p>${escapeHtml(localizedRecommendation(item).note)}</p>
               </button>
             `
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
     </section>
   `;
@@ -1618,14 +1627,14 @@ function renderUnifiedInfo(protein) {
       <h3>${t("keyFeatures")}</h3>
       <div class="feature-list">
         ${localizedFeatures(protein)
-          .map(
-            ([tone, title, text]) => `
+      .map(
+        ([tone, title, text]) => `
               <div class="feature ${tone}">
                 <strong>${escapeHtml(title)}:</strong> ${escapeHtml(text)}
               </div>
             `
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
     </section>
 
@@ -1691,10 +1700,10 @@ function renderLiteraturePanel(protein) {
       <h3>연관 키워드</h3>
       <div class="entity-cloud">
         ${evidence.relatedEntities.length
-          ? evidence.relatedEntities
-              .map((entity) => `<span>${escapeHtml(entity.label)} <small>${entity.count}</small></span>`)
-              .join("")
-          : "<p>초록에서 반복적으로 등장하는 DNA/RNA/단백질 키워드를 찾지 못했습니다.</p>"}
+      ? evidence.relatedEntities
+        .map((entity) => `<span>${escapeHtml(entity.label)} <small>${entity.count}</small></span>`)
+        .join("")
+      : "<p>초록에서 반복적으로 등장하는 DNA/RNA/단백질 키워드를 찾지 못했습니다.</p>"}
       </div>
     </section>
 
@@ -1703,16 +1712,16 @@ function renderLiteraturePanel(protein) {
       <p class="section-lead">각 참고문헌 카드 안에 초록에서 뽑은 근거 문장을 함께 표시합니다.</p>
       <div class="reference-list">
         ${evidence.articles.length
-          ? visibleArticles.map((article) => renderReference(article, evidence.claims || [])).join("")
-          : "<p>표시할 참고문헌이 없습니다.</p>"}
+      ? visibleArticles.map((article) => renderReference(article, evidence.claims || [])).join("")
+      : "<p>표시할 참고문헌이 없습니다.</p>"}
         ${hiddenArticles.length
-          ? `
+      ? `
             <details class="reference-more">
               <summary>더보기 ${hiddenArticles.length}개</summary>
               ${hiddenArticles.map((article) => renderReference(article, evidence.claims || [])).join("")}
             </details>
           `
-          : ""}
+      : ""}
       </div>
     </section>
   `;
@@ -1726,13 +1735,13 @@ function renderReference(article, claims = []) {
       <p>${escapeHtml(article.authors)}</p>
       <span>${escapeHtml(article.journal)} · ${escapeHtml(article.year)} · 인용 ${article.citedByCount}</span>
       ${linkedClaims.length
-        ? `
+      ? `
           <div class="reference-evidence">
             <strong>근거 문장</strong>
             ${linkedClaims.map((claim) => `<p>${escapeHtml(claim.sentence)}</p>`).join("")}
           </div>
         `
-        : ""}
+      : ""}
     </article>
   `;
 }
@@ -1772,17 +1781,17 @@ function renderReportModal(protein) {
           <section>
             <h3>근거 문장</h3>
             ${(evidence?.claims?.length ? evidence.claims : [])
-              .slice(0, 4)
-              .map(
-                (claim) => `
+      .slice(0, 4)
+      .map(
+        (claim) => `
                   <article class="claim-card">
                     <p>${escapeHtml(claim.sentence)}</p>
                     <a href="${escapeHtml(claim.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(claim.sourceTitle)}</a>
                     <span>${escapeHtml(claim.journal)} · ${escapeHtml(claim.year)}</span>
                   </article>
                 `
-              )
-              .join("") || "<p>논문 근거가 아직 준비되지 않았습니다.</p>"}
+      )
+      .join("") || "<p>논문 근거가 아직 준비되지 않았습니다.</p>"}
           </section>
           <section>
             <h3>참고문헌</h3>
@@ -1883,9 +1892,9 @@ function renderComparisonPanel(protein) {
           <p>${escapeHtml(getCurrentComparisonHint(protein))}</p>
         </div>
         ${candidates.length
-          ? candidates
-              .map(
-                (candidate) => `
+      ? candidates
+        .map(
+          (candidate) => `
                   <button type="button" data-compare-key="${escapeHtml(getProteinKey(candidate))}">
                     <strong>${escapeHtml(getDisplayName(candidate))}</strong>
                     <span>${escapeHtml(candidate.source)} · ${escapeHtml(candidate.method)} · ${escapeHtml(candidate.resolution)}</span>
@@ -1893,9 +1902,9 @@ function renderComparisonPanel(protein) {
                     <em>${escapeHtml(getComparisonDelta(candidate, protein))}</em>
                   </button>
                 `
-              )
-              .join("")
-          : "<p>검색 결과가 더 있으면 비교 후보가 여기에 표시됩니다.</p>"}
+        )
+        .join("")
+      : "<p>검색 결과가 더 있으면 비교 후보가 여기에 표시됩니다.</p>"}
       </div>
     </section>
   `;
@@ -1985,10 +1994,10 @@ function renderVariantPanel(protein) {
   const variant = parseVariant(state.variantQuery);
   const interpretation = variant
     ? [
-        `${variant.from}${variant.position}${variant.to} 변이는 ${variant.position}번 잔기 주변의 결합, 접힘, 표면 노출을 확인해야 합니다.`,
-        "구조상으로는 주변 5-8 A 영역의 전하, 크기, 소수성 변화가 기능 영향의 첫 단서가 됩니다.",
-        "이 결과는 연구/교육용 해석이며 진단, 치료, 임상 의사결정 목적으로 사용하면 안 됩니다."
-      ]
+      `${variant.from}${variant.position}${variant.to} 변이는 ${variant.position}번 잔기 주변의 결합, 접힘, 표면 노출을 확인해야 합니다.`,
+      "구조상으로는 주변 5-8 A 영역의 전하, 크기, 소수성 변화가 기능 영향의 첫 단서가 됩니다.",
+      "이 결과는 연구/교육용 해석이며 진단, 치료, 임상 의사결정 목적으로 사용하면 안 됩니다."
+    ]
     : [];
 
   return `
@@ -2000,8 +2009,8 @@ function renderVariantPanel(protein) {
         <button type="button" data-highlight-variant ${variant ? "" : "disabled"}>위치 표시</button>
       </div>
       ${variant
-        ? `<div class="analysis-list">${interpretation.map((text) => `<p>${escapeHtml(text)}</p>`).join("")}</div>`
-        : `<div class="evidence-empty">변이를 입력하면 주변 잔기와 기능 영향 확인 포인트를 보여줍니다.</div>`}
+      ? `<div class="analysis-list">${interpretation.map((text) => `<p>${escapeHtml(text)}</p>`).join("")}</div>`
+      : `<div class="evidence-empty">변이를 입력하면 주변 잔기와 기능 영향 확인 포인트를 보여줍니다.</div>`}
     </section>
   `;
 }
@@ -2017,8 +2026,8 @@ function renderResearchTools(protein) {
       <h3>${t("sourceLinks")}</h3>
       <div class="tool-grid">
         ${pdbUrl
-          ? `<a class="secondary-button link-button" href="${escapeHtml(pdbUrl)}" target="_blank" rel="noreferrer">${t("viewPdb")}</a>`
-          : `<a class="secondary-button link-button disabled-link" aria-disabled="true">${t("noPdbCandidate")}</a>`}
+      ? `<a class="secondary-button link-button" href="${escapeHtml(pdbUrl)}" target="_blank" rel="noreferrer">${t("viewPdb")}</a>`
+      : `<a class="secondary-button link-button disabled-link" aria-disabled="true">${t("noPdbCandidate")}</a>`}
         <a class="secondary-button link-button" href="${escapeHtml(alphaFoldUrl)}" target="_blank" rel="noreferrer">${t("viewAlphaFold")}</a>
         <a class="secondary-button link-button" href="${escapeHtml(literatureUrl)}" target="_blank" rel="noreferrer">${t("searchLiterature")}</a>
         <a class="secondary-button link-button" href="${escapeHtml(protein.cifDownloadUrl)}" target="_blank" rel="noreferrer">${t("saveMmcif")}</a>
@@ -2132,6 +2141,18 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.activeLearningTopic = button.dataset.learningTopic;
       state.learningAi = { loading: false, content: "", error: "" };
+      render();
+    });
+  });
+
+  document.querySelectorAll(".glossary-term-head button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const term = button.closest(".glossary-term-head")?.querySelector("strong")?.textContent || "";
+      const key = getGlossaryTermKey(term);
+      state.learningGlossaryOpen = {
+        ...state.learningGlossaryOpen,
+        [key]: !state.learningGlossaryOpen[key]
+      };
       render();
     });
   });

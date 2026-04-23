@@ -16,6 +16,7 @@ import {
 export async function findProteinStructures(query) {
   const curatedPdbIds = getCuratedPdbIds(query);
   let apiPdbIds = [];
+  let rcsbError = null;
 
   try {
     const response = await fetch(RCSB_SEARCH_URL, {
@@ -37,14 +38,20 @@ export async function findProteinStructures(query) {
       .filter(Boolean)
       .slice(0, 6);
   } catch (error) {
-    if (!curatedPdbIds.length) {
-      return fetchAlphaFoldResults(query);
-    }
+    rcsbError = error;
   }
 
   const pdbIds = mergeUniqueIds([...curatedPdbIds, ...apiPdbIds]).slice(0, 8);
+  const pdbResults = pdbIds.length ? await fetchPdbDetails(pdbIds) : [];
+  let alphaFoldResults = [];
 
-  const results = pdbIds.length ? await fetchPdbDetails(pdbIds) : await fetchAlphaFoldResults(query);
+  try {
+    alphaFoldResults = await fetchAlphaFoldResults(query);
+  } catch (error) {
+    if (!pdbResults.length) throw rcsbError || error;
+  }
+
+  const results = [...pdbResults, ...alphaFoldResults];
   return markRepresentativeResult(
     results.map((protein) => addSearchContextMetadata(addLocalizedMetadata(protein), query))
   );
