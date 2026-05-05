@@ -4,9 +4,9 @@ FoldNote는 간단하게 단백질 이름을 검색해서 구조, 기능, 논문
 생화학을 처음 배우는 사람도 3D 단백질 구조를 읽을 수 있도록 용어 정리, 논문 해설, 구조 노트를 제공합니다.
 
 
-<img width="1900" height="945" alt="image (2)" src="https://github.com/user-attachments/assets/048ed7fe-28fd-4b90-aa83-7221e414e1f7" />
 <img width="1888" height="942" alt="image (1)" src="https://github.com/user-attachments/assets/c0085d0e-e93e-45f8-8924-c812a21a442d" />
 <img width="1886" height="939" alt="image" src="https://github.com/user-attachments/assets/aa6ab6e3-2210-4a6e-bfa6-0facd3e69ac2" />
+<img width="1900" height="945" alt="image (2)" src="https://github.com/user-attachments/assets/048ed7fe-28fd-4b90-aa83-7221e414e1f7" />
 <img width="1290" height="924" alt="image (4)" src="https://github.com/user-attachments/assets/dd90b536-faf9-4725-a23b-91f4db19c1e5" />
 <img width="1283" height="934" alt="image (3)" src="https://github.com/user-attachments/assets/2111293a-88ea-49c7-94e0-1b675a4eb2fa" />
 
